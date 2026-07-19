@@ -6,4 +6,4 @@ dependencyResolutionManagement {
     repositories { google(); mavenCentral() }
 }
 rootProject.name = "AgroGuideRTK"
-include(":app", ":core:geo", ":core:nmea", ":core:ntrip", ":device", ":service")
+include(":app", ":core:geo", ":core:nmea", ":core:ntrip", ":core:coverage", ":device", ":service")

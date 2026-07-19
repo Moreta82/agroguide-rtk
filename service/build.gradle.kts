@@ -14,6 +14,7 @@ android {
 }
 dependencies {
     api(project(":device"))
+    api(project(":core:coverage"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.service)
     implementation(libs.kotlinx.coroutines.android)
