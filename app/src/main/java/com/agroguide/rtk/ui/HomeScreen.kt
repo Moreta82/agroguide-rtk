@@ -22,24 +22,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Switch
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.agroguide.rtk.R
+import com.agroguide.rtk.data.NtripProfile
 import com.agroguide.rtk.device.SourceEvent
 import com.agroguide.rtk.service.GuidanceService
 import com.agroguide.rtk.service.PositionRepository
 
 /**
- * Phase-1 home: pick source (demo / BT / Android location), start/stop the
- * foreground service, watch the fix panel. Field canvas arrives in phase 3.
+ * Guidance home: pick source (demo / BT / Android location), toggle NTRIP
+ * corrections (BT mode), start/stop the foreground service, watch the fix
+ * panel. Field canvas arrives in phase 3.
  */
 @Composable
-fun HomeScreen(pairedRtkDevices: List<Pair<String, String>>) {  // name to MAC
+fun HomeScreen(
+    pairedRtkDevices: List<Pair<String, String>>,  // name to MAC
+    activeNtripProfile: NtripProfile?,
+) {
     val context = LocalContext.current
     val vehicle by PositionRepository.vehicle.collectAsStateWithLifecycle()
     val connection by PositionRepository.connection.collectAsStateWithLifecycle()
     val active by PositionRepository.sourceName.collectAsStateWithLifecycle()
+    val ntripStats by PositionRepository.ntrip.collectAsStateWithLifecycle()
     var mode by remember { mutableStateOf(GuidanceService.MODE_DEMO) }
     var btAddress by remember { mutableStateOf(pairedRtkDevices.firstOrNull()?.second) }
+    var ntripEnabled by remember { mutableStateOf(true) }
 
     Row(Modifier.fillMaxSize().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -61,13 +70,58 @@ fun HomeScreen(pairedRtkDevices: List<Pair<String, String>>) {  // name to MAC
             SourceOption(stringResource(R.string.source_android), mode == GuidanceService.MODE_ANDROID) {
                 mode = GuidanceService.MODE_ANDROID
             }
+            if (mode == GuidanceService.MODE_BT) {
+                Row(
+                    Modifier.fillMaxWidth().height(56.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column {
+                        Text(stringResource(R.string.ntrip_corrections), style = MaterialTheme.typography.titleMedium)
+                        if (activeNtripProfile == null) {
+                            Text(stringResource(R.string.ntrip_need_profile), style = MaterialTheme.typography.bodySmall)
+                        } else {
+                            Text(activeNtripProfile.name, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    Switch(
+                        checked = ntripEnabled && activeNtripProfile != null,
+                        onCheckedChange = { ntripEnabled = it },
+                        enabled = activeNtripProfile != null,
+                    )
+                }
+                if (active != null && activeNtripProfile != null && ntripEnabled) {
+                    val ntripText = if (ntripStats.connected) {
+                        stringResource(R.string.ntrip_connected) + " · ${ntripStats.bytesReceived / 1024} KB"
+                    } else {
+                        stringResource(R.string.ntrip_disconnected)
+                    }
+                    Text(
+                        ntripText,
+                        color = if (ntripStats.connected) Color(0xFF2E7D32) else Color(0xFFC62828),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+            }
             Spacer(Modifier.weight(1f))
             ConnectionBanner(connection)
             Button(
                 modifier = Modifier.fillMaxWidth().height(64.dp),
                 onClick = {
-                    if (active == null) GuidanceService.start(context, mode, btAddress)
-                    else GuidanceService.stop(context)
+                    if (active == null) {
+                        val ntrip = activeNtripProfile?.takeIf {
+                            ntripEnabled && mode == GuidanceService.MODE_BT
+                        }?.let {
+                            GuidanceService.NtripStartConfig(
+                                host = it.host, port = it.port, username = it.username,
+                                password = it.password, mountPoint = it.mountPoint,
+                                v2 = it.ntripV2, uploadGga = it.uploadGga, ggaIntervalS = it.ggaIntervalS,
+                            )
+                        }
+                        GuidanceService.start(context, mode, btAddress, ntrip)
+                    } else {
+                        GuidanceService.stop(context)
+                    }
                 },
                 enabled = mode != GuidanceService.MODE_BT || btAddress != null,
             ) {

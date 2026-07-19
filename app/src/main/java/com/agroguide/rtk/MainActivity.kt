@@ -10,11 +10,28 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.agroguide.rtk.data.NtripProfileStore
+import com.agroguide.rtk.data.NtripSettings
 import com.agroguide.rtk.ui.HomeScreen
+import com.agroguide.rtk.ui.NtripScreen
+import com.agroguide.rtk.ui.ReceiverScreen
 import com.agroguide.rtk.ui.theme.AgroGuideTheme
 
 class MainActivity : ComponentActivity() {
@@ -29,9 +46,26 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         requestNeededPermissions()
+        val store = NtripProfileStore(applicationContext)
         setContent {
             AgroGuideTheme {
-                HomeScreen(pairedRtkDevices = if (permissionsGranted) pairedRtkDevices() else emptyList())
+                val settings by store.settings.collectAsStateWithLifecycle(initialValue = NtripSettings())
+                var tab by remember { mutableIntStateOf(0) }
+                Column(Modifier.fillMaxSize()) {
+                    TabRow(selectedTabIndex = tab) {
+                        Tab(selected = tab == 0, onClick = { tab = 0 }) { TabLabel(R.string.tab_guidance) }
+                        Tab(selected = tab == 1, onClick = { tab = 1 }) { TabLabel(R.string.tab_ntrip) }
+                        Tab(selected = tab == 2, onClick = { tab = 2 }) { TabLabel(R.string.tab_receiver) }
+                    }
+                    when (tab) {
+                        0 -> HomeScreen(
+                            pairedRtkDevices = if (permissionsGranted) pairedRtkDevices() else emptyList(),
+                            activeNtripProfile = settings.activeProfile,
+                        )
+                        1 -> NtripScreen(settings, store)
+                        else -> ReceiverScreen()
+                    }
+                }
             }
         }
     }
@@ -59,4 +93,9 @@ class MainActivity : ComponentActivity() {
                 .map { (it.name ?: it.address) to it.address }
         } catch (_: SecurityException) { emptyList() }
     }
+}
+
+@Composable
+private fun TabLabel(res: Int) {
+    Text(stringResource(res), Modifier.padding(vertical = 16.dp))
 }

@@ -22,4 +22,41 @@
     <string name="state_error">Error de conexión</string>
     <string name="perm_rationale">Se necesitan permisos de ubicación y Bluetooth para el guiado.</string>
     <string name="no_paired_rtk">No hay receptores RTK_GNSS emparejados. Empareja el receptor (PIN 1234) en Ajustes de Bluetooth.</string>
+
+    <string name="tab_guidance">Guiado</string>
+    <string name="tab_ntrip">NTRIP</string>
+    <string name="tab_receiver">Receptor</string>
+
+    <string name="ntrip_new_profile">Nuevo perfil</string>
+    <string name="ntrip_edit">Editar</string>
+    <string name="ntrip_delete">Eliminar</string>
+    <string name="ntrip_delete_confirm">¿Eliminar el perfil «%1$s»?</string>
+    <string name="ntrip_browse">Explorar mountpoints</string>
+    <string name="ntrip_no_profiles">Sin perfiles. Crea uno para recibir correcciones RTK.</string>
+    <string name="ntrip_corrections">Correcciones NTRIP</string>
+    <string name="ntrip_need_profile">Crea un perfil NTRIP en la pestaña NTRIP</string>
+    <string name="ntrip_connected">NTRIP: conectado</string>
+    <string name="ntrip_disconnected">NTRIP: sin conexión</string>
+    <string name="ntrip_host">Servidor</string>
+    <string name="ntrip_port">Puerto</string>
+    <string name="ntrip_mount">Mountpoint</string>
+    <string name="ntrip_user">Usuario</string>
+    <string name="ntrip_pass">Contraseña</string>
+    <string name="ntrip_name">Nombre del perfil</string>
+    <string name="ntrip_v2">NTRIP v2</string>
+    <string name="ntrip_send_gga">Enviar GGA al caster</string>
+    <string name="ntrip_gga_interval">Intervalo GGA (s)</string>
+    <string name="ntrip_fetch_error">No se pudo obtener la lista: %1$s</string>
+    <string name="ntrip_badge_gga">GGA</string>
+    <string name="ntrip_badge_auth">🔒</string>
+    <string name="save">Guardar</string>
+    <string name="cancel">Cancelar</string>
+
+    <string name="receiver_optimize">Optimizar receptor (5 Hz)</string>
+    <string name="receiver_restore">Restaurar valores de fábrica</string>
+    <string name="receiver_need_bt">Conecta el receptor Bluetooth primero</string>
+    <string name="receiver_ok">Receptor configurado ✓</string>
+    <string name="receiver_nak">El receptor rechazó el comando</string>
+    <string name="receiver_timeout">Sin respuesta del receptor</string>
+    <string name="receiver_hint">Ajusta el ZED-F9P a 5 Hz y desactiva las frases GSV para reducir tráfico Bluetooth. Los cambios se guardan en RAM y flash del receptor.</string>
 </resources>
