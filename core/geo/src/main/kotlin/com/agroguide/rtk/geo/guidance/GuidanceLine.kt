@@ -38,6 +38,40 @@ sealed interface GuidanceLine {
         }
     }
 
+    /**
+     * Recorded curve. Pass offsets are measured as perpendicular distance to
+     * the ORIGINAL polyline — exact on straights and gentle bends, degrades on
+     * tight corners (offset self-intersection is not handled in v1).
+     */
+    data class Curve(val points: List<EnuPoint>) : GuidanceLine {
+        override fun guide(workPoint: EnuPoint, headingDeg: Double, widthM: Double): GuidanceResult? {
+            if (points.size < 2) return null
+            // nearest segment by clamped perpendicular projection
+            var best = Double.MAX_VALUE
+            var bestUx = 0.0; var bestUy = 0.0; var bestOff = 0.0
+            for (i in 0 until points.size - 1) {
+                val p1 = points[i]; val p2 = points[i + 1]
+                val dx = p2.x - p1.x; val dy = p2.y - p1.y
+                val len2 = dx * dx + dy * dy
+                if (len2 < 1e-12) continue
+                val t = (((workPoint.x - p1.x) * dx + (workPoint.y - p1.y) * dy) / len2).coerceIn(0.0, 1.0)
+                val cx = p1.x + t * dx; val cy = p1.y + t * dy
+                val ex = workPoint.x - cx; val ey = workPoint.y - cy
+                val d2 = ex * ex + ey * ey
+                if (d2 < best) {
+                    best = d2
+                    val len = kotlin.math.sqrt(len2)
+                    bestUx = dx / len; bestUy = dy / len
+                    bestOff = ex * bestUy + ey * -bestUx   // signed via segment right normal
+                }
+            }
+            // Reuse straight-line snapping in the local segment frame: anchor so
+            // the field offset equals bestOff.
+            val anchor = EnuPoint(workPoint.x - bestOff * bestUy, workPoint.y + bestOff * bestUx)
+            return lineGuide(workPoint, headingDeg, widthM, anchor, bestUx, bestUy)
+        }
+    }
+
     companion object {
         const val MIN_AB_M = 2.0
 
