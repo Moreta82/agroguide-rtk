@@ -25,6 +25,7 @@ import com.agroguide.rtk.device.bt.BtSppPositionSource
 class GuidanceService : LifecycleService() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var ntripSession: NtripSession? = null
+    private var collectorJob: kotlinx.coroutines.Job? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
@@ -41,8 +42,28 @@ class GuidanceService : LifecycleService() {
         PositionRepository.attach(source) { SystemClock.elapsedRealtime() }
         activeBt = source as? BtSppPositionSource
         startNtripIfRequested(intent, source)
+        startVehicleCollector()
         acquireWakeLock()
         return START_STICKY
+    }
+
+    /**
+     * Guidance and coverage are driven from the service so they keep running
+     * with the screen off; the UI only observes repositories.
+     */
+    private fun startVehicleCollector() {
+        collectorJob?.cancel()
+        collectorJob = lifecycleScope.launch {
+            PositionRepository.vehicle.collect { state ->
+                if (state != null) {
+                    GuidanceRepository.update(state)
+                    val work = GuidanceRepository.implement.value.workPoint(
+                        com.agroguide.rtk.geo.EnuPoint(state.x, state.y), state.headingDeg,
+                    )
+                    CoverageRepository.update(state, work)
+                }
+            }
+        }
     }
 
     private fun startNtripIfRequested(intent: Intent?, source: PositionSource) {
@@ -75,6 +96,7 @@ class GuidanceService : LifecycleService() {
     }
 
     override fun onDestroy() {
+        collectorJob?.cancel(); collectorJob = null
         ntripSession?.stop(); ntripSession = null
         activeBt = null
         PositionRepository.detach()

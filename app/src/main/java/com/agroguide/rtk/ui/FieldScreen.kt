@@ -63,11 +63,6 @@ fun FieldScreen(
     var showSource by remember { mutableStateOf(false) }
     var showImplement by remember { mutableStateOf(false) }
 
-    // single collector feeding the guidance engine
-    LaunchedEffect(Unit) {
-        PositionRepository.vehicle.collect { it?.let(GuidanceRepository::update) }
-    }
-
     Column(Modifier.fillMaxSize()) {
         Lightbar(result?.xteM)
         Row(Modifier.fillMaxSize().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
