@@ -81,6 +81,16 @@ object GuidanceRepository {
 
     fun clearLine() { _line.value = null; _result.value = null; _pendingA.value = null }
 
+    /** Restore a persisted line (mode inferred from the line type). */
+    fun restoreLine(line: GuidanceLine) {
+        _line.value = line
+        _mode.value = when (line) {
+            is GuidanceLine.Ab -> GuidanceMode.AB
+            is GuidanceLine.APlus -> GuidanceMode.A_PLUS
+            is GuidanceLine.Curve -> GuidanceMode.CURVE
+        }
+    }
+
     /** Called for every VehicleState by the field-view collector. */
     fun update(state: VehicleState) {
         val work = _implement.value.workPoint(EnuPoint(state.x, state.y), state.headingDeg)

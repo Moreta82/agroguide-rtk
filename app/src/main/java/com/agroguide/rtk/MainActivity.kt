@@ -115,6 +115,17 @@ class MainActivity : ComponentActivity() {
                         com.agroguide.rtk.service.CoverageRepository.configure(it.widthM, it.sections)
                     }
                 }
+                val lineStore = remember { com.agroguide.rtk.data.GuidanceLineStore(applicationContext) }
+                LaunchedEffect(Unit) {
+                    // restore once, then persist every change (including clearing)
+                    if (GuidanceRepository.line.value == null) {
+                        lineStore.load()?.let { GuidanceRepository.restoreLine(it) }
+                    }
+                    var first = true
+                    GuidanceRepository.line.collect { line ->
+                        if (first) { first = false } else { lineStore.save(line) }
+                    }
+                }
                 var tab by remember { mutableIntStateOf(0) }
                 Column(Modifier.fillMaxSize()) {
                     TabRow(selectedTabIndex = tab) {
