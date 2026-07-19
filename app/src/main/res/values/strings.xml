@@ -1,3 +1,25 @@
 <resources>
     <string name="app_name">AgroGuide RTK</string>
+    <string name="fix_no_fix">SIN FIX</string>
+    <string name="fix_gps">GPS</string>
+    <string name="fix_dgps">DGPS</string>
+    <string name="fix_rtk_float">RTK FLOAT</string>
+    <string name="fix_rtk_fixed">RTK FIJO</string>
+    <string name="fix_dead_reckoning">ESTIMA</string>
+    <string name="label_satellites">Satélites</string>
+    <string name="label_hdop">HDOP</string>
+    <string name="label_corr_age">Edad corr.</string>
+    <string name="label_speed">Velocidad</string>
+    <string name="unit_kmh">km/h</string>
+    <string name="source_demo">Demo (simulado)</string>
+    <string name="source_bt">Receptor Bluetooth RTK</string>
+    <string name="source_android">Ubicación de Android</string>
+    <string name="btn_start">Iniciar</string>
+    <string name="btn_stop">Detener</string>
+    <string name="state_connecting">Conectando…</string>
+    <string name="state_connected">Conectado</string>
+    <string name="state_disconnected">Desconectado</string>
+    <string name="state_error">Error de conexión</string>
+    <string name="perm_rationale">Se necesitan permisos de ubicación y Bluetooth para el guiado.</string>
+    <string name="no_paired_rtk">No hay receptores RTK_GNSS emparejados. Empareja el receptor (PIN 1234) en Ajustes de Bluetooth.</string>
 </resources>
