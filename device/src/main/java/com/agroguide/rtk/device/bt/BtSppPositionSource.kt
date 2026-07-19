@@ -75,6 +75,7 @@ class BtSppPositionSource(
     private suspend fun ProducerScope<SourceEvent>.readUntilStale(socket: BluetoothSocket) =
         withContext(Dispatchers.IO) {
             val assembler = NmeaLineAssembler()
+            val ackScanner = com.agroguide.rtk.nmea.ubx.UbxAckScanner()
             val buf = ByteArray(1024)
             var lastNmeaMs = SystemClock.elapsedRealtime()
             val input = socket.inputStream
@@ -92,9 +93,13 @@ class BtSppPositionSource(
                     val n = input.read(buf)
                     if (n < 0) break
                     val now = SystemClock.elapsedRealtime()
-                    for (line in assembler.feed(buf.copyOf(n))) {
+                    val chunk = buf.copyOf(n)
+                    for (line in assembler.feed(chunk)) {
                         lastNmeaMs = now
                         send(SourceEvent.Nmea(line, now))
+                    }
+                    for (ack in ackScanner.feed(chunk)) {
+                        send(SourceEvent.UbxAckEvent(ack.ok, ack.ackedCls, ack.ackedId))
                     }
                 }
             } catch (_: IOException) { /* socket closed by watchdog or peer */ }

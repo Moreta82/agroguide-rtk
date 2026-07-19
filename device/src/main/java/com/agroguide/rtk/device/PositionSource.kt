@@ -12,6 +12,9 @@ sealed interface SourceEvent {
     data class ConnectionState(val state: State, val detail: String? = null) : SourceEvent {
         enum class State { CONNECTING, CONNECTED, DISCONNECTED, ERROR }
     }
+
+    /** UBX ACK/NAK observed on the raw stream (receiver-utility feedback). */
+    data class UbxAckEvent(val ok: Boolean, val ackedCls: Int, val ackedId: Int) : SourceEvent
 }
 
 /** One position provider (BT SPP, Android location, replay, later USB). */

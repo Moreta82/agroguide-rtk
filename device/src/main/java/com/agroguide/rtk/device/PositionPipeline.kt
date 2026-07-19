@@ -31,6 +31,7 @@ class PositionPipeline(
             }
             is SourceEvent.DirectFix -> ev.fix
             is SourceEvent.ConnectionState -> return@transform
+            is SourceEvent.UbxAckEvent -> return@transform
         }
         if (fix.quality == FixQuality.NO_FIX) return@transform
         val p = plane ?: TangentPlane(fix.latDeg, fix.lonDeg).also { plane = it }
