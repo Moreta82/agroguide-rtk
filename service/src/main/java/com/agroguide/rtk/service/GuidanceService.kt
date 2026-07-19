@@ -26,6 +26,7 @@ class GuidanceService : LifecycleService() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var ntripSession: NtripSession? = null
     private var collectorJob: kotlinx.coroutines.Job? = null
+    private var mockPublisher: com.agroguide.rtk.device.MockLocationPublisher? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
@@ -42,6 +43,14 @@ class GuidanceService : LifecycleService() {
         PositionRepository.attach(source) { SystemClock.elapsedRealtime() }
         activeBt = source as? BtSppPositionSource
         startNtripIfRequested(intent, source)
+        // mock output: never in Android-location mode (feedback loop)
+        mockPublisher?.stop(); mockPublisher = null
+        if (intent?.getBooleanExtra(EXTRA_MOCK, false) == true &&
+            intent.getStringExtra(EXTRA_MODE) != MODE_ANDROID
+        ) {
+            mockPublisher = com.agroguide.rtk.device.MockLocationPublisher(this)
+                .takeIf { it.start() }
+        }
         startVehicleCollector()
         JobManager.tryResumeOnStart(applicationContext)
         acquireWakeLock()
@@ -57,6 +66,7 @@ class GuidanceService : LifecycleService() {
         collectorJob = lifecycleScope.launch {
             PositionRepository.vehicle.collect { state ->
                 if (state != null) {
+                    mockPublisher?.publish(state)
                     GuidanceRepository.update(state)
                     val work = GuidanceRepository.implement.value.workPoint(
                         com.agroguide.rtk.geo.EnuPoint(state.x, state.y), state.headingDeg,
@@ -103,6 +113,7 @@ class GuidanceService : LifecycleService() {
     }
 
     override fun onDestroy() {
+        mockPublisher?.stop(); mockPublisher = null
         collectorJob?.cancel(); collectorJob = null
         ntripSession?.stop(); ntripSession = null
         activeBt = null
@@ -144,6 +155,7 @@ class GuidanceService : LifecycleService() {
     companion object {
         const val EXTRA_MODE = "mode"
         const val EXTRA_BT_ADDRESS = "bt_address"
+        const val EXTRA_MOCK = "mock_provider"
         const val EXTRA_NTRIP = "ntrip"
         const val EXTRA_NTRIP_HOST = "ntrip_host"
         const val EXTRA_NTRIP_PORT = "ntrip_port"
@@ -168,9 +180,11 @@ class GuidanceService : LifecycleService() {
             mode: String,
             btAddress: String? = null,
             ntrip: NtripStartConfig? = null,
+            mockProvider: Boolean = false,
         ) {
             val i = Intent(context, GuidanceService::class.java)
                 .putExtra(EXTRA_MODE, mode).putExtra(EXTRA_BT_ADDRESS, btAddress)
+                .putExtra(EXTRA_MOCK, mockProvider)
             if (ntrip != null) {
                 i.putExtra(EXTRA_NTRIP, true)
                     .putExtra(EXTRA_NTRIP_HOST, ntrip.host)
