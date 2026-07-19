@@ -59,4 +59,24 @@
     <string name="receiver_nak">El receptor rechazó el comando</string>
     <string name="receiver_timeout">Sin respuesta del receptor</string>
     <string name="receiver_hint">Ajusta el ZED-F9P a 5 Hz y desactiva las frases GSV para reducir tráfico Bluetooth. Los cambios se guardan en RAM y flash del receptor.</string>
+
+    <string name="implement_title">Apero</string>
+    <string name="implement_width">Ancho de trabajo (m)</string>
+    <string name="implement_lateral">Desfase lateral (m, + derecha)</string>
+    <string name="implement_longitudinal">Antena→apero (m, + detrás)</string>
+
+    <string name="mode_free">Libre</string>
+    <string name="mode_ab">AB</string>
+    <string name="mode_aplus">A+</string>
+    <string name="mode_curve">Curva</string>
+    <string name="mark_a">Marcar A</string>
+    <string name="mark_b">Marcar B</string>
+    <string name="mark_aplus">Marcar A+</string>
+    <string name="curve_start">Grabar curva</string>
+    <string name="curve_stop">Fin curva</string>
+    <string name="clear_line">Borrar línea</string>
+    <string name="source_button">Fuente</string>
+    <string name="implement_button">Apero</string>
+    <string name="field_no_position">Sin posición — inicia una fuente</string>
+    <string name="label_pass">Pasada</string>
 </resources>
