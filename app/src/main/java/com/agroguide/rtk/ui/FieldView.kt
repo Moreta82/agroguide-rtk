@@ -47,10 +47,15 @@ fun FieldView(
     trail: List<EnuPoint>,
     implement: ImplementConfig,
     tiles: Map<TileKey, TileSnapshot> = emptyMap(),
+    parcelRing: List<EnuPoint>? = null,
+    draftRing: List<EnuPoint> = emptyList(),
+    onTapWorld: ((EnuPoint) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     var scale by remember { mutableFloatStateOf(4f) }        // px per meter
     var headingUp by remember { mutableStateOf(true) }
+    val tapHandler by androidx.compose.runtime.rememberUpdatedState(onTapWorld)
+    val vehicleNow by androidx.compose.runtime.rememberUpdatedState(vehicle)
     // world-space Paths per tile, rebuilt only when the tile version changes
     val tilePathCache = remember { mutableMapOf<TileKey, TilePaths>() }
     tilePathCache.keys.retainAll(tiles.keys)
@@ -67,7 +72,21 @@ fun FieldView(
                 detectTransformGestures { _, _, zoom, _ -> scale = (scale * zoom).coerceIn(0.5f, 30f) }
             }
             .pointerInput(Unit) {
-                detectTapGestures(onDoubleTap = { headingUp = !headingUp })
+                detectTapGestures(
+                    onDoubleTap = { headingUp = !headingUp },
+                    onTap = { pos ->
+                        val handler = tapHandler ?: return@detectTapGestures
+                        val v = vehicleNow ?: return@detectTapGestures
+                        // inverse of project(): screen offset -> world point
+                        val cx = size.width / 2f; val cy = size.height * ANCHOR_Y
+                        val right = (pos.x - cx) / scale
+                        val fwd = (cy - pos.y) / scale
+                        val h = Math.toRadians(if (headingUp) v.headingDeg else 0.0)
+                        val dx = cos(h) * right + sin(h) * fwd
+                        val dy = -sin(h) * right + cos(h) * fwd
+                        handler(EnuPoint(v.x + dx, v.y + dy))
+                    },
+                )
             },
     ) {
         drawRect(Color(0xFF1B2E1B))
@@ -140,6 +159,32 @@ fun FieldView(
             }
             is GuidanceLine.Curve -> drawCurvePasses(line.points, passIndex ?: 0, implement.widthM, ::project)
             null -> {}
+        }
+
+        // parcel outline (active job's parcel)
+        parcelRing?.takeIf { it.size >= 3 }?.let { ring ->
+            val path = Path()
+            val first = project(ring[0].x, ring[0].y)
+            path.moveTo(first.x, first.y)
+            for (i in 1 until ring.size) {
+                val p = project(ring[i].x, ring[i].y)
+                path.lineTo(p.x, p.y)
+            }
+            path.close()
+            drawPath(path, Color(0xCCFFFFFF), style = Stroke(width = 3.dp.toPx()))
+        }
+
+        // parcel draft in progress: vertices + open polyline
+        if (draftRing.isNotEmpty()) {
+            for (i in 1 until draftRing.size) {
+                drawLine(
+                    Color(0xFF00E5FF),
+                    project(draftRing[i - 1].x, draftRing[i - 1].y),
+                    project(draftRing[i].x, draftRing[i].y),
+                    2.dp.toPx(),
+                )
+            }
+            for (p in draftRing) drawCircle(Color(0xFF00E5FF), 5.dp.toPx(), project(p.x, p.y))
         }
 
         // AB markers + pending A

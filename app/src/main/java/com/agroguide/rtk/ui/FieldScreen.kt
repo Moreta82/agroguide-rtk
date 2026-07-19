@@ -68,6 +68,41 @@ fun FieldScreen(
     var showImplement by remember { mutableStateOf(false) }
     var showResetConfirm by remember { mutableStateOf(false) }
 
+    val activeJob by com.agroguide.rtk.service.JobManager.activeJob.collectAsStateWithLifecycle()
+    val draftMode by ParcelDraft.mode.collectAsStateWithLifecycle()
+    val draftPoints by ParcelDraft.points.collectAsStateWithLifecycle()
+    var pendingRing by remember { mutableStateOf<List<com.agroguide.rtk.geo.EnuPoint>?>(null) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // DRIVE draft: collect work points from the vehicle flow while active
+    LaunchedEffect(draftMode) {
+        if (draftMode == ParcelDraft.Mode.DRIVE) {
+            PositionRepository.vehicle.collect { state ->
+                if (state != null) {
+                    ParcelDraft.addPoint(
+                        implement.workPoint(com.agroguide.rtk.geo.EnuPoint(state.x, state.y), state.headingDeg)
+                    )
+                }
+            }
+        }
+    }
+
+    // active job's parcel ring in ENU (for the outline)
+    val jobParcelRing by androidx.compose.runtime.produceState<List<com.agroguide.rtk.geo.EnuPoint>?>(
+        initialValue = null, activeJob?.parcelId,
+    ) {
+        val parcelId = activeJob?.parcelId
+        val plane = PositionRepository.activePlane
+        value = if (parcelId == null || plane == null) null else {
+            com.agroguide.rtk.data.db.AgroDb.get(context).parcels().byId(parcelId)?.let { p ->
+                stringToRing(p.ringLonLat).map { (lon, lat) ->
+                    val e = plane.toEnu(lat, lon)
+                    com.agroguide.rtk.geo.EnuPoint(e.x, e.y)
+                }
+            }
+        }
+    }
+
     Column(Modifier.fillMaxSize()) {
         Lightbar(result?.xteM)
         Row(Modifier.fillMaxSize().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -76,7 +111,53 @@ fun FieldScreen(
                     vehicle = vehicle, line = line, passIndex = result?.passIndex,
                     pendingA = pendingA, trail = trail, implement = implement,
                     tiles = tiles,
+                    parcelRing = jobParcelRing,
+                    draftRing = draftPoints,
+                    onTapWorld = if (draftMode == ParcelDraft.Mode.TAP) {
+                        { p -> ParcelDraft.addPoint(p) }
+                    } else null,
                 )
+                activeJob?.let { job ->
+                    val activeState = job.state == com.agroguide.rtk.service.JobManager.STATE_ACTIVE
+                    Text(
+                        job.name + "  ·  " + stringResource(
+                            if (activeState) R.string.job_active else R.string.job_paused
+                        ),
+                        Modifier.align(Alignment.TopStart).padding(8.dp)
+                            .background(
+                                if (activeState) Color(0xCC2E7D32) else Color(0xCCF9A825),
+                                androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
+                            )
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+                if (draftMode != ParcelDraft.Mode.NONE) {
+                    Row(
+                        Modifier.align(Alignment.TopCenter).padding(8.dp)
+                            .background(Color(0xCC004D60), androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            stringResource(R.string.parcel_draft_banner, draftPoints.size),
+                            color = Color.White,
+                        )
+                        androidx.compose.material3.TextButton(onClick = {
+                            val ring = ParcelDraft.close()
+                            if (ring == null) {
+                                android.widget.Toast.makeText(context, R.string.parcel_too_few, android.widget.Toast.LENGTH_LONG).show()
+                            } else {
+                                pendingRing = ring
+                            }
+                        }) { Text(stringResource(R.string.parcel_close, draftPoints.size), color = Color.White) }
+                        androidx.compose.material3.TextButton(onClick = { ParcelDraft.cancel() }) {
+                            Text(stringResource(R.string.cancel), color = Color.White)
+                        }
+                    }
+                }
                 if (vehicle == null) {
                     Text(
                         stringResource(R.string.field_no_position),
@@ -139,6 +220,42 @@ fun FieldScreen(
     if (showSource) {
         SourceDialog(pairedRtkDevices, activeNtripProfile) { showSource = false }
     }
+    pendingRing?.let { ring ->
+        var name by remember { mutableStateOf("") }
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { pendingRing = null },
+            title = { Text(stringResource(R.string.parcel_name)) },
+            text = { androidx.compose.material3.OutlinedTextField(name, { name = it }, singleLine = true) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    val plane = PositionRepository.activePlane
+                    val measured = com.agroguide.rtk.data.parcel.ParcelGeometry.measure(ring)
+                    if (plane != null && measured != null) {
+                        val lonLat = ring.map { p ->
+                            val (lat, lon) = plane.toGeo(p.x, p.y)
+                            lon to lat
+                        }
+                        val entity = com.agroguide.rtk.data.db.ParcelEntity(
+                            id = java.util.UUID.randomUUID().toString(),
+                            name = name.ifBlank { "Parcela" },
+                            createdAtMs = System.currentTimeMillis(),
+                            ringLonLat = ringToString(lonLat),
+                            areaM2 = measured.areaM2,
+                            perimeterM = measured.perimeterM,
+                        )
+                        scope.launch { com.agroguide.rtk.data.db.AgroDb.get(context).parcels().insert(entity) }
+                    }
+                    pendingRing = null
+                }) { Text(stringResource(R.string.save)) }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { pendingRing = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+
     if (showResetConfirm) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { showResetConfirm = false },

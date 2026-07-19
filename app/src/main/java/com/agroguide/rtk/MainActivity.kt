@@ -32,10 +32,24 @@ import com.agroguide.rtk.data.ImplementSettingsStore
 import com.agroguide.rtk.data.NtripProfileStore
 import com.agroguide.rtk.data.NtripSettings
 import com.agroguide.rtk.service.GuidanceRepository
+import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
+import com.agroguide.rtk.data.db.AgroDb
+import com.agroguide.rtk.data.db.ParcelEntity
+import com.agroguide.rtk.data.parcel.ParcelCodec
+import com.agroguide.rtk.data.parcel.ParcelGeometry
+import com.agroguide.rtk.geo.TangentPlane
 import com.agroguide.rtk.ui.FieldScreen
+import com.agroguide.rtk.ui.JobsScreen
 import com.agroguide.rtk.ui.NtripScreen
+import com.agroguide.rtk.ui.ParcelsScreen
 import com.agroguide.rtk.ui.ReceiverScreen
+import com.agroguide.rtk.ui.ringToString
 import com.agroguide.rtk.ui.theme.AgroGuideTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.UUID
 
 class MainActivity : ComponentActivity() {
     private var permissionsGranted by mutableStateOf(false)
@@ -44,6 +58,47 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
             permissionsGranted = it.values.all { granted -> granted }
         }
+
+    private val importLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) importParcels(uri)
+        }
+
+    /** Parse a GeoJSON or KML document and insert every polygon as a parcel. */
+    private fun importParcels(uri: android.net.Uri) {
+        lifecycleScope.launch {
+            val count = withContext(Dispatchers.IO) {
+                runCatching {
+                    val text = contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) }
+                        ?: return@runCatching 0
+                    val imported = ParcelCodec.fromGeoJson(text).ifEmpty { ParcelCodec.fromKml(text) }
+                    val dao = AgroDb.get(applicationContext).parcels()
+                    var inserted = 0
+                    for (p in imported) {
+                        // measure on a local plane anchored at the first vertex
+                        val plane = TangentPlane(p.ringLonLat[0].second, p.ringLonLat[0].first)
+                        val ringEnu = p.ringLonLat.map { (lon, lat) -> plane.toEnu(lat, lon) }
+                        val measured = ParcelGeometry.measure(ringEnu) ?: continue
+                        dao.insert(
+                            ParcelEntity(
+                                id = UUID.randomUUID().toString(), name = p.name,
+                                createdAtMs = System.currentTimeMillis(),
+                                ringLonLat = ringToString(p.ringLonLat),
+                                areaM2 = measured.areaM2, perimeterM = measured.perimeterM,
+                            )
+                        )
+                        inserted++
+                    }
+                    inserted
+                }.getOrDefault(0)
+            }
+            if (count > 0) {
+                Toast.makeText(this@MainActivity, getString(R.string.parcel_import_ok, count), Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(this@MainActivity, R.string.parcel_import_fail, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,8 +119,10 @@ class MainActivity : ComponentActivity() {
                 Column(Modifier.fillMaxSize()) {
                     TabRow(selectedTabIndex = tab) {
                         Tab(selected = tab == 0, onClick = { tab = 0 }) { TabLabel(R.string.tab_guidance) }
-                        Tab(selected = tab == 1, onClick = { tab = 1 }) { TabLabel(R.string.tab_ntrip) }
-                        Tab(selected = tab == 2, onClick = { tab = 2 }) { TabLabel(R.string.tab_receiver) }
+                        Tab(selected = tab == 1, onClick = { tab = 1 }) { TabLabel(R.string.tab_parcels) }
+                        Tab(selected = tab == 2, onClick = { tab = 2 }) { TabLabel(R.string.tab_jobs) }
+                        Tab(selected = tab == 3, onClick = { tab = 3 }) { TabLabel(R.string.tab_ntrip) }
+                        Tab(selected = tab == 4, onClick = { tab = 4 }) { TabLabel(R.string.tab_receiver) }
                     }
                     when (tab) {
                         0 -> FieldScreen(
@@ -73,7 +130,12 @@ class MainActivity : ComponentActivity() {
                             activeNtripProfile = settings.activeProfile,
                             implementStore = implementStore,
                         )
-                        1 -> NtripScreen(settings, store)
+                        1 -> ParcelsScreen(
+                            onImport = { importLauncher.launch(arrayOf("*/*")) },
+                            onGoToField = { tab = 0 },
+                        )
+                        2 -> JobsScreen()
+                        3 -> NtripScreen(settings, store)
                         else -> ReceiverScreen()
                     }
                 }

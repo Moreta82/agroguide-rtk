@@ -48,9 +48,13 @@ object PositionRepository {
     @Volatile private var pinnedPlane: com.agroguide.rtk.geo.TangentPlane? = null
     @Volatile private var activePipeline: PositionPipeline? = null
 
+    /** ENU frame currently in use (job-pinned or auto-anchored). */
+    val activePlane: com.agroguide.rtk.geo.TangentPlane?
+        get() = pinnedPlane ?: activePipeline?.plane
+
     /** Origin of the ENU frame currently in use (job-pinned or auto-anchored). */
     val activePlaneOrigin: Pair<Double, Double>?
-        get() = (pinnedPlane ?: activePipeline?.plane)?.let { it.originLatDeg to it.originLonDeg }
+        get() = activePlane?.let { it.originLatDeg to it.originLonDeg }
 
     /** Pin (or clear with null) the tangent plane; applies to the live pipeline too. */
     fun pinPlane(plane: com.agroguide.rtk.geo.TangentPlane?) {

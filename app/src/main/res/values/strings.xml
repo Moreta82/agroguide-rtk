@@ -89,4 +89,44 @@
     <string name="coverage_reset_confirm">¿Borrar la cobertura pintada y los contadores?</string>
     <string name="unit_ha">ha</string>
     <string name="unit_km">km</string>
+
+    <string name="tab_parcels">Parcelas</string>
+    <string name="tab_jobs">Trabajos</string>
+
+    <string name="parcel_new">Nueva parcela</string>
+    <string name="parcel_new_drive">Conducir perímetro</string>
+    <string name="parcel_new_tap">Marcar puntos en el mapa</string>
+    <string name="parcel_rename">Renombrar</string>
+    <string name="parcel_delete">Eliminar</string>
+    <string name="parcel_delete_confirm">¿Eliminar la parcela «%1$s»?</string>
+    <string name="parcel_export_geojson">GeoJSON</string>
+    <string name="parcel_export_kml">KML</string>
+    <string name="parcel_import">Importar (GeoJSON/KML)</string>
+    <string name="parcel_import_ok">Importadas %1$d parcelas</string>
+    <string name="parcel_import_fail">No se pudo importar el archivo</string>
+    <string name="parcel_none">Sin parcelas. Crea una o importa GeoJSON/KML.</string>
+    <string name="parcel_name">Nombre de la parcela</string>
+    <string name="parcel_close">Cerrar parcela (%1$d)</string>
+    <string name="parcel_draft_banner">Creando parcela: %1$d puntos</string>
+    <string name="parcel_too_few">Se necesitan al menos 3 puntos</string>
+    <string name="parcel_need_position">Necesitas posición para crear parcelas</string>
+
+    <string name="job_new">Nuevo trabajo</string>
+    <string name="job_name">Nombre del trabajo</string>
+    <string name="job_parcel">Parcela (opcional)</string>
+    <string name="job_no_parcel">Sin parcela</string>
+    <string name="job_start">Iniciar trabajo</string>
+    <string name="job_pause">Pausar</string>
+    <string name="job_resume">Reanudar</string>
+    <string name="job_finish">Finalizar</string>
+    <string name="job_finish_confirm">¿Finalizar el trabajo «%1$s»? Se guardarán sus estadísticas.</string>
+    <string name="job_active">ACTIVO</string>
+    <string name="job_paused">EN PAUSA</string>
+    <string name="job_none_active">Sin trabajo activo</string>
+    <string name="job_need_position">Necesitas posición para iniciar un trabajo</string>
+    <string name="job_history">Histórico</string>
+    <string name="job_report_html">Informe HTML</string>
+    <string name="job_report_pdf">Informe PDF</string>
+    <string name="job_report_fail">No se pudo generar el informe</string>
+    <string name="share_via">Compartir</string>
 </resources>
