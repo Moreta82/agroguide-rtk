@@ -36,6 +36,14 @@ object PositionRepository {
     private val _sourceName = MutableStateFlow<String?>(null)
     val sourceName: StateFlow<String?> = _sourceName.asStateFlow()
 
+    private val _ntrip = MutableStateFlow(com.agroguide.rtk.ntrip.NtripStats())
+    val ntrip: StateFlow<com.agroguide.rtk.ntrip.NtripStats> = _ntrip.asStateFlow()
+    fun publishNtrip(stats: com.agroguide.rtk.ntrip.NtripStats) { _ntrip.value = stats }
+
+    /** Shared per-session source events, for consumers beyond the pipeline (NTRIP GGA, UBX ACK UI). */
+    @Volatile var sharedEvents: kotlinx.coroutines.flow.SharedFlow<SourceEvent>? = null
+        private set
+
     private var scope: CoroutineScope? = null
     private const val RENDER_HZ = 15
 
@@ -50,6 +58,7 @@ object PositionRepository {
         scope = s
         _sourceName.value = source.name
         val shared = source.events.shareIn(s, SharingStarted.Eagerly)
+        sharedEvents = shared
         val sharedSource = object : PositionSource {
             override val name = source.name
             override val events = shared
@@ -72,7 +81,9 @@ object PositionRepository {
 
     fun detach() {
         scope?.cancel(); scope = null
+        sharedEvents = null
         _sourceName.value = null
         _connection.value = SourceEvent.ConnectionState(SourceEvent.ConnectionState.State.DISCONNECTED)
+        _ntrip.value = com.agroguide.rtk.ntrip.NtripStats()
     }
 }
