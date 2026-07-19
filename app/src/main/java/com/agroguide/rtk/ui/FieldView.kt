@@ -14,10 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import com.agroguide.rtk.coverage.TileKey
+import com.agroguide.rtk.coverage.TileSnapshot
 import com.agroguide.rtk.geo.EnuPoint
 import com.agroguide.rtk.geo.VehicleState
 import com.agroguide.rtk.geo.guidance.GuidanceLine
@@ -42,10 +46,19 @@ fun FieldView(
     pendingA: EnuPoint?,
     trail: List<EnuPoint>,
     implement: ImplementConfig,
+    tiles: Map<TileKey, TileSnapshot> = emptyMap(),
     modifier: Modifier = Modifier,
 ) {
     var scale by remember { mutableFloatStateOf(4f) }        // px per meter
     var headingUp by remember { mutableStateOf(true) }
+    // world-space Paths per tile, rebuilt only when the tile version changes
+    val tilePathCache = remember { mutableMapOf<TileKey, TilePaths>() }
+    tilePathCache.keys.retainAll(tiles.keys)
+    for ((key, snap) in tiles) {
+        if (tilePathCache[key]?.version != snap.version) {
+            tilePathCache[key] = TilePaths(snap.version, geometryToPath(snap.covered), geometryToPath(snap.overlap))
+        }
+    }
 
     Canvas(
         modifier
@@ -84,6 +97,23 @@ fun FieldView(
         while (gy <= v.y + extent) {
             drawLine(gridColor, project(v.x - extent, gy), project(v.x + extent, gy), 1f)
             gy += 10.0
+        }
+
+        // coverage tiles: world-space paths (y negated) under one affine
+        // transform equivalent to project(); only tiles near the vehicle
+        withTransform({
+            translate(cx, cy)
+            rotate(degrees = -camHeading.toFloat(), pivot = Offset.Zero)
+            scale(scale, scale, pivot = Offset.Zero)
+            translate(-v.x.toFloat(), v.y.toFloat())
+        }) {
+            val tileSize = 50.0
+            for ((key, paths) in tilePathCache) {
+                val tcx = (key.ix + 0.5) * tileSize; val tcy = (key.iy + 0.5) * tileSize
+                if (kotlin.math.abs(tcx - v.x) > extent + tileSize || kotlin.math.abs(tcy - v.y) > extent + tileSize) continue
+                drawPath(paths.covered, Color(0x5532CD32))
+                drawPath(paths.overlap, Color(0x88FF6D00))
+            }
         }
 
         // trail
@@ -148,6 +178,31 @@ fun FieldView(
         tr.close()
         drawPath(tr, Color(0xFFFFC107))
     }
+}
+
+/** World-space paths for one tile (y negated so north is up pre-transform). */
+private class TilePaths(val version: Int, val covered: Path, val overlap: Path)
+
+private fun geometryToPath(g: org.locationtech.jts.geom.Geometry): Path {
+    val path = Path().apply { fillType = PathFillType.EvenOdd }
+    for (i in 0 until g.numGeometries) {
+        val poly = g.getGeometryN(i) as? org.locationtech.jts.geom.Polygon ?: continue
+        appendRing(path, poly.exteriorRing)
+        for (r in 0 until poly.numInteriorRing) appendRing(path, poly.getInteriorRingN(r))
+    }
+    return path
+}
+
+private fun appendRing(path: Path, ring: org.locationtech.jts.geom.LineString) {
+    val n = ring.numPoints
+    if (n < 3) return
+    val c0 = ring.getCoordinateN(0)
+    path.moveTo(c0.x.toFloat(), -c0.y.toFloat())
+    for (i in 1 until n) {
+        val c = ring.getCoordinateN(i)
+        path.lineTo(c.x.toFloat(), -c.y.toFloat())
+    }
+    path.close()
 }
 
 private inline fun DrawScope.drawStraightPasses(

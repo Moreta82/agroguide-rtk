@@ -59,6 +59,7 @@ fun FieldScreen(
     val trail by GuidanceRepository.trail.collectAsStateWithLifecycle()
     val implement by GuidanceRepository.implement.collectAsStateWithLifecycle()
     val implementSettings by implementStore.settings.collectAsStateWithLifecycle(initialValue = ImplementSettings())
+    val tiles by com.agroguide.rtk.service.CoverageRepository.tiles.collectAsStateWithLifecycle()
 
     var showSource by remember { mutableStateOf(false) }
     var showImplement by remember { mutableStateOf(false) }
@@ -70,6 +71,7 @@ fun FieldScreen(
                 FieldView(
                     vehicle = vehicle, line = line, passIndex = result?.passIndex,
                     pendingA = pendingA, trail = trail, implement = implement,
+                    tiles = tiles,
                 )
                 if (vehicle == null) {
                     Text(
