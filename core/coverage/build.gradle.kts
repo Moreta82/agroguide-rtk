@@ -1,5 +1,6 @@
 plugins { alias(libs.plugins.kotlin.jvm) }
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+tasks.withType<Test> { maxHeapSize = "1g" }
 dependencies {
     api(project(":core:geo"))
     api(libs.jts.core)
