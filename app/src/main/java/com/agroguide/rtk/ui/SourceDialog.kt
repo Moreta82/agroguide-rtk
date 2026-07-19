@@ -41,6 +41,7 @@ import com.agroguide.rtk.service.PositionRepository
 fun SourceDialog(
     pairedRtkDevices: List<Pair<String, String>>,   // name to MAC
     activeNtripProfile: NtripProfile?,
+    mockProvider: Boolean = false,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -121,7 +122,7 @@ fun SourceDialog(
                                 v2 = it.ntripV2, uploadGga = it.uploadGga, ggaIntervalS = it.ggaIntervalS,
                             )
                         }
-                        GuidanceService.start(context, mode, btAddress, ntrip)
+                        GuidanceService.start(context, mode, btAddress, ntrip, mockProvider)
                     } else {
                         GuidanceService.stop(context)
                     }

@@ -49,6 +49,7 @@ fun FieldScreen(
     pairedRtkDevices: List<Pair<String, String>>,
     activeNtripProfile: NtripProfile?,
     implementStore: ImplementSettingsStore,
+    mockProvider: Boolean = false,
 ) {
     val scope = rememberCoroutineScope()
     val vehicle by PositionRepository.vehicle.collectAsStateWithLifecycle()
@@ -218,7 +219,7 @@ fun FieldScreen(
     }
 
     if (showSource) {
-        SourceDialog(pairedRtkDevices, activeNtripProfile) { showSource = false }
+        SourceDialog(pairedRtkDevices, activeNtripProfile, mockProvider) { showSource = false }
     }
     pendingRing?.let { ring ->
         var name by remember { mutableStateOf("") }

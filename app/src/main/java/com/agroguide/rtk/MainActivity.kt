@@ -39,13 +39,20 @@ import com.agroguide.rtk.data.db.ParcelEntity
 import com.agroguide.rtk.data.parcel.ParcelCodec
 import com.agroguide.rtk.data.parcel.ParcelGeometry
 import com.agroguide.rtk.geo.TangentPlane
+import com.agroguide.rtk.data.AppSettings
+import com.agroguide.rtk.data.AppSettingsStore
+import com.agroguide.rtk.data.ThemeMode
 import com.agroguide.rtk.ui.FieldScreen
 import com.agroguide.rtk.ui.JobsScreen
 import com.agroguide.rtk.ui.NtripScreen
 import com.agroguide.rtk.ui.ParcelsScreen
 import com.agroguide.rtk.ui.ReceiverScreen
+import com.agroguide.rtk.ui.SettingsScreen
+import com.agroguide.rtk.ui.isBatteryExempt
+import com.agroguide.rtk.ui.requestBatteryExemption
 import com.agroguide.rtk.ui.ringToString
 import com.agroguide.rtk.ui.theme.AgroGuideTheme
+import com.agroguide.rtk.ui.vendorHint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -106,8 +113,22 @@ class MainActivity : ComponentActivity() {
         requestNeededPermissions()
         val store = NtripProfileStore(applicationContext)
         val implementStore = ImplementSettingsStore(applicationContext)
+        val appStore = AppSettingsStore(applicationContext)
         setContent {
-            AgroGuideTheme {
+            val appSettings by appStore.settings.collectAsStateWithLifecycle(initialValue = AppSettings())
+            val night: Boolean? = when (appSettings.themeMode) {
+                ThemeMode.AUTO -> null
+                ThemeMode.DAY -> false
+                ThemeMode.NIGHT -> true
+            }
+            LaunchedEffect(appSettings.keepScreenOn) {
+                if (appSettings.keepScreenOn) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+            }
+            AgroGuideTheme(night = night) {
                 val settings by store.settings.collectAsStateWithLifecycle(initialValue = NtripSettings())
                 LaunchedEffect(Unit) {
                     implementStore.settings.collect {
@@ -128,18 +149,20 @@ class MainActivity : ComponentActivity() {
                 }
                 var tab by remember { mutableIntStateOf(0) }
                 Column(Modifier.fillMaxSize()) {
-                    TabRow(selectedTabIndex = tab) {
+                    androidx.compose.material3.ScrollableTabRow(selectedTabIndex = tab, edgePadding = 0.dp) {
                         Tab(selected = tab == 0, onClick = { tab = 0 }) { TabLabel(R.string.tab_guidance) }
                         Tab(selected = tab == 1, onClick = { tab = 1 }) { TabLabel(R.string.tab_parcels) }
                         Tab(selected = tab == 2, onClick = { tab = 2 }) { TabLabel(R.string.tab_jobs) }
                         Tab(selected = tab == 3, onClick = { tab = 3 }) { TabLabel(R.string.tab_ntrip) }
                         Tab(selected = tab == 4, onClick = { tab = 4 }) { TabLabel(R.string.tab_receiver) }
+                        Tab(selected = tab == 5, onClick = { tab = 5 }) { TabLabel(R.string.tab_settings) }
                     }
                     when (tab) {
                         0 -> FieldScreen(
                             pairedRtkDevices = if (permissionsGranted) pairedRtkDevices() else emptyList(),
                             activeNtripProfile = settings.activeProfile,
                             implementStore = implementStore,
+                            mockProvider = appSettings.mockProvider,
                         )
                         1 -> ParcelsScreen(
                             onImport = { importLauncher.launch(arrayOf("*/*")) },
@@ -147,8 +170,41 @@ class MainActivity : ComponentActivity() {
                         )
                         2 -> JobsScreen()
                         3 -> NtripScreen(settings, store)
-                        else -> ReceiverScreen()
+                        4 -> ReceiverScreen()
+                        else -> SettingsScreen(appSettings, appStore)
                     }
+                }
+
+                // first-run onboarding for aggressive battery managers
+                var showBattery by remember { mutableStateOf(false) }
+                LaunchedEffect(appSettings.batteryDialogShown) {
+                    showBattery = !appSettings.batteryDialogShown && !isBatteryExempt(this@MainActivity)
+                }
+                if (showBattery) {
+                    androidx.compose.material3.AlertDialog(
+                        onDismissRequest = { showBattery = false },
+                        title = { Text(stringResource(R.string.battery_title)) },
+                        text = {
+                            Column {
+                                Text(stringResource(R.string.battery_dialog_text))
+                                vendorHint()?.let {
+                                    Text(it, Modifier.padding(top = 8.dp))
+                                }
+                            }
+                        },
+                        confirmButton = {
+                            androidx.compose.material3.TextButton(onClick = {
+                                requestBatteryExemption(this@MainActivity)
+                                showBattery = false
+                            }) { Text(stringResource(R.string.battery_request)) }
+                        },
+                        dismissButton = {
+                            androidx.compose.material3.TextButton(onClick = {
+                                showBattery = false
+                                lifecycleScope.launch { appStore.update { it.copy(batteryDialogShown = true) } }
+                            }) { Text(stringResource(R.string.battery_dismiss)) }
+                        },
+                    )
                 }
             }
         }

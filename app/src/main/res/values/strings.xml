@@ -129,4 +129,23 @@
     <string name="job_report_pdf">Informe PDF</string>
     <string name="job_report_fail">No se pudo generar el informe</string>
     <string name="share_via">Compartir</string>
+
+    <string name="tab_settings">Ajustes</string>
+    <string name="theme_label">Tema</string>
+    <string name="theme_auto">Automático</string>
+    <string name="theme_day">Día</string>
+    <string name="theme_night">Noche</string>
+    <string name="setting_keep_screen">Mantener pantalla encendida</string>
+    <string name="setting_mock">Salida mock (otras apps)</string>
+    <string name="setting_mock_hint">Requiere seleccionar AgroGuide como app de ubicación simulada en Opciones de desarrollador. Se activa al iniciar la fuente.</string>
+    <string name="battery_title">Optimización de batería</string>
+    <string name="battery_ok">Exenta de optimización ✓</string>
+    <string name="battery_warn">El sistema puede matar el guiado con la pantalla apagada</string>
+    <string name="battery_request">Solicitar exención</string>
+    <string name="battery_dialog_text">Para que el guiado y la grabación del trabajo sigan funcionando con la pantalla apagada, AgroGuide necesita quedar exenta de la optimización de batería.</string>
+    <string name="battery_hint_miui">MIUI/HyperOS: Ajustes → Batería → AgroGuide RTK → Sin restricciones, y bloquea la app en Recientes.</string>
+    <string name="battery_hint_emui">EMUI: Batería → Inicio de aplicaciones → AgroGuide RTK → Gestión manual (las tres opciones activadas).</string>
+    <string name="battery_hint_oneui">One UI: Batería → Límites de uso en segundo plano → asegúrate de que AgroGuide RTK no está en "Aplicaciones inactivas".</string>
+    <string name="battery_dismiss">No volver a mostrar</string>
+    <string name="app_version">AgroGuide RTK %1$s</string>
 </resources>
