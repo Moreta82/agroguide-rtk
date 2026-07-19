@@ -15,6 +15,7 @@ android {
 dependencies {
     api(project(":core:nmea"))
     api(project(":core:geo"))
+    api(project(":core:ntrip"))
     implementation(libs.kotlinx.coroutines.android)
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)
