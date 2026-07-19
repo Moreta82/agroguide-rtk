@@ -43,6 +43,7 @@ class GuidanceService : LifecycleService() {
         activeBt = source as? BtSppPositionSource
         startNtripIfRequested(intent, source)
         startVehicleCollector()
+        JobManager.tryResumeOnStart(applicationContext)
         acquireWakeLock()
         return START_STICKY
     }
@@ -60,7 +61,13 @@ class GuidanceService : LifecycleService() {
                     val work = GuidanceRepository.implement.value.workPoint(
                         com.agroguide.rtk.geo.EnuPoint(state.x, state.y), state.headingDeg,
                     )
-                    CoverageRepository.update(state, work)
+                    // paused job = no painting and no recording
+                    if (!JobManager.isPaused) {
+                        CoverageRepository.update(state, work)
+                        var mask = 0
+                        CoverageRepository.sections.value.forEachIndexed { i, on -> if (on) mask = mask or (1 shl i) }
+                        JobManager.onState(state, work, mask)
+                    }
                 }
             }
         }

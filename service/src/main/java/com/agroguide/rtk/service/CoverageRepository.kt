@@ -61,6 +61,19 @@ object CoverageRepository {
         scope.launch { engine.reset(); publish() }
     }
 
+    /** Rebuild the engine from a job journal (resume-after-restart). */
+    fun replay(
+        data: com.agroguide.rtk.data.journal.JournalData,
+        onDone: (com.agroguide.rtk.data.journal.ReplaySummary) -> Unit,
+    ) {
+        scope.launch {
+            engine.reset()
+            val summary = com.agroguide.rtk.data.journal.JournalReplay.into(data, engine)
+            publish()
+            onDone(summary)
+        }
+    }
+
     /** Called by the service's vehicle collector for every state. */
     fun update(state: VehicleState, workPoint: EnuPoint) {
         val active = _sections.value.toBooleanArray()

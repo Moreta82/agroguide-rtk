@@ -95,4 +95,10 @@ object GuidanceRepository {
     }
 
     fun clearTrail() { _trail.value = emptyList(); lastTrail = null }
+
+    /** Restore the on-screen trail from a replayed job journal. */
+    fun restoreTrail(points: List<EnuPoint>) {
+        _trail.value = points.takeLast(4000)
+        lastTrail = points.lastOrNull()
+    }
 }

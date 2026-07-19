@@ -44,6 +44,20 @@ object PositionRepository {
     @Volatile var sharedEvents: kotlinx.coroutines.flow.SharedFlow<SourceEvent>? = null
         private set
 
+    /** Plane forced by an active job so old and new coverage share one ENU frame. */
+    @Volatile private var pinnedPlane: com.agroguide.rtk.geo.TangentPlane? = null
+    @Volatile private var activePipeline: PositionPipeline? = null
+
+    /** Origin of the ENU frame currently in use (job-pinned or auto-anchored). */
+    val activePlaneOrigin: Pair<Double, Double>?
+        get() = (pinnedPlane ?: activePipeline?.plane)?.let { it.originLatDeg to it.originLonDeg }
+
+    /** Pin (or clear with null) the tangent plane; applies to the live pipeline too. */
+    fun pinPlane(plane: com.agroguide.rtk.geo.TangentPlane?) {
+        pinnedPlane = plane
+        if (plane != null) activePipeline?.plane = plane
+    }
+
     private var scope: CoroutineScope? = null
     private const val RENDER_HZ = 15
 
@@ -63,7 +77,8 @@ object PositionRepository {
             override val name = source.name
             override val events = shared
         }
-        val pipeline = PositionPipeline(sharedSource)
+        val pipeline = PositionPipeline(sharedSource, pinnedPlane)
+        activePipeline = pipeline
         val projector = CvProjector()
         s.launch {
             shared.filterIsInstance<SourceEvent.ConnectionState>().collect { _connection.value = it }
@@ -81,6 +96,7 @@ object PositionRepository {
 
     fun detach() {
         scope?.cancel(); scope = null
+        activePipeline = null
         sharedEvents = null
         _sourceName.value = null
         _connection.value = SourceEvent.ConnectionState(SourceEvent.ConnectionState.State.DISCONNECTED)
