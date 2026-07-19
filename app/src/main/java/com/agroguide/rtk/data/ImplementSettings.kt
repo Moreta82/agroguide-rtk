@@ -15,8 +15,9 @@ data class ImplementSettings(
     val widthM: Double = 6.0,
     val lateralOffsetM: Double = 0.0,
     val longitudinalOffsetM: Double = 0.0,
+    val sections: Int = 1,
 ) {
-    fun toConfig() = ImplementConfig(widthM, lateralOffsetM, longitudinalOffsetM)
+    fun toConfig() = ImplementConfig(widthM, lateralOffsetM, longitudinalOffsetM, sections)
 }
 
 private val Context.implementDataStore by preferencesDataStore("implement")

@@ -28,6 +28,7 @@ fun ImplementDialog(
     var width by remember { mutableStateOf(initial.widthM.toString()) }
     var lateral by remember { mutableStateOf(initial.lateralOffsetM.toString()) }
     var longitudinal by remember { mutableStateOf(initial.longitudinalOffsetM.toString()) }
+    var sections by remember { mutableStateOf(initial.sections.toString()) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -37,6 +38,7 @@ fun ImplementDialog(
                 OutlinedTextField(width, { width = it }, label = { Text(stringResource(R.string.implement_width)) }, singleLine = true)
                 OutlinedTextField(lateral, { lateral = it }, label = { Text(stringResource(R.string.implement_lateral)) }, singleLine = true)
                 OutlinedTextField(longitudinal, { longitudinal = it }, label = { Text(stringResource(R.string.implement_longitudinal)) }, singleLine = true)
+                OutlinedTextField(sections, { sections = it.filter(Char::isDigit) }, label = { Text(stringResource(R.string.sections_label)) }, singleLine = true)
             }
         },
         confirmButton = {
@@ -47,6 +49,7 @@ fun ImplementDialog(
                             widthM = (parseM(width) ?: initial.widthM).coerceIn(0.5, 60.0),
                             lateralOffsetM = (parseM(lateral) ?: initial.lateralOffsetM).coerceIn(-30.0, 30.0),
                             longitudinalOffsetM = (parseM(longitudinal) ?: initial.longitudinalOffsetM).coerceIn(-10.0, 30.0),
+                            sections = (sections.toIntOrNull() ?: initial.sections).coerceIn(1, 16),
                         )
                     )
                 },

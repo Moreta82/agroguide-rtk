@@ -1,6 +1,7 @@
 package com.agroguide.rtk.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,9 +61,12 @@ fun FieldScreen(
     val implement by GuidanceRepository.implement.collectAsStateWithLifecycle()
     val implementSettings by implementStore.settings.collectAsStateWithLifecycle(initialValue = ImplementSettings())
     val tiles by com.agroguide.rtk.service.CoverageRepository.tiles.collectAsStateWithLifecycle()
+    val coverageStats by com.agroguide.rtk.service.CoverageRepository.stats.collectAsStateWithLifecycle()
+    val sectionStates by com.agroguide.rtk.service.CoverageRepository.sections.collectAsStateWithLifecycle()
 
     var showSource by remember { mutableStateOf(false) }
     var showImplement by remember { mutableStateOf(false) }
+    var showResetConfirm by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
         Lightbar(result?.xteM)
@@ -81,6 +85,10 @@ fun FieldScreen(
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }
+                SectionBar(
+                    states = sectionStates,
+                    modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(8.dp),
+                )
             }
             Column(
                 Modifier.width(272.dp).verticalScroll(rememberScrollState()),
@@ -91,6 +99,7 @@ fun FieldScreen(
                     "${stringResource(R.string.label_pass)}: ${result?.passIndex ?: "—"}",
                     fontSize = 18.sp, fontWeight = FontWeight.SemiBold,
                 )
+                CountersStrip(coverageStats)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     ModeChip(R.string.mode_free, mode == GuidanceMode.FREE) { GuidanceRepository.setMode(GuidanceMode.FREE) }
                     ModeChip(R.string.mode_ab, mode == GuidanceMode.AB) { GuidanceRepository.setMode(GuidanceMode.AB) }
@@ -122,12 +131,31 @@ fun FieldScreen(
                 }
                 OutlinedActionButton(stringResource(R.string.implement_button)) { showImplement = true }
                 OutlinedActionButton(stringResource(R.string.source_button)) { showSource = true }
+                OutlinedActionButton(stringResource(R.string.coverage_reset)) { showResetConfirm = true }
             }
         }
     }
 
     if (showSource) {
         SourceDialog(pairedRtkDevices, activeNtripProfile) { showSource = false }
+    }
+    if (showResetConfirm) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showResetConfirm = false },
+            text = { Text(stringResource(R.string.coverage_reset_confirm)) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    com.agroguide.rtk.service.CoverageRepository.reset()
+                    GuidanceRepository.clearTrail()
+                    showResetConfirm = false
+                }) { Text(stringResource(R.string.coverage_reset)) }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { showResetConfirm = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
     }
     if (showImplement) {
         ImplementDialog(
@@ -178,5 +206,62 @@ private fun ActionButton(label: String, enabled: Boolean = true, onClick: () -> 
 private fun OutlinedActionButton(label: String, onClick: () -> Unit) {
     OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth().height(56.dp)) {
         Text(label, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+/** Manual per-section toggles across the implement width (0 = leftmost). */
+@Composable
+private fun SectionBar(states: List<Boolean>, modifier: Modifier = Modifier) {
+    val repo = com.agroguide.rtk.service.CoverageRepository
+    Row(modifier.height(56.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        val allOn = states.all { it }
+        androidx.compose.material3.TextButton(
+            onClick = { repo.setAllSections(!allOn) },
+            modifier = Modifier.height(56.dp),
+        ) { Text(stringResource(R.string.sections_all), color = Color.White) }
+        states.forEachIndexed { i, on ->
+            Box(
+                Modifier
+                    .weight(1f)
+                    .height(56.dp)
+                    .background(
+                        if (on) Color(0xFF2E7D32) else Color(0xFF37474F),
+                        androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
+                    )
+                    .clickable { repo.toggleSection(i) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("${i + 1}", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+/** Live job counters: treated area, overlap area/%, distance. */
+@Composable
+private fun CountersStrip(stats: com.agroguide.rtk.coverage.CoverageStats) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        CounterRow(
+            stringResource(R.string.counters_treated),
+            "%.2f %s".format(stats.treatedM2 / 10_000.0, stringResource(R.string.unit_ha)),
+        )
+        CounterRow(
+            stringResource(R.string.counters_overlap),
+            "%.2f %s (%.1f %%)".format(
+                stats.overlapM2 / 10_000.0, stringResource(R.string.unit_ha), stats.overlapPercent,
+            ),
+        )
+        CounterRow(
+            stringResource(R.string.counters_distance),
+            "%.2f %s".format(stats.distanceM / 1000.0, stringResource(R.string.unit_km)),
+        )
+    }
+}
+
+@Composable
+private fun CounterRow(label: String, value: String) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, fontSize = 16.sp)
+        Text(value, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
     }
 }

@@ -55,7 +55,10 @@ class MainActivity : ComponentActivity() {
             AgroGuideTheme {
                 val settings by store.settings.collectAsStateWithLifecycle(initialValue = NtripSettings())
                 LaunchedEffect(Unit) {
-                    implementStore.settings.collect { GuidanceRepository.setImplement(it.toConfig()) }
+                    implementStore.settings.collect {
+                        GuidanceRepository.setImplement(it.toConfig())
+                        com.agroguide.rtk.service.CoverageRepository.configure(it.widthM, it.sections)
+                    }
                 }
                 var tab by remember { mutableIntStateOf(0) }
                 Column(Modifier.fillMaxSize()) {

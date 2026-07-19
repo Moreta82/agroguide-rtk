@@ -79,4 +79,14 @@
     <string name="implement_button">Apero</string>
     <string name="field_no_position">Sin posición — inicia una fuente</string>
     <string name="label_pass">Pasada</string>
+
+    <string name="sections_label">Secciones</string>
+    <string name="sections_all">todas</string>
+    <string name="counters_treated">Tratado</string>
+    <string name="counters_overlap">Solape</string>
+    <string name="counters_distance">Distancia</string>
+    <string name="coverage_reset">Reiniciar cobertura</string>
+    <string name="coverage_reset_confirm">¿Borrar la cobertura pintada y los contadores?</string>
+    <string name="unit_ha">ha</string>
+    <string name="unit_km">km</string>
 </resources>
