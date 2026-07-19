@@ -27,9 +27,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.LaunchedEffect
+import com.agroguide.rtk.data.ImplementSettingsStore
 import com.agroguide.rtk.data.NtripProfileStore
 import com.agroguide.rtk.data.NtripSettings
-import com.agroguide.rtk.ui.HomeScreen
+import com.agroguide.rtk.service.GuidanceRepository
+import com.agroguide.rtk.ui.FieldScreen
 import com.agroguide.rtk.ui.NtripScreen
 import com.agroguide.rtk.ui.ReceiverScreen
 import com.agroguide.rtk.ui.theme.AgroGuideTheme
@@ -47,9 +50,13 @@ class MainActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         requestNeededPermissions()
         val store = NtripProfileStore(applicationContext)
+        val implementStore = ImplementSettingsStore(applicationContext)
         setContent {
             AgroGuideTheme {
                 val settings by store.settings.collectAsStateWithLifecycle(initialValue = NtripSettings())
+                LaunchedEffect(Unit) {
+                    implementStore.settings.collect { GuidanceRepository.setImplement(it.toConfig()) }
+                }
                 var tab by remember { mutableIntStateOf(0) }
                 Column(Modifier.fillMaxSize()) {
                     TabRow(selectedTabIndex = tab) {
@@ -58,9 +65,10 @@ class MainActivity : ComponentActivity() {
                         Tab(selected = tab == 2, onClick = { tab = 2 }) { TabLabel(R.string.tab_receiver) }
                     }
                     when (tab) {
-                        0 -> HomeScreen(
+                        0 -> FieldScreen(
                             pairedRtkDevices = if (permissionsGranted) pairedRtkDevices() else emptyList(),
                             activeNtripProfile = settings.activeProfile,
+                            implementStore = implementStore,
                         )
                         1 -> NtripScreen(settings, store)
                         else -> ReceiverScreen()
