@@ -164,6 +164,8 @@ class MainActivity : ComponentActivity() {
                             activeNtripProfile = settings.activeProfile,
                             implementStore = implementStore,
                             mockProvider = appSettings.mockProvider,
+                            basemap = com.agroguide.rtk.map.MapProvider.fromId(appSettings.basemap),
+                            basemapApiKey = appSettings.googleMapsApiKey.ifBlank { null },
                         )
                         1 -> ParcelsScreen(
                             onImport = { importLauncher.launch(arrayOf("*/*")) },

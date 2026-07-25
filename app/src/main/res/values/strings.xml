@@ -152,4 +152,18 @@
     <string name="source_badge_demo">DEMO · SIMULADO</string>
     <string name="source_badge_none">SIN FUENTE</string>
     <string name="source_badge_android">Ubicación Android</string>
+
+    <string name="basemap_label">Mapa de fondo</string>
+    <string name="basemap_none">Ninguno (solo cuadrícula)</string>
+    <string name="basemap_osm">Callejero OpenStreetMap (libre)</string>
+    <string name="basemap_esri">Satélite Esri (libre)</string>
+    <string name="basemap_google">Google Maps satélite (requiere clave)</string>
+    <string name="basemap_google_key">Clave API de Google Maps</string>
+    <string name="basemap_google_hint">Crea una clave en Google Cloud con la API «Map Tiles» activada y facturación habilitada. Sin clave, esta opción no muestra nada.</string>
+    <string name="basemap_hint">Las teselas se guardan en el móvil: la zona que veas o descargues seguirá disponible sin cobertura.</string>
+    <string name="basemap_download">Descargar zona visible</string>
+    <string name="basemap_downloading">Descargando %1$d teselas…</string>
+    <string name="basemap_cache">Caché de mapas: %1$s MB</string>
+    <string name="basemap_clear">Borrar caché de mapas</string>
+    <string name="basemap_need_position">Necesitas posición para descargar la zona</string>
 </resources>

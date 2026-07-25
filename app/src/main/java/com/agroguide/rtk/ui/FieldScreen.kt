@@ -50,6 +50,8 @@ fun FieldScreen(
     activeNtripProfile: NtripProfile?,
     implementStore: ImplementSettingsStore,
     mockProvider: Boolean = false,
+    basemap: com.agroguide.rtk.map.MapProvider = com.agroguide.rtk.map.MapProvider.NONE,
+    basemapApiKey: String? = null,
 ) {
     val scope = rememberCoroutineScope()
     val vehicle by PositionRepository.vehicle.collectAsStateWithLifecycle()
@@ -117,6 +119,9 @@ fun FieldScreen(
                     onTapWorld = if (draftMode == ParcelDraft.Mode.TAP) {
                         { p -> ParcelDraft.addPoint(p) }
                     } else null,
+                    basemap = basemap,
+                    basemapApiKey = basemapApiKey,
+                    plane = PositionRepository.activePlane,
                 )
                 SourceBadge(Modifier.align(Alignment.TopEnd).padding(8.dp))
                 activeJob?.let { job ->

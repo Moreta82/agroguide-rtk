@@ -15,14 +15,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import android.widget.Toast
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.agroguide.rtk.geo.tiles.WebMercator
+import com.agroguide.rtk.map.MapProvider
+import com.agroguide.rtk.map.TileCache
+import com.agroguide.rtk.service.PositionRepository
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -89,6 +101,74 @@ fun SettingsScreen(settings: AppSettings, store: AppSettingsStore) {
         }
         Text(stringResource(R.string.setting_mock_hint), style = MaterialTheme.typography.bodySmall)
 
+        Text(stringResource(R.string.basemap_label), style = MaterialTheme.typography.titleMedium)
+        BasemapOption(R.string.basemap_none, MapProvider.NONE, settings.basemap) { p ->
+            scope.launch { store.update { it.copy(basemap = p.id) } }
+        }
+        BasemapOption(R.string.basemap_osm, MapProvider.OSM, settings.basemap) { p ->
+            scope.launch { store.update { it.copy(basemap = p.id) } }
+        }
+        BasemapOption(R.string.basemap_esri, MapProvider.ESRI_SATELLITE, settings.basemap) { p ->
+            scope.launch { store.update { it.copy(basemap = p.id) } }
+        }
+        BasemapOption(R.string.basemap_google, MapProvider.GOOGLE_SATELLITE, settings.basemap) { p ->
+            scope.launch { store.update { it.copy(basemap = p.id) } }
+        }
+        if (MapProvider.fromId(settings.basemap) == MapProvider.GOOGLE_SATELLITE) {
+            var key by remember(settings.googleMapsApiKey) { mutableStateOf(settings.googleMapsApiKey) }
+            OutlinedTextField(
+                value = key,
+                onValueChange = { key = it },
+                label = { Text(stringResource(R.string.basemap_google_key)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Button(
+                onClick = { scope.launch { store.update { it.copy(googleMapsApiKey = key.trim()) } } },
+                modifier = Modifier.height(48.dp),
+            ) { Text(stringResource(R.string.save)) }
+            Text(stringResource(R.string.basemap_google_hint), style = MaterialTheme.typography.bodySmall)
+        }
+        if (MapProvider.fromId(settings.basemap) != MapProvider.NONE) {
+            Text(stringResource(R.string.basemap_hint), style = MaterialTheme.typography.bodySmall)
+            val downloading by TileCache.downloading.collectAsStateWithLifecycle()
+            if (downloading > 0) {
+                Text(stringResource(R.string.basemap_downloading, downloading))
+            }
+            var cacheMb by remember { mutableStateOf(0L) }
+            LaunchedEffect(downloading) {
+                cacheMb = TileCache.cacheSizeBytes(context) / (1024 * 1024)
+            }
+            Text(stringResource(R.string.basemap_cache, cacheMb.toString()))
+            Button(
+                onClick = {
+                    val plane = PositionRepository.activePlane
+                    val v = PositionRepository.vehicle.value
+                    if (plane == null || v == null) {
+                        Toast.makeText(context, R.string.basemap_need_position, Toast.LENGTH_LONG).show()
+                    } else {
+                        // ~1 km around the tractor, at the three most useful zooms
+                        val provider = MapProvider.fromId(settings.basemap)
+                        val half = 1000.0
+                        val c = listOf(
+                            plane.toGeo(v.x - half, v.y - half), plane.toGeo(v.x + half, v.y + half),
+                        )
+                        val minLat = c.minOf { it.first }; val maxLat = c.maxOf { it.first }
+                        val minLon = c.minOf { it.second }; val maxLon = c.maxOf { it.second }
+                        val tiles = (16..provider.maxZoom.coerceAtMost(18)).flatMap { z ->
+                            WebMercator.tilesForBounds(minLat, maxLat, minLon, maxLon, z, maxTiles = 200)
+                        }
+                        TileCache.prefetch(context, provider, tiles, settings.googleMapsApiKey.ifBlank { null })
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+            ) { Text(stringResource(R.string.basemap_download)) }
+            OutlinedButton(
+                onClick = { TileCache.clear(context) },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+            ) { Text(stringResource(R.string.basemap_clear)) }
+        }
+
         Text(stringResource(R.string.battery_title), style = MaterialTheme.typography.titleMedium)
         if (exempt) {
             Text(stringResource(R.string.battery_ok), color = Color(0xFF2E7D32))
@@ -105,6 +185,25 @@ fun SettingsScreen(settings: AppSettings, store: AppSettingsStore) {
             stringResource(R.string.app_version, "0.6.0-phase6"),
             style = MaterialTheme.typography.bodySmall,
         )
+    }
+}
+
+@Composable
+private fun BasemapOption(
+    labelRes: Int,
+    provider: MapProvider,
+    currentId: String,
+    onSelect: (MapProvider) -> Unit,
+) {
+    Row(
+        Modifier.fillMaxWidth().height(48.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(
+            selected = MapProvider.fromId(currentId) == provider,
+            onClick = { onSelect(provider) },
+        )
+        Text(stringResource(labelRes))
     }
 }
 

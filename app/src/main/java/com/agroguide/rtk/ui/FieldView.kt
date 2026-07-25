@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.agroguide.rtk.coverage.TileKey
 import com.agroguide.rtk.coverage.TileSnapshot
 import com.agroguide.rtk.geo.EnuPoint
@@ -50,12 +51,19 @@ fun FieldView(
     parcelRing: List<EnuPoint>? = null,
     draftRing: List<EnuPoint> = emptyList(),
     onTapWorld: ((EnuPoint) -> Unit)? = null,
+    basemap: com.agroguide.rtk.map.MapProvider = com.agroguide.rtk.map.MapProvider.NONE,
+    basemapApiKey: String? = null,
+    plane: com.agroguide.rtk.geo.TangentPlane? = null,
+    onScaleChange: (Float) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var scale by remember { mutableFloatStateOf(4f) }        // px per meter
     var headingUp by remember { mutableStateOf(true) }
     val tapHandler by androidx.compose.runtime.rememberUpdatedState(onTapWorld)
     val vehicleNow by androidx.compose.runtime.rememberUpdatedState(vehicle)
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    // recomposes the canvas as tiles arrive from disk/network
+    val tileVersion by com.agroguide.rtk.map.TileCache.version.collectAsStateWithLifecycle()
     // world-space Paths per tile, rebuilt only when the tile version changes
     val tilePathCache = remember { mutableMapOf<TileKey, TilePaths>() }
     tilePathCache.keys.retainAll(tiles.keys)
@@ -69,7 +77,10 @@ fun FieldView(
         modifier
             .fillMaxSize()
             .pointerInput(Unit) {
-                detectTransformGestures { _, _, zoom, _ -> scale = (scale * zoom).coerceIn(0.5f, 30f) }
+                detectTransformGestures { _, _, zoom, _ ->
+                    scale = (scale * zoom).coerceIn(0.5f, 30f)
+                    onScaleChange(scale)
+                }
             }
             .pointerInput(Unit) {
                 detectTapGestures(
@@ -105,8 +116,20 @@ fun FieldView(
 
         val extent = (max(size.width, size.height) / scale).toDouble() + 20.0
 
+        // basemap tiles first, so everything else paints on top of them
+        if (basemap != com.agroguide.rtk.map.MapProvider.NONE && plane != null) {
+            drawBasemap(
+                basemap, basemapApiKey, plane, ctx, v, extent, scale, camHeading, ::project,
+                tileVersion,
+            )
+        }
+
         // world-aligned 10 m grid
-        val gridColor = Color(0x2200FF00)
+        val gridColor = if (basemap == com.agroguide.rtk.map.MapProvider.NONE) {
+            Color(0x2200FF00)
+        } else {
+            Color(0x18FFFFFF)   // subtler over imagery
+        }
         var gx = floor((v.x - extent) / 10.0) * 10.0
         while (gx <= v.x + extent) {
             drawLine(gridColor, project(gx, v.y - extent), project(gx, v.y + extent), 1f)
@@ -222,6 +245,62 @@ fun FieldView(
         }
         tr.close()
         drawPath(tr, Color(0xFFFFC107))
+    }
+}
+
+/**
+ * Draws basemap tiles under the guidance overlay.
+ *
+ * Each Web Mercator tile is axis-aligned in the local ENU frame at field
+ * scale, so it is drawn as an image placed at its north-west corner, rotated
+ * by the camera heading and scaled to its ground size — the same mapping
+ * `project()` applies to every other layer.
+ */
+private fun DrawScope.drawBasemap(
+    provider: com.agroguide.rtk.map.MapProvider,
+    apiKey: String?,
+    plane: com.agroguide.rtk.geo.TangentPlane,
+    context: android.content.Context,
+    v: VehicleState,
+    extentM: Double,
+    scale: Float,
+    camHeadingDeg: Double,
+    project: (Double, Double) -> Offset,
+    @Suppress("UNUSED_PARAMETER") tileVersion: Int,
+) {
+    val corners = listOf(
+        plane.toGeo(v.x - extentM, v.y - extentM), plane.toGeo(v.x + extentM, v.y - extentM),
+        plane.toGeo(v.x - extentM, v.y + extentM), plane.toGeo(v.x + extentM, v.y + extentM),
+    )
+    val minLat = corners.minOf { it.first }; val maxLat = corners.maxOf { it.first }
+    val minLon = corners.minOf { it.second }; val maxLon = corners.maxOf { it.second }
+    val z = com.agroguide.rtk.geo.tiles.WebMercator
+        .zoomForScale(scale.toDouble(), v.latDeg)
+        .coerceAtMost(provider.maxZoom)
+    val tiles = com.agroguide.rtk.geo.tiles.WebMercator
+        .tilesForBounds(minLat, maxLat, minLon, maxLon, z, maxTiles = 48)
+
+    for (t in tiles) {
+        val image = com.agroguide.rtk.map.TileCache.get(context, provider, t, apiKey) ?: continue
+        val (nwLat, nwLon) = com.agroguide.rtk.geo.tiles.WebMercator.tileNorthWest(t.x, t.y, z)
+        val (seLat, seLon) = com.agroguide.rtk.geo.tiles.WebMercator.tileNorthWest(t.x + 1, t.y + 1, z)
+        val nw = plane.toEnu(nwLat, nwLon)
+        val se = plane.toEnu(seLat, seLon)
+        val wM = (se.x - nw.x).toFloat()
+        val hM = (nw.y - se.y).toFloat()
+        if (wM <= 0f || hM <= 0f) continue
+        val origin = project(nw.x, nw.y)
+        withTransform({
+            translate(origin.x, origin.y)
+            rotate(degrees = -camHeadingDeg.toFloat(), pivot = Offset.Zero)
+            scale(
+                wM * scale / image.width,
+                hM * scale / image.height,
+                pivot = Offset.Zero,
+            )
+        }) {
+            drawImage(image, Offset.Zero)
+        }
     }
 }
 

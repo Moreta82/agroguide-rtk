@@ -18,6 +18,8 @@ data class AppSettings(
     val keepScreenOn: Boolean = true,
     val mockProvider: Boolean = false,
     val batteryDialogShown: Boolean = false,
+    val basemap: String = "none",            // MapProvider id
+    val googleMapsApiKey: String = "",
 ) {
     val themeMode: ThemeMode get() = runCatching { ThemeMode.valueOf(theme) }.getOrDefault(ThemeMode.AUTO)
 }
