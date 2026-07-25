@@ -182,7 +182,7 @@ fun SettingsScreen(settings: AppSettings, store: AppSettingsStore) {
         }
 
         Text(
-            stringResource(R.string.app_version, "0.6.0-phase6"),
+            stringResource(R.string.app_version, com.agroguide.rtk.BuildConfig.VERSION_NAME),
             style = MaterialTheme.typography.bodySmall,
         )
     }
