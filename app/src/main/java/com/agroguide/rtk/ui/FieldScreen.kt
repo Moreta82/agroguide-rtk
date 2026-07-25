@@ -118,6 +118,7 @@ fun FieldScreen(
                         { p -> ParcelDraft.addPoint(p) }
                     } else null,
                 )
+                SourceBadge(Modifier.align(Alignment.TopEnd).padding(8.dp))
                 activeJob?.let { job ->
                     val activeState = job.state == com.agroguide.rtk.service.JobManager.STATE_ACTIVE
                     Text(
@@ -286,6 +287,38 @@ fun FieldScreen(
             onDismiss = { showImplement = false },
         )
     }
+}
+
+/**
+ * Always-visible indicator of WHICH source is feeding the screen. Demo is
+ * flagged in orange so a simulated tractor can never be mistaken for a real
+ * receiver; Bluetooth shows the actual device name reported on connect.
+ */
+@Composable
+private fun SourceBadge(modifier: Modifier = Modifier) {
+    val source by PositionRepository.sourceName.collectAsStateWithLifecycle()
+    val connection by PositionRepository.connection.collectAsStateWithLifecycle()
+    val (label, color) = when (source) {
+        null -> stringResource(R.string.source_badge_none) to Color(0xCC424242)
+        "Demo" -> stringResource(R.string.source_badge_demo) to Color(0xCCEF6C00)
+        "Android" -> stringResource(R.string.source_badge_android) to Color(0xCC1565C0)
+        else -> {
+            val name = connection.detail?.takeIf {
+                connection.state == com.agroguide.rtk.device.SourceEvent.ConnectionState.State.CONNECTED
+            }
+            (name ?: stringResource(R.string.source_bt)) to
+                if (name != null) Color(0xCC2E7D32) else Color(0xCCC62828)
+        }
+    }
+    Text(
+        label,
+        modifier
+            .background(color, androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        color = Color.White,
+        fontWeight = FontWeight.Bold,
+        fontSize = 14.sp,
+    )
 }
 
 /** Compact quality chip + sats + speed, reusing FixPanel color/label mapping. */

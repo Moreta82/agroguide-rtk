@@ -63,7 +63,8 @@ class MainActivity : ComponentActivity() {
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-            permissionsGranted = it.values.all { granted -> granted }
+            // Bluetooth listing must not depend on unrelated grants (notifications).
+            permissionsGranted = hasBluetoothPermission()
         }
 
     private val importLauncher =
@@ -213,24 +214,40 @@ class MainActivity : ComponentActivity() {
     private fun requestNeededPermissions() {
         val wanted = buildList {
             add(Manifest.permission.ACCESS_FINE_LOCATION)
-            if (Build.VERSION.SDK_INT >= 31) add(Manifest.permission.BLUETOOTH_CONNECT)
+            if (Build.VERSION.SDK_INT >= 31) {
+                add(Manifest.permission.BLUETOOTH_CONNECT)
+                add(Manifest.permission.BLUETOOTH_SCAN)
+            }
             if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.POST_NOTIFICATIONS)
         }
         val missing = wanted.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
-        if (missing.isEmpty()) permissionsGranted = true
-        else permissionLauncher.launch(missing.toTypedArray())
+        permissionsGranted = hasBluetoothPermission()
+        if (missing.isNotEmpty()) permissionLauncher.launch(missing.toTypedArray())
     }
 
-    /** Paired devices whose name starts with RTK_GNSS (ArduSimple kit naming). */
+    /**
+     * Listing paired receivers only needs BLUETOOTH_CONNECT — denying
+     * notifications must not hide the receiver list.
+     */
+    private fun hasBluetoothPermission(): Boolean =
+        Build.VERSION.SDK_INT < 31 ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) ==
+            PackageManager.PERMISSION_GRANTED
+
+    /**
+     * All paired devices, RTK receivers first. Filtering strictly by the
+     * RTK_GNSS prefix hid receivers renamed by the user or shipped with a
+     * different name, so the list is complete and merely ordered.
+     */
     @SuppressLint("MissingPermission")
     private fun pairedRtkDevices(): List<Pair<String, String>> {
         val adapter = (getSystemService(BLUETOOTH_SERVICE) as BluetoothManager).adapter ?: return emptyList()
         return try {
             adapter.bondedDevices
-                .filter { (it.name ?: "").startsWith("RTK_GNSS", ignoreCase = true) }
                 .map { (it.name ?: it.address) to it.address }
+                .sortedByDescending { it.first.startsWith("RTK", ignoreCase = true) }
         } catch (_: SecurityException) { emptyList() }
     }
 }

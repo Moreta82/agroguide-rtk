@@ -31,22 +31,32 @@ class GuidanceService : LifecycleService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         startAsForeground()
-        val source: PositionSource = when (intent?.getStringExtra(EXTRA_MODE)) {
+        // A null intent means the system restarted us (START_STICKY): resume the
+        // SAME source the user chose. Demo is never a fallback — it only runs
+        // when explicitly requested.
+        val effective = intent ?: LastSourceConfig.restore(this)
+        if (effective == null) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
+        val source: PositionSource = when (effective.getStringExtra(EXTRA_MODE)) {
             MODE_BT -> {
-                val address = intent.getStringExtra(EXTRA_BT_ADDRESS)
+                val address = effective.getStringExtra(EXTRA_BT_ADDRESS)
                 if (address == null) { stopSelf(); return START_NOT_STICKY }
                 BtSppPositionSource(address)
             }
             MODE_ANDROID -> AndroidLocationSource(this)
-            else -> DemoPositionSource()
+            MODE_DEMO -> DemoPositionSource()
+            else -> { stopSelf(); return START_NOT_STICKY }
         }
+        if (intent != null) LastSourceConfig.save(this, intent)
         PositionRepository.attach(source) { SystemClock.elapsedRealtime() }
         activeBt = source as? BtSppPositionSource
-        startNtripIfRequested(intent, source)
+        startNtripIfRequested(effective, source)
         // mock output: never in Android-location mode (feedback loop)
         mockPublisher?.stop(); mockPublisher = null
-        if (intent?.getBooleanExtra(EXTRA_MOCK, false) == true &&
-            intent.getStringExtra(EXTRA_MODE) != MODE_ANDROID
+        if (effective.getBooleanExtra(EXTRA_MOCK, false) &&
+            effective.getStringExtra(EXTRA_MODE) != MODE_ANDROID
         ) {
             mockPublisher = com.agroguide.rtk.device.MockLocationPublisher(this)
                 .takeIf { it.start() }
@@ -133,14 +143,22 @@ class GuidanceService : LifecycleService() {
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .setOngoing(true)
             .build()
-        if (Build.VERSION.SDK_INT >= 29) {
-            startForeground(
-                NOTIF_ID, notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION or
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
-            )
-        } else {
-            startForeground(NOTIF_ID, notification)
+        // On API 34+ a typed foreground service throws when the matching
+        // runtime permission is missing; fall back to an untyped service so
+        // the app degrades instead of crashing.
+        try {
+            if (Build.VERSION.SDK_INT >= 29) {
+                startForeground(
+                    NOTIF_ID, notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION or
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+                )
+            } else {
+                startForeground(NOTIF_ID, notification)
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("GuidanceService", "typed foreground failed", e)
+            try { startForeground(NOTIF_ID, notification) } catch (_: Exception) {}
         }
     }
 

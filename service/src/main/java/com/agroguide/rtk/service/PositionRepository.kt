@@ -72,7 +72,16 @@ object PositionRepository {
      */
     fun attach(source: PositionSource, nowMs: () -> Long) {
         detach()
-        val s = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        // Safety net: a source that throws (permission revoked, vendor BT stack
+        // quirk) must degrade to an ERROR banner, never take down the process.
+        val handler = kotlinx.coroutines.CoroutineExceptionHandler { _, e ->
+            android.util.Log.e("PositionRepository", "source failed", e)
+            _connection.value = SourceEvent.ConnectionState(
+                SourceEvent.ConnectionState.State.ERROR,
+                e.message ?: e.javaClass.simpleName,
+            )
+        }
+        val s = CoroutineScope(SupervisorJob() + Dispatchers.Default + handler)
         scope = s
         _sourceName.value = source.name
         val shared = source.events.shareIn(s, SharingStarted.Eagerly)

@@ -1,3 +1,10 @@
 <resources>
-    <style name="Theme.AgroGuide" parent="android:Theme.Material.NoActionBar.Fullscreen" />
+    <!--
+      Dark base: the window background shows through wherever Compose does not
+      paint, and the app is designed for a dark, high-contrast cabin display.
+      Compose paints its own Surface on top (see AgroGuideTheme).
+    -->
+    <style name="Theme.AgroGuide" parent="android:Theme.Material.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
 </resources>

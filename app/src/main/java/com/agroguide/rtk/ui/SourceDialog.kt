@@ -48,8 +48,27 @@ fun SourceDialog(
     val connection by PositionRepository.connection.collectAsStateWithLifecycle()
     val active by PositionRepository.sourceName.collectAsStateWithLifecycle()
     val ntripStats by PositionRepository.ntrip.collectAsStateWithLifecycle()
-    var mode by remember { mutableStateOf(GuidanceService.MODE_DEMO) }
-    var btAddress by remember { mutableStateOf(pairedRtkDevices.firstOrNull()?.second) }
+    // Never preselect demo: use what is running, else the last explicit choice,
+    // else Bluetooth when a receiver is paired.
+    var mode by remember {
+        mutableStateOf(
+            when (PositionRepository.sourceName.value) {
+                "BT-SPP" -> GuidanceService.MODE_BT
+                "Android" -> GuidanceService.MODE_ANDROID
+                "Demo" -> GuidanceService.MODE_DEMO
+                else -> com.agroguide.rtk.service.LastSourceConfig.lastMode(context)
+                    ?: if (pairedRtkDevices.isNotEmpty()) GuidanceService.MODE_BT
+                    else GuidanceService.MODE_ANDROID
+            }
+        )
+    }
+    var btAddress by remember {
+        mutableStateOf(
+            com.agroguide.rtk.service.LastSourceConfig.lastBtAddress(context)
+                ?.takeIf { addr -> pairedRtkDevices.any { it.second == addr } }
+                ?: pairedRtkDevices.firstOrNull()?.second
+        )
+    }
     var ntripEnabled by remember { mutableStateOf(true) }
 
     AlertDialog(

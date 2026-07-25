@@ -2,12 +2,14 @@ package com.agroguide.rtk.device.bt
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.os.SystemClock
 import com.agroguide.rtk.device.PositionSource
 import com.agroguide.rtk.device.SourceEvent
 import com.agroguide.rtk.device.SourceEvent.ConnectionState.State
 import com.agroguide.rtk.nmea.NmeaLineAssembler
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.delay
@@ -52,22 +54,58 @@ class BtSppPositionSource(
             var socket: BluetoothSocket? = null
             try {
                 val device = adapter.getRemoteDevice(deviceAddress)
-                adapter.cancelDiscovery()
-                socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
-                socket.connect()
+                // Optimization only, and it needs BLUETOOTH_SCAN on API 31+:
+                // never let a missing permission take down the session.
+                try { adapter.cancelDiscovery() } catch (_: SecurityException) {}
+                socket = connectSocket(device)
                 output = socket.outputStream
-                send(SourceEvent.ConnectionState(State.CONNECTED, deviceAddress))
+                send(SourceEvent.ConnectionState(State.CONNECTED, deviceLabel()))
                 policy.reset()
                 readUntilStale(socket)
-            } catch (e: IOException) {
-                send(SourceEvent.ConnectionState(State.ERROR, e.message))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // IOException (peer refused/off), SecurityException (permission
+                // revoked), IllegalArgumentException (bad MAC)... a failed
+                // connection must surface in the UI, never crash the app.
+                send(SourceEvent.ConnectionState(State.ERROR, e.message ?: e.javaClass.simpleName))
             } finally {
                 output = null
-                try { socket?.close() } catch (_: IOException) {}
+                try { socket?.close() } catch (_: Exception) {}
             }
             if (!isActive) break
             send(SourceEvent.ConnectionState(State.DISCONNECTED))
             delay(policy.nextDelayMs())
+        }
+    }
+
+    private fun deviceLabel(): String = try {
+        BluetoothAdapter.getDefaultAdapter()?.getRemoteDevice(deviceAddress)?.name ?: deviceAddress
+    } catch (_: Exception) {
+        deviceAddress
+    }
+
+    /**
+     * Opens the RFCOMM channel. The standard SDP lookup fails on some SPP
+     * modules and on a few vendor stacks; the reflective channel-1 fallback is
+     * the well-known workaround, tried only after the normal path fails.
+     */
+    private fun connectSocket(device: BluetoothDevice): BluetoothSocket {
+        val primary = device.createRfcommSocketToServiceRecord(SPP_UUID)
+        try {
+            primary.connect()
+            return primary
+        } catch (e: IOException) {
+            try { primary.close() } catch (_: IOException) {}
+            val fallback = try {
+                @Suppress("UNCHECKED_CAST")
+                val m = device.javaClass.getMethod("createRfcommSocket", Int::class.javaPrimitiveType)
+                m.invoke(device, 1) as BluetoothSocket
+            } catch (_: Exception) {
+                throw e   // no fallback available: report the original failure
+            }
+            fallback.connect()
+            return fallback
         }
     }
 

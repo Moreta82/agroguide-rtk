@@ -13,7 +13,8 @@ enum class ThemeMode { AUTO, DAY, NIGHT }
 
 @Serializable
 data class AppSettings(
-    val theme: String = "AUTO",              // ThemeMode name
+    // Night by default: high-contrast light text, matching the field view.
+    val theme: String = "NIGHT",             // ThemeMode name
     val keepScreenOn: Boolean = true,
     val mockProvider: Boolean = false,
     val batteryDialogShown: Boolean = false,

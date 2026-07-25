@@ -148,4 +148,8 @@
     <string name="battery_hint_oneui">One UI: Batería → Límites de uso en segundo plano → asegúrate de que AgroGuide RTK no está en "Aplicaciones inactivas".</string>
     <string name="battery_dismiss">No volver a mostrar</string>
     <string name="app_version">AgroGuide RTK %1$s</string>
+
+    <string name="source_badge_demo">DEMO · SIMULADO</string>
+    <string name="source_badge_none">SIN FUENTE</string>
+    <string name="source_badge_android">Ubicación Android</string>
 </resources>
