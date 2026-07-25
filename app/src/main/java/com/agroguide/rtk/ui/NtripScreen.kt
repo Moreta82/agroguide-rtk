@@ -141,12 +141,19 @@ private fun ProfileDialog(
     var fetchError by remember { mutableStateOf<String?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
 
+    // Cap the scrollable body to a fraction of the actual screen so every field
+    // is reachable on short/landscape displays; a fixed 420 dp cut the last
+    // fields off and left the scroll unable to reach them.
+    val screenHeight = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.heightIn(max = screenHeight * 0.92f),
         title = { Text(if (onDelete == null) stringResource(R.string.ntrip_new_profile) else name) },
         text = {
             Column(
-                Modifier.verticalScroll(rememberScrollState()).heightIn(max = 420.dp),
+                Modifier
+                    .heightIn(max = screenHeight * 0.6f)
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ntrip_name)) }, singleLine = true)
@@ -207,7 +214,7 @@ private fun ProfileDialog(
             onDismissRequest = { browsing = false },
             title = { Text(stringResource(R.string.ntrip_browse)) },
             text = {
-                LazyColumn(Modifier.heightIn(max = 420.dp)) {
+                LazyColumn(Modifier.heightIn(max = screenHeight * 0.6f)) {
                     items(mounts!!, key = { it.mountPoint }) { m ->
                         Row(
                             Modifier.fillMaxWidth().height(56.dp)

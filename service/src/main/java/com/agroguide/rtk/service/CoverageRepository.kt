@@ -29,7 +29,11 @@ object CoverageRepository {
         Executors.newSingleThreadExecutor { r ->
             Thread(r, "coverage").apply { isDaemon = true }
         }.asCoroutineDispatcher()
-    private val scope = CoroutineScope(SupervisorJob() + mutationDispatcher)
+    // Coverage geometry must never take the app down: log and keep going.
+    private val errorHandler = kotlinx.coroutines.CoroutineExceptionHandler { _, e ->
+        android.util.Log.e("CoverageRepository", "coverage update failed", e)
+    }
+    private val scope = CoroutineScope(SupervisorJob() + mutationDispatcher + errorHandler)
 
     private val _stats = MutableStateFlow(CoverageStats())
     val stats: StateFlow<CoverageStats> = _stats.asStateFlow()

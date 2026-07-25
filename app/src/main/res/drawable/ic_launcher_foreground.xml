@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Side view of an agricultural tractor in the classic green/yellow farm-machinery
+  livery. Deliberately a generic drawing: no manufacturer logo, wordmark or
+  emblem is used, so the icon carries no third-party trademark.
+  Adaptive-icon canvas is 108x108 with the inner 72x72 as the safe zone.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- rear wheel tyre -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M18,72 a20,20 0 1,1 40,0 a20,20 0 1,1 -40,0 z" />
+    <!-- rear wheel rim -->
+    <path
+        android:fillColor="#F5C518"
+        android:pathData="M27,72 a11,11 0 1,1 22,0 a11,11 0 1,1 -22,0 z" />
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M34,72 a4,4 0 1,1 8,0 a4,4 0 1,1 -8,0 z" />
+
+    <!-- front wheel tyre -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M64,80 a12,12 0 1,1 24,0 a12,12 0 1,1 -24,0 z" />
+    <!-- front wheel rim -->
+    <path
+        android:fillColor="#F5C518"
+        android:pathData="M70,80 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0 z" />
+
+    <!-- chassis -->
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M30,62 L86,62 L86,74 L30,74 z" />
+    <!-- engine hood -->
+    <path
+        android:fillColor="#357A38"
+        android:pathData="M58,44 L84,44 A4,4 0 0,1 88,48 L88,64 L58,64 z" />
+    <!-- grille -->
+    <path
+        android:fillColor="#F5C518"
+        android:pathData="M84,50 L88,50 L88,62 L84,62 z" />
+    <!-- cab body -->
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M28,34 L58,34 L58,64 L28,64 z" />
+    <!-- cab window -->
+    <path
+        android:fillColor="#BFE6F5"
+        android:pathData="M33,39 L53,39 L53,53 L33,53 z" />
+    <!-- cab roof -->
+    <path
+        android:fillColor="#F5C518"
+        android:pathData="M24,29 L62,29 L62,35 L24,35 z" />
+    <!-- exhaust stack -->
+    <path
+        android:fillColor="#4A4A4A"
+        android:pathData="M63,20 L69,20 L69,45 L63,45 z" />
+</vector>

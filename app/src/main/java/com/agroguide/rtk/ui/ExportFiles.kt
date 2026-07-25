@@ -5,17 +5,18 @@ import android.content.Intent
 import androidx.core.content.FileProvider
 import java.io.File
 
-/** Writes an export file to app-external storage and opens the share sheet. */
+/** Writes an export file and opens the share sheet. */
 object ExportFiles {
+    private const val AUTHORITY = "com.agroguide.rtk.files"
+
     fun writeAndShare(context: Context, fileName: String, mime: String, content: ByteArray) {
-        val dir = File(context.getExternalFilesDir(null), "export").apply { mkdirs() }
-        val file = File(dir, fileName)
+        val file = File(exportDir(context), fileName)
         file.writeBytes(content)
         share(context, file, mime)
     }
 
     fun share(context: Context, file: File, mime: String) {
-        val uri = FileProvider.getUriForFile(context, "com.agroguide.rtk.files", file)
+        val uri = FileProvider.getUriForFile(context, AUTHORITY, file)
         val intent = Intent(Intent.ACTION_SEND)
             .setType(mime)
             .putExtra(Intent.EXTRA_STREAM, uri)
@@ -26,5 +27,16 @@ object ExportFiles {
         )
     }
 
-    fun exportDir(context: Context): File = File(context.getExternalFilesDir(null), "export").apply { mkdirs() }
+    /**
+     * Export directory. External app storage is preferred (easy to reach from a
+     * PC), but it is unavailable while the device is in some USB modes or when
+     * the volume is not mounted — fall back to internal storage, which is also
+     * declared in the FileProvider paths.
+     */
+    fun exportDir(context: Context): File {
+        val external = context.getExternalFilesDir(null)
+        val dir = if (external != null) File(external, "export") else File(context.filesDir, "export")
+        dir.mkdirs()
+        return dir
+    }
 }

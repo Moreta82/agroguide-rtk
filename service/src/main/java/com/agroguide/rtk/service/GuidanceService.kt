@@ -11,6 +11,7 @@ import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import com.agroguide.rtk.device.AndroidLocationSource
 import com.agroguide.rtk.device.DemoPositionSource
@@ -73,9 +74,15 @@ class GuidanceService : LifecycleService() {
      */
     private fun startVehicleCollector() {
         collectorJob?.cancel()
-        collectorJob = lifecycleScope.launch {
+        // Guidance/coverage/journal all hang off this collector; one bad update
+        // must not kill the session (and with it the app).
+        val handler = kotlinx.coroutines.CoroutineExceptionHandler { _, e ->
+            android.util.Log.e("GuidanceService", "vehicle collector failed", e)
+        }
+        collectorJob = lifecycleScope.launch(handler) {
             PositionRepository.vehicle.collect { state ->
-                if (state != null) {
+                if (state == null) return@collect
+                try {
                     mockPublisher?.publish(state)
                     GuidanceRepository.update(state)
                     val work = GuidanceRepository.implement.value.workPoint(
@@ -88,6 +95,10 @@ class GuidanceService : LifecycleService() {
                         CoverageRepository.sections.value.forEachIndexed { i, on -> if (on) mask = mask or (1 shl i) }
                         JobManager.onState(state, work, mask)
                     }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    android.util.Log.e("GuidanceService", "state update failed", e)
                 }
             }
         }

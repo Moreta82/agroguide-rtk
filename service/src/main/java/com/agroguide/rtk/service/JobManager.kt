@@ -79,10 +79,16 @@ object JobManager {
         val w = writer ?: return
         val t = SystemClock.elapsedRealtime() - jobStartRealtime
         val moving = state.speedMps > 0.2
-        if (moving) {
-            w.fix(t, workPoint.x, workPoint.y, state.headingDeg, state.speedMps, state.quality.ordinal, sectionsMask)
-        } else if (wasMoving) {
-            w.breakSegment(t)
+        // A journal write failure (full disk, storage detached) must degrade to
+        // "recording stopped", never to a crash mid-work.
+        try {
+            if (moving) {
+                w.fix(t, workPoint.x, workPoint.y, state.headingDeg, state.speedMps, state.quality.ordinal, sectionsMask)
+            } else if (wasMoving) {
+                w.breakSegment(t)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("JobManager", "journal write failed", e)
         }
         wasMoving = moving
     }

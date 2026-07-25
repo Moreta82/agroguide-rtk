@@ -190,34 +190,55 @@ fun JobsScreen() {
 
 fun dateStr(ms: Long): String = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(ms))
 
-/** Rebuilds trail/avg-speed from the journal and shares an HTML or PDF report. */
+/**
+ * Builds an HTML or PDF report and opens the share sheet. The journal only
+ * contributes the track and average speed: if it is missing or unreadable the
+ * report is still produced from the stored job totals, because a report with
+ * no thumbnail is far more useful than an error message.
+ */
 private suspend fun generateReport(context: Context, db: AgroDb, job: JobEntity, html: Boolean) {
     val result = withContext(Dispatchers.IO) {
         runCatching {
-            val data = JournalReader.read(JobManager.journalFile(context, job.id))
-                ?: error("journal missing")
-            val summary = JournalReplay.into(data, CoverageEngine(data.header.widthM, data.header.sections))
-            val parcel = job.parcelId?.let { db.parcels().byId(it) }
+            val summary = runCatching {
+                JournalReader.read(JobManager.journalFile(context, job.id))?.let { JournalReplay.summarize(it) }
+            }.getOrNull()
+            val parcel = runCatching { job.parcelId?.let { db.parcels().byId(it) } }.getOrNull()
             val report = JobReportData(
                 jobName = job.name, parcelName = parcel?.name, dateStr = dateStr(job.startedAtMs),
                 activeSeconds = job.activeSeconds, treatedM2 = job.treatedM2, overlapM2 = job.overlapM2,
                 parcelAreaM2 = parcel?.areaM2, widthM = job.implementWidthM,
-                avgSpeedMps = summary.avgSpeedMps, distanceM = job.distanceM, trail = summary.trail,
+                avgSpeedMps = summary?.avgSpeedMps ?: 0.0, distanceM = job.distanceM,
+                trail = summary?.trail ?: emptyList(),
             )
+            val safeName = job.name.replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "trabajo" }
             val dir = ExportFiles.exportDir(context)
             if (html) {
-                val f = File(dir, "informe-${job.name.replace(' ', '_')}.html")
+                val f = File(dir, "informe-$safeName.html")
                 f.writeText(JobReport.html(report))
                 f to "text/html"
             } else {
-                val f = File(dir, "informe-${job.name.replace(' ', '_')}.pdf")
+                val f = File(dir, "informe-$safeName.pdf")
                 PdfWriter.write(report, f)
                 f to "application/pdf"
             }
         }
     }
     result.fold(
-        onSuccess = { (file, mime) -> ExportFiles.share(context, file, mime) },
-        onFailure = { Toast.makeText(context, R.string.job_report_fail, Toast.LENGTH_LONG).show() },
+        onSuccess = { (file, mime) ->
+            runCatching { ExportFiles.share(context, file, mime) }.onFailure { e ->
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.job_report_fail) + ": " + (e.message ?: e.javaClass.simpleName),
+                    Toast.LENGTH_LONG,
+                ).show()
+            }
+        },
+        onFailure = { e ->
+            Toast.makeText(
+                context,
+                context.getString(R.string.job_report_fail) + ": " + (e.message ?: e.javaClass.simpleName),
+                Toast.LENGTH_LONG,
+            ).show()
+        },
     )
 }

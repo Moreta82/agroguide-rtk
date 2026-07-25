@@ -20,8 +20,8 @@ android {
         applicationId = "com.agroguide.rtk"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.0.1"
+        versionCode = 4
+        versionName = "1.0.2"
     }
     buildFeatures { buildConfig = true }
     signingConfigs {

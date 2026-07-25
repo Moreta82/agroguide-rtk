@@ -1,6 +1,7 @@
 package com.agroguide.rtk.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.fillMaxSize
@@ -76,6 +77,9 @@ fun FieldView(
     Canvas(
         modifier
             .fillMaxSize()
+            // Compose does not clip draw calls: rotated basemap tiles and pass
+            // lines would otherwise paint over the tab bar above the canvas.
+            .clipToBounds()
             .pointerInput(Unit) {
                 detectTransformGestures { _, _, zoom, _ ->
                     scale = (scale * zoom).coerceIn(0.5f, 30f)

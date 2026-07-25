@@ -74,10 +74,26 @@ class CoverageEngine(
         for (s in 0 until minOf(sections, activeSections.size)) {
             if (!activeSections[s]) continue
             val (from, to) = Swath.sectionExtent(widthM, sections, s)
-            val quad = Swath.quad(prev, pose, from, to) ?: continue
-            insert(quad)
+            val quad = try {
+                Swath.quad(prev, pose, from, to)
+            } catch (_: RuntimeException) {
+                null            // JTS refused to build/heal this quad
+            } ?: continue
+            // JTS overlay is not numerically bulletproof: a near-degenerate
+            // swath (heading noise at crawl speed) can throw TopologyException.
+            // Losing one segment of paint is acceptable; crashing is not.
+            try {
+                insert(quad)
+            } catch (e: RuntimeException) {
+                skippedSegments++
+                lastError = e
+            }
         }
     }
+
+    /** Segments dropped because JTS could not process them (diagnostics only). */
+    var skippedSegments = 0; private set
+    var lastError: RuntimeException? = null; private set
 
     private fun insert(quad: Polygon) {
         val env = quad.envelopeInternal

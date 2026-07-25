@@ -67,6 +67,26 @@ class CoverageEngineTest {
         assertEquals(0, e.tiles().size)
     }
 
+    @Test fun `pathological geometry never throws`() {
+        // A real receiver at crawl speed reports wildly unstable headings, which
+        // produces bowtie and near-degenerate swaths. These used to reach JTS
+        // unguarded and kill the process a few seconds after starting to move.
+        val e = CoverageEngine(6.0, 3)
+        val active = booleanArrayOf(true, true, true)
+        val rnd = java.util.Random(42)
+        var x = 0.0; var y = 0.0
+        repeat(3000) { i ->
+            x += rnd.nextDouble() * 0.4 - 0.2
+            y += 0.2
+            val heading = if (i % 7 == 0) rnd.nextDouble() * 360 else 0.0
+            e.update(WorkPose(EnuPoint(x, y), heading), active)
+            if (i % 50 == 0) e.update(WorkPose(EnuPoint(x, y), heading + 180), active)
+        }
+        assertTrue(e.stats.treatedM2 > 0.0)
+        // whatever JTS could not digest was skipped, not thrown
+        assertTrue(e.skippedSegments >= 0)
+    }
+
     @Test fun `long job stays fast`() {
         val e = CoverageEngine(6.0, 1)
         val t0 = System.nanoTime()

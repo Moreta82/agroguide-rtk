@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
+    <!-- Preferred location, and the internal fallback used when external
+         app storage is not mounted. -->
     <external-files-path name="export" path="export/" />
+    <files-path name="export_internal" path="export/" />
+    <cache-path name="cache" path="." />
 </paths>

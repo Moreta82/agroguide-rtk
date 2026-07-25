@@ -113,9 +113,18 @@ class ReplaySummary(
 
 object JournalReplay {
     /** Feeds all fixes into [engine]; returns trail (>=0.5 m spacing) and timing. */
-    fun into(data: JournalData, engine: CoverageEngine): ReplaySummary {
-        engine.widthM = data.header.widthM
-        engine.sections = data.header.sections
+    fun into(data: JournalData, engine: CoverageEngine): ReplaySummary = run(data, engine)
+
+    /**
+     * Trail and timing only, without rebuilding coverage geometry. Reports need
+     * just this, and keeping them off the JTS path means a report can always be
+     * produced even if some geometry is unprocessable.
+     */
+    fun summarize(data: JournalData): ReplaySummary = run(data, null)
+
+    private fun run(data: JournalData, engine: CoverageEngine?): ReplaySummary {
+        engine?.widthM = data.header.widthM
+        engine?.sections = data.header.sections
         val trail = ArrayList<EnuPoint>()
         var fixCount = 0
         var paused = false
@@ -130,7 +139,7 @@ object JournalReplay {
                     if (spanStart < 0 && !paused) spanStart = rec.tMs
                     fixCount++
                     speedSum += rec.speedMps
-                    if (!paused) {
+                    if (!paused && engine != null) {
                         val mask = rec.sectionsMask
                         val active = BooleanArray(engine.sections) { (mask shr it) and 1 == 1 }
                         engine.update(WorkPose(EnuPoint(rec.x, rec.y), rec.headingDeg), active)
@@ -142,10 +151,10 @@ object JournalReplay {
                 }
                 is JournalRecord.Pause -> {
                     if (spanStart >= 0) { activeMs += rec.tMs - spanStart; spanStart = -1 }
-                    paused = true; engine.breakSegment()
+                    paused = true; engine?.breakSegment()
                 }
                 is JournalRecord.Resume -> { paused = false; spanStart = rec.tMs }
-                is JournalRecord.Break -> engine.breakSegment()
+                is JournalRecord.Break -> engine?.breakSegment()
             }
         }
         if (spanStart >= 0) activeMs += lastT - spanStart
