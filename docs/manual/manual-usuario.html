@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>AgroGuide RTK — Manual de usuario</title>
+<style>
+  @page { size: A4; margin: 0; }
+
+  :root{
+    --g900:#0B2410; --g800:#123318; --g700:#1B5E20; --g600:#2E7D32; --g500:#43A047;
+    --g300:#A5D6A7; --lime:#7CDB8A; --amber:#F5C518; --orange:#EF6C00; --red:#C62828;
+    --blue:#1565C0; --wheat:#E8DCB5; --sand:#F2EAD3;
+    --ink:#14201A; --body:#33413A; --muted:#6B7A70; --line:#DCE4DC; --soft:#F5F8F4;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--body); font-size:10.9pt; line-height:1.56; counter-reset:pageno 0;
+    background:#fff;
+  }
+
+  .page{
+    width:210mm; height:297mm; padding:15mm 14mm 13mm; position:relative;
+    overflow:hidden; page-break-after:always; counter-increment:pageno; background:#fff;
+  }
+  .page:last-child{ page-break-after:auto; }
+
+  .pfoot{
+    position:absolute; left:14mm; right:14mm; bottom:7mm;
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:7.6pt; color:var(--muted); letter-spacing:.03em;
+    border-top:1px solid var(--line); padding-top:2.5mm;
+  }
+  .pfoot .num::after{ content:counter(pageno); font-weight:700; color:var(--g600); }
+
+  /* ---------- cover ---------- */
+  .cover{ padding:0; background:var(--g900); color:#fff; }
+  .cover-art{ position:absolute; inset:0; }
+  .cover-inner{ position:absolute; inset:0; padding:22mm 18mm; display:flex; flex-direction:column; }
+  .brandline{ display:flex; align-items:center; gap:5mm; }
+  .brandline .bname{ font-size:12pt; letter-spacing:.34em; text-transform:uppercase; color:var(--lime); font-weight:600; }
+  .cover h1{ font-size:44pt; line-height:1.02; font-weight:800; color:#fff; letter-spacing:-.02em; margin-top:auto; }
+  .cover h1 em{ font-style:normal; color:var(--lime); display:block; }
+  .cover .tag{ font-size:13pt; color:#CFE3D2; margin-top:6mm; max-width:120mm; line-height:1.45; }
+  .cover .meta{ margin-top:10mm; display:flex; gap:14mm; border-top:1px solid rgba(255,255,255,.18); padding-top:6mm; }
+  .cover .meta div span{ display:block; font-size:7.6pt; letter-spacing:.18em; text-transform:uppercase; color:#8FB39A; }
+  .cover .meta div strong{ font-size:11.5pt; color:#fff; font-weight:600; }
+
+  /* ---------- typography ---------- */
+  .kicker{ font-size:8pt; letter-spacing:.2em; text-transform:uppercase; color:var(--g600); font-weight:700; }
+  h2{ font-size:23.5pt; color:var(--ink); font-weight:800; letter-spacing:-.015em; line-height:1.12; margin:1.5mm 0 3mm; }
+  h2 .n{ color:var(--g300); }
+  h3{ font-size:12.8pt; color:var(--g700); font-weight:700; margin:6.5mm 0 2.4mm; }
+  h4{ font-size:10.6pt; color:var(--ink); font-weight:700; margin:0 0 1.2mm; }
+  p{ margin-bottom:3mm; }
+  p.lead{ font-size:11.8pt; color:var(--ink); line-height:1.5; }
+  strong{ color:var(--ink); font-weight:650; }
+  .hr{ height:3px; width:22mm; background:var(--amber); border-radius:2px; margin:0 0 4mm; }
+  ul{ margin:0 0 3mm 4.5mm; }
+  li{ margin-bottom:1.4mm; }
+  code{ font-family:"Cascadia Mono",Consolas,monospace; font-size:8.8pt; background:var(--soft);
+        border:1px solid var(--line); border-radius:3px; padding:.4mm 1.2mm; color:var(--g700); }
+
+  /* ---------- components ---------- */
+  .grid{ display:grid; gap:4mm; }
+  .g2{ grid-template-columns:1fr 1fr; }
+  .g3{ grid-template-columns:repeat(3,1fr); }
+
+  .card{ background:var(--soft); border:1px solid var(--line); border-radius:3mm; padding:4.4mm 4.8mm; }
+  .card .ic{ width:9mm; height:9mm; border-radius:2.4mm; background:var(--g700); display:flex;
+             align-items:center; justify-content:center; margin-bottom:2.5mm; }
+  .card p{ font-size:9.8pt; margin:0; color:var(--body); }
+  .card.hi{ background:#fff; border-color:var(--g300); }
+
+  .num-step{ display:flex; gap:4mm; margin-bottom:4mm; }
+  .num-step .bub{ flex:0 0 9mm; height:9mm; border-radius:50%; background:var(--g700); color:#fff;
+                  font-weight:800; font-size:11pt; display:flex; align-items:center; justify-content:center; }
+  .num-step .bd{ flex:1; }
+  .num-step p{ font-size:9.4pt; margin:0; }
+
+  table{ width:100%; border-collapse:collapse; font-size:9.6pt; }
+  th{ background:var(--g700); color:#fff; text-align:left; padding:2.5mm 3.2mm; font-weight:600; font-size:9.2pt;
+      letter-spacing:.04em; }
+  th:first-child{ border-radius:2mm 0 0 0; } th:last-child{ border-radius:0 2mm 0 0; }
+  td{ padding:2.5mm 3.2mm; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:nth-child(even) td{ background:var(--soft); }
+  td strong{ color:var(--g700); }
+
+  .note{ border-left:3px solid var(--amber); background:#FFFBEB; padding:3mm 4mm; border-radius:0 2mm 2mm 0;
+         font-size:9.8pt; margin:3.4mm 0; }
+  .note b{ color:#8A6100; }
+  .warn{ border-left:3px solid var(--red); background:#FEF2F2; padding:3mm 4mm; border-radius:0 2mm 2mm 0;
+         font-size:9.8pt; margin:3.4mm 0; }
+  .warn b{ color:var(--red); }
+  .tip{ border-left:3px solid var(--g600); background:#F1F8F1; padding:3mm 4mm; border-radius:0 2mm 2mm 0;
+        font-size:9.8pt; margin:3.4mm 0; }
+  .tip b{ color:var(--g700); }
+
+  .pill{ display:inline-block; padding:.8mm 2.4mm; border-radius:9mm; font-size:8pt; font-weight:700;
+         color:#fff; letter-spacing:.03em; }
+
+  .toc-item{ display:flex; align-items:baseline; gap:3mm; padding:2.4mm 0; border-bottom:1px solid var(--line); }
+  .toc-item .tn{ font-size:10pt; font-weight:800; color:var(--g300); width:8mm; }
+  .toc-item .tt{ font-weight:650; color:var(--ink); font-size:10.4pt; }
+  .toc-item .td{ color:var(--muted); font-size:9pt; margin-left:auto; text-align:right; max-width:78mm; }
+
+  .figcap{ font-size:8.2pt; color:var(--muted); margin-top:1.5mm; }
+  .fig{ background:var(--soft); border:1px solid var(--line); border-radius:3mm; padding:4mm; }
+  svg{ display:block; max-width:100%; }
+</style>
+</head>
+<body>
+
+<!-- ============ 1 COVER ============ -->
+<section class="page cover">
+  <svg class="cover-art" viewBox="0 0 210 297" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="cg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#0B2410"/><stop offset="0.55" stop-color="#123B1B"/><stop offset="1" stop-color="#0B2410"/>
+      </linearGradient>
+    </defs>
+    <rect width="210" height="297" fill="url(#cg)"/>
+    <!-- furrow field perspective -->
+    <g opacity="0.16" stroke="#7CDB8A" stroke-width="0.5" fill="none">
+      <path d="M-20,297 C40,220 90,205 230,196"/><path d="M-20,282 C45,212 95,196 230,186"/>
+      <path d="M-20,267 C50,204 100,187 230,176"/><path d="M-20,252 C55,196 105,178 230,166"/>
+      <path d="M-20,237 C60,188 110,169 230,156"/><path d="M-20,222 C65,180 115,160 230,146"/>
+    </g>
+    <g opacity="0.07">
+      <circle cx="178" cy="52" r="40" fill="#7CDB8A"/>
+    </g>
+    <!-- satellite signals -->
+    <g opacity="0.35" stroke="#F5C518" stroke-width="0.4" fill="none">
+      <path d="M150,26 L128,74"/><path d="M168,34 L134,76"/><path d="M186,46 L142,80"/>
+    </g>
+    <g fill="#F5C518" opacity="0.9">
+      <circle cx="150" cy="25" r="1.6"/><circle cx="168" cy="33" r="1.3"/><circle cx="186" cy="45" r="1.1"/>
+    </g>
+    <rect x="0" y="291" width="210" height="6" fill="#F5C518" opacity="0.9"/>
+  </svg>
+
+  <div class="cover-inner">
+    <div class="brandline">
+      <svg width="17mm" height="17mm" viewBox="0 0 108 108">
+        <rect width="108" height="108" rx="24" fill="#E8DCB5"/>
+        <path fill="#1A1A1A" d="M18,72 a20,20 0 1,1 40,0 a20,20 0 1,1 -40,0 z"/>
+        <path fill="#F5C518" d="M27,72 a11,11 0 1,1 22,0 a11,11 0 1,1 -22,0 z"/>
+        <path fill="#1A1A1A" d="M34,72 a4,4 0 1,1 8,0 a4,4 0 1,1 -8,0 z"/>
+        <path fill="#1A1A1A" d="M64,80 a12,12 0 1,1 24,0 a12,12 0 1,1 -24,0 z"/>
+        <path fill="#F5C518" d="M70,80 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0 z"/>
+        <path fill="#2E7D32" d="M30,62 L86,62 L86,74 L30,74 z"/>
+        <path fill="#357A38" d="M58,44 L84,44 A4,4 0 0,1 88,48 L88,64 L58,64 z"/>
+        <path fill="#F5C518" d="M84,50 L88,50 L88,62 L84,62 z"/>
+        <path fill="#2E7D32" d="M28,34 L58,34 L58,64 L28,64 z"/>
+        <path fill="#BFE6F5" d="M33,39 L53,39 L53,53 L33,53 z"/>
+        <path fill="#F5C518" d="M24,29 L62,29 L62,35 L24,35 z"/>
+        <path fill="#4A4A4A" d="M63,20 L69,20 L69,45 L63,45 z"/>
+      </svg>
+      <span class="bname">AgroGuide RTK</span>
+    </div>
+
+    <h1>Manual de<em>usuario</em></h1>
+    <p class="tag">Guiado agrícola de precisión centimétrica para Android.
+      Configuración, uso en campo y resolución de problemas, explicado paso a paso.</p>
+
+    <div class="meta">
+      <div><span>Versión</span><strong>1.0.2</strong></div>
+      <div><span>Receptor</span><strong>u-blox ZED-F9P</strong></div>
+      <div><span>Sistema</span><strong>Android 8.0 o superior</strong></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 TOC ============ -->
+<section class="page">
+  <div class="kicker">Contenido</div>
+  <h2>Índice del manual</h2>
+  <div class="hr"></div>
+  <p class="lead" style="margin-bottom:5mm">Si es tu primera vez, sigue las secciones 1 a 5 en orden: en unos
+    minutos tendrás el receptor conectado y guiando. El resto son referencias que puedes consultar cuando las necesites.</p>
+
+  <div class="toc-item"><span class="tn">1</span><span class="tt">Qué es AgroGuide RTK</span><span class="td">Para qué sirve y qué incluye</span></div>
+  <div class="toc-item"><span class="tn">2</span><span class="tt">Cómo funciona el sistema</span><span class="td">Del satélite a la pantalla: arquitectura y precisión</span></div>
+  <div class="toc-item"><span class="tn">3</span><span class="tt">Primeros pasos</span><span class="td">Permisos, batería y emparejar el receptor</span></div>
+  <div class="toc-item"><span class="tn">4</span><span class="tt">La pantalla de guiado</span><span class="td">Cada elemento de la pantalla, explicado</span></div>
+  <div class="toc-item"><span class="tn">5</span><span class="tt">El lightbar</span><span class="td">Cómo leer la barra de luces mientras conduces</span></div>
+  <div class="toc-item"><span class="tn">6</span><span class="tt">Fuentes de posición</span><span class="td">Bluetooth RTK, ubicación de Android y modo demo</span></div>
+  <div class="toc-item"><span class="tn">7</span><span class="tt">Correcciones NTRIP</span><span class="td">Qué son y cómo configurar un perfil</span></div>
+  <div class="toc-item"><span class="tn">8</span><span class="tt">Utilidades del receptor</span><span class="td">Optimizar el ZED-F9P a 5 Hz</span></div>
+  <div class="toc-item"><span class="tn">9</span><span class="tt">Configurar el apero</span><span class="td">Ancho, desfases y número de secciones</span></div>
+  <div class="toc-item"><span class="tn">10</span><span class="tt">Líneas de guiado</span><span class="td">AB, A+, curvas y modo libre</span></div>
+  <div class="toc-item"><span class="tn">11</span><span class="tt">Cobertura, solape y secciones</span><span class="td">Pintado en tiempo real y contadores</span></div>
+  <div class="toc-item"><span class="tn">12</span><span class="tt">Parcelas</span><span class="td">Crear, medir, importar y exportar</span></div>
+  <div class="toc-item"><span class="tn">13</span><span class="tt">Trabajos e informes</span><span class="td">Grabar la faena y generar HTML o PDF</span></div>
+  <div class="toc-item"><span class="tn">14</span><span class="tt">Mapas de fondo</span><span class="td">Satélite y callejero, con descarga sin cobertura</span></div>
+  <div class="toc-item"><span class="tn">15</span><span class="tt">Ajustes generales</span><span class="td">Tema, pantalla y salida de posición</span></div>
+  <div class="toc-item"><span class="tn">16</span><span class="tt">Resolución de problemas</span><span class="td">Síntoma, causa y solución</span></div>
+  <div class="toc-item"><span class="tn">17</span><span class="tt">Referencia rápida</span><span class="td">Chuleta para llevar en la cabina</span></div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 3 QUÉ ES ============ -->
+<section class="page">
+  <div class="kicker">Sección 1</div>
+  <h2><span class="n">01 ·</span> Qué es AgroGuide RTK</h2>
+  <div class="hr"></div>
+  <p class="lead">AgroGuide RTK convierte tu móvil o tablet Android en un sistema de guiado agrícola de precisión
+    centimétrica. Se conecta por Bluetooth a un receptor GNSS RTK, recibe correcciones por internet y te muestra
+    en pantalla por dónde has pasado y por dónde debes pasar, evitando solapes y huecos.</p>
+
+  <div class="tip"><b>Guiado visual, no autoguiado.</b> La aplicación te indica con precisión hacia dónde
+    corregir, pero no acciona la dirección del tractor. Tú conduces siguiendo la barra de luces.</div>
+
+  <h3>Qué incluye</h3>
+  <div class="grid g3">
+    <div class="card">
+      <div class="ic"><svg width="5mm" height="5mm" viewBox="0 0 24 24" fill="none" stroke="#7CDB8A" stroke-width="2.2"><path d="M3 18h18M6 14l4-6 4 4 4-8"/></svg></div>
+      <h4>Guiado AB y curvas</h4>
+      <p>Líneas rectas, por rumbo, curvas grabadas y modo libre, con salto automático a la pasada más cercana.</p>
+    </div>
+    <div class="card">
+      <div class="ic"><svg width="5mm" height="5mm" viewBox="0 0 24 24" fill="none" stroke="#7CDB8A" stroke-width="2.2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 20V10"/></svg></div>
+      <h4>Cobertura y solape</h4>
+      <p>Pintado en tiempo real de lo tratado, con el solape en otro color y contadores de hectáreas.</p>
+    </div>
+    <div class="card">
+      <div class="ic"><svg width="5mm" height="5mm" viewBox="0 0 24 24" fill="none" stroke="#7CDB8A" stroke-width="2.2"><path d="M4 16V8l8-4 8 4v8l-8 4z"/><path d="M8 10v6M16 10v6M12 8v8"/></svg></div>
+      <h4>Control de secciones</h4>
+      <p>Hasta 16 tramos del apero que puedes abrir y cerrar a mano; solo pinta lo que está activo.</p>
+    </div>
+    <div class="card">
+      <div class="ic"><svg width="5mm" height="5mm" viewBox="0 0 24 24" fill="none" stroke="#7CDB8A" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14 0 18-3-4-3-14.5 0-18z"/></svg></div>
+      <h4>NTRIP integrado</h4>
+      <p>Cliente de correcciones v1 y v2 con perfiles, explorador de estaciones y reconexión automática.</p>
+    </div>
+    <div class="card">
+      <div class="ic"><svg width="5mm" height="5mm" viewBox="0 0 24 24" fill="none" stroke="#7CDB8A" stroke-width="2.2"><path d="M4 6h16v13H4z"/><path d="M4 10h16M9 19v-9"/></svg></div>
+      <h4>Parcelas y trabajos</h4>
+      <p>Mide parcelas, graba faenas completas y genera informes en HTML y PDF con el recorrido.</p>
+    </div>
+    <div class="card">
+      <div class="ic"><svg width="5mm" height="5mm" viewBox="0 0 24 24" fill="none" stroke="#7CDB8A" stroke-width="2.2"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
+      <h4>Funciona sin cobertura</h4>
+      <p>La vista de campo no necesita internet. Los mapas son opcionales y se pueden descargar antes de salir.</p>
+    </div>
+  </div>
+
+  <h3>Qué necesitas</h3>
+  <table>
+    <tr><th style="width:38mm">Elemento</th><th>Detalle</th></tr>
+    <tr><td><strong>Móvil o tablet</strong></td><td>Android 8.0 o superior. Se recomienda tablet en horizontal para ver mejor el campo.</td></tr>
+    <tr><td><strong>Receptor GNSS</strong></td><td>ArduSimple RTK Portable Bluetooth Kit (u-blox ZED-F9P) u otro receptor que emita NMEA por Bluetooth SPP.</td></tr>
+    <tr><td><strong>Correcciones RTK</strong></td><td>Acceso a un servidor NTRIP (el del IGN es gratuito en España). Sin ellas funciona, pero con precisión de metros.</td></tr>
+    <tr><td><strong>Datos móviles</strong></td><td>Solo para recibir las correcciones. El consumo es muy bajo, en torno a 1 MB cada 10 minutos.</td></tr>
+  </table>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 4 ARQUITECTURA ============ -->
+<section class="page">
+  <div class="kicker">Sección 2</div>
+  <h2><span class="n">02 ·</span> Cómo funciona el sistema</h2>
+  <div class="hr"></div>
+  <p>Cuatro piezas trabajando juntas. El receptor calcula la posición con los satélites, pero por sí solo se
+    equivoca varios metros. La estación de referencia sabe exactamente dónde está y calcula ese error; te lo envía
+    por internet a través del servidor NTRIP, y tu receptor lo aplica para bajar a centímetros.</p>
+
+  <div class="fig" style="margin-top:2mm">
+  <svg viewBox="0 0 560 235">
+    <defs>
+      <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 z" fill="#2E7D32"/>
+      </marker>
+      <marker id="ary" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 z" fill="#C08A00"/>
+      </marker>
+    </defs>
+
+    <!-- satellites -->
+    <g>
+      <circle cx="120" cy="26" r="7" fill="#1B5E20"/><rect x="104" y="22" width="10" height="8" rx="1.5" fill="#7CDB8A"/><rect x="126" y="22" width="10" height="8" rx="1.5" fill="#7CDB8A"/>
+      <circle cx="280" cy="18" r="7" fill="#1B5E20"/><rect x="264" y="14" width="10" height="8" rx="1.5" fill="#7CDB8A"/><rect x="286" y="14" width="10" height="8" rx="1.5" fill="#7CDB8A"/>
+      <circle cx="440" cy="26" r="7" fill="#1B5E20"/><rect x="424" y="22" width="10" height="8" rx="1.5" fill="#7CDB8A"/><rect x="446" y="22" width="10" height="8" rx="1.5" fill="#7CDB8A"/>
+      <rect x="168" y="36" width="224" height="14" rx="3" fill="#F5F8F4"/>
+      <text x="280" y="46" text-anchor="middle" font-size="10" fill="#6B7A70" font-family="Segoe UI">Satélites GNSS (GPS · Galileo · GLONASS)</text>
+    </g>
+    <g stroke="#C08A00" stroke-width="1" stroke-dasharray="3 3" opacity="0.75">
+      <path d="M120,36 L92,104"/><path d="M280,28 L100,102"/><path d="M280,28 L466,104"/><path d="M440,36 L472,104"/>
+    </g>
+
+    <!-- base station -->
+    <g>
+      <rect x="424" y="106" width="96" height="52" rx="6" fill="#fff" stroke="#DCE4DC"/>
+      <path d="M472,116 l7,12 h-14 z" fill="#1B5E20"/><rect x="470" y="128" width="4" height="14" fill="#1B5E20"/>
+      <text x="472" y="152" text-anchor="middle" font-size="9.5" fill="#14201A" font-family="Segoe UI" font-weight="600">Estación de referencia</text>
+    </g>
+
+    <!-- caster -->
+    <g>
+      <rect x="424" y="176" width="96" height="44" rx="6" fill="#1B5E20"/>
+      <text x="472" y="196" text-anchor="middle" font-size="10" fill="#fff" font-family="Segoe UI" font-weight="700">Servidor NTRIP</text>
+      <text x="472" y="209" text-anchor="middle" font-size="8.5" fill="#A5D6A7" font-family="Segoe UI">caster (internet)</text>
+    </g>
+    <path d="M472,158 L472,174" stroke="#2E7D32" stroke-width="1.6" marker-end="url(#ar)"/>
+
+    <!-- receiver -->
+    <g>
+      <rect x="42" y="106" width="104" height="52" rx="6" fill="#fff" stroke="#DCE4DC"/>
+      <rect x="56" y="120" width="30" height="22" rx="3" fill="#2E7D32"/>
+      <circle cx="106" cy="124" r="4" fill="#F5C518"/>
+      <text x="94" y="150" text-anchor="middle" font-size="9.5" fill="#14201A" font-family="Segoe UI" font-weight="600">Receptor ZED-F9P</text>
+    </g>
+
+    <!-- phone -->
+    <g>
+      <rect x="228" y="98" width="104" height="68" rx="7" fill="#0E1510"/>
+      <rect x="234" y="104" width="92" height="56" rx="4" fill="#16201A"/>
+      <rect x="238" y="108" width="84" height="9" rx="2" fill="#101010"/>
+      <circle cx="246" cy="112.5" r="2.4" fill="#43A047"/><circle cx="254" cy="112.5" r="2.4" fill="#43A047"/>
+      <circle cx="262" cy="112.5" r="2.4" fill="#2A2A2A"/><circle cx="270" cy="112.5" r="2.4" fill="#2A2A2A"/>
+      <rect x="240" y="121" width="80" height="35" rx="3" fill="#1B2E1B"/>
+      <path d="M252,152 L300,126" stroke="#FFEB3B" stroke-width="1.6"/>
+      <path d="M266,156 l-5,-9 l10,0 z" fill="#FFC107"/>
+      <text x="280" y="180" text-anchor="middle" font-size="9.5" fill="#14201A" font-family="Segoe UI" font-weight="600">AgroGuide RTK</text>
+    </g>
+
+    <!-- links -->
+    <path d="M148,132 L224,132" stroke="#2E7D32" stroke-width="1.8" marker-end="url(#ar)"/>
+    <text x="186" y="126" text-anchor="middle" font-size="8.5" fill="#2E7D32" font-family="Segoe UI" font-weight="700">NMEA</text>
+    <text x="186" y="146" text-anchor="middle" font-size="8" fill="#6B7A70" font-family="Segoe UI">Bluetooth</text>
+
+    <path d="M224,146 L150,146" stroke="#C08A00" stroke-width="1.8" marker-end="url(#ary)"/>
+    <text x="186" y="160" text-anchor="middle" font-size="8.5" fill="#C08A00" font-family="Segoe UI" font-weight="700">RTCM3</text>
+
+    <path d="M420,196 L340,170" stroke="#C08A00" stroke-width="1.8" marker-end="url(#ary)"/>
+    <text x="360" y="212" text-anchor="middle" font-size="8.5" fill="#C08A00" font-family="Segoe UI" font-weight="700">correcciones</text>
+    <text x="360" y="224" text-anchor="middle" font-size="8" fill="#6B7A70" font-family="Segoe UI">por datos móviles</text>
+  </svg>
+  <div class="figcap">El receptor envía su posición a la app por Bluetooth; la app descarga las correcciones del
+    servidor NTRIP y se las devuelve al receptor por ese mismo cable inalámbrico. Todo el guiado se calcula en el móvil.</div>
+  </div>
+
+  <h3>Niveles de precisión que verás en pantalla</h3>
+  <svg viewBox="0 0 560 74" style="margin-bottom:2mm">
+    <g font-family="Segoe UI">
+      <rect x="0" y="8" width="104" height="26" rx="4" fill="#424242"/>
+      <text x="52" y="25" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">SIN FIX</text>
+      <text x="52" y="48" text-anchor="middle" font-size="9" fill="#6B7A70">sin posición</text>
+
+      <rect x="114" y="8" width="104" height="26" rx="4" fill="#C62828"/>
+      <text x="166" y="25" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">GPS</text>
+      <text x="166" y="48" text-anchor="middle" font-size="9" fill="#6B7A70">2 – 4 m</text>
+      <text x="166" y="60" text-anchor="middle" font-size="8" fill="#9AA79C">sin correcciones</text>
+
+      <rect x="228" y="8" width="104" height="26" rx="4" fill="#EF6C00"/>
+      <text x="280" y="25" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">DGPS</text>
+      <text x="280" y="48" text-anchor="middle" font-size="9" fill="#6B7A70">0,5 – 2 m</text>
+
+      <rect x="342" y="8" width="104" height="26" rx="4" fill="#F9A825"/>
+      <text x="394" y="25" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">RTK FLOAT</text>
+      <text x="394" y="48" text-anchor="middle" font-size="9" fill="#6B7A70">10 – 50 cm</text>
+      <text x="394" y="60" text-anchor="middle" font-size="8" fill="#9AA79C">convergiendo</text>
+
+      <rect x="456" y="8" width="104" height="26" rx="4" fill="#2E7D32"/>
+      <text x="508" y="25" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">RTK FIJO</text>
+      <text x="508" y="48" text-anchor="middle" font-size="9" fill="#6B7A70">1 – 3 cm</text>
+      <text x="508" y="60" text-anchor="middle" font-size="8" fill="#2E7D32" font-weight="600">objetivo</text>
+    </g>
+  </svg>
+  <p style="font-size:9.8pt">Al conectar las correcciones el receptor sube por esta escala en menos de un minuto
+    con buena visibilidad de cielo. <strong>RTK FIJO</strong> es el estado de trabajo normal; si baja a FLOAT o DGPS,
+    revisa la cobertura de datos o si hay árboles o edificios tapando el cielo.</p>
+
+  <div class="note"><b>Si pierdes las correcciones, no pierdes el trabajo.</b> El receptor sigue dando posición
+    (con menos precisión) y la aplicación continúa guiando, pintando y grabando. En cuanto la conexión vuelve,
+    el estado sube de nuevo a RTK FIJO automáticamente, sin tocar nada.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 5 PRIMEROS PASOS ============ -->
+<section class="page">
+  <div class="kicker">Sección 3</div>
+  <h2><span class="n">03 ·</span> Primeros pasos</h2>
+  <div class="hr"></div>
+  <p class="lead">Configuración inicial completa. Solo hay que hacerla una vez.</p>
+
+  <div class="num-step"><div class="bub">1</div><div class="bd">
+    <h4>Concede los permisos al abrir la aplicación</h4>
+    <p>La primera vez pedirá <strong>ubicación</strong>, <strong>dispositivos cercanos (Bluetooth)</strong> y
+      <strong>notificaciones</strong>. Los tres son necesarios: sin Bluetooth no aparecerá tu receptor en la lista,
+      y sin notificaciones no se puede mantener el guiado con la pantalla apagada.</p>
+  </div></div>
+
+  <div class="num-step"><div class="bub">2</div><div class="bd">
+    <h4>Autoriza el uso sin restricción de batería</h4>
+    <p>Aparecerá un aviso sobre la optimización de batería. Acéptalo: si el sistema puede "dormir" la aplicación,
+      dejará de grabar el trabajo cuando apagues la pantalla. En móviles Xiaomi, Huawei y Samsung el manual te
+      indicará además el ajuste concreto de su capa de personalización.</p>
+  </div></div>
+
+  <div class="num-step"><div class="bub">3</div><div class="bd">
+    <h4>Empareja el receptor en los ajustes de Android</h4>
+    <p>Enciende el receptor y, <strong>desde los ajustes de Bluetooth de Android</strong> (no desde la app),
+      empareja el dispositivo. En el kit ArduSimple aparece como <code>RTK_GNSS_xxxx</code> y el PIN es
+      <code>1234</code>. Este paso solo se hace una vez.</p>
+  </div></div>
+
+  <div class="num-step"><div class="bub">4</div><div class="bd">
+    <h4>Crea un perfil NTRIP</h4>
+    <p>En la pestaña <strong>NTRIP</strong>, pulsa "Nuevo perfil" e introduce los datos de tu servidor de
+      correcciones (sección 7 de este manual). Sin este paso el guiado funciona, pero con precisión de metros
+      en lugar de centímetros.</p>
+  </div></div>
+
+  <div class="num-step"><div class="bub">5</div><div class="bd">
+    <h4>Configura tu apero</h4>
+    <p>En la pestaña <strong>Guiado</strong>, botón "Apero": introduce el ancho de trabajo real en metros y,
+      si procede, los desfases y el número de secciones (sección 9).</p>
+  </div></div>
+
+  <div class="num-step"><div class="bub">6</div><div class="bd">
+    <h4>Arranca la fuente de posición</h4>
+    <p>Botón <strong>"Fuente"</strong> → selecciona tu receptor Bluetooth → activa el interruptor de correcciones
+      NTRIP → <strong>Iniciar</strong>. En unos segundos el distintivo superior derecho se pondrá verde con el nombre
+      de tu receptor y el panel mostrará la calidad de la señal.</p>
+  </div></div>
+
+  <div class="note"><b>Comprobación rápida.</b> Sabrás que todo está bien cuando veas: distintivo verde con el
+    nombre del receptor, indicador "NTRIP: conectado" con kilobytes subiendo, y la calidad pasando a
+    <span class="pill" style="background:#2E7D32">RTK FIJO</span> con la edad de correcciones por debajo de 5 segundos.</div>
+
+  <div class="warn"><b>Si la app no encuentra el receptor.</b> Comprueba que está emparejado en los ajustes de
+    Android y que concediste el permiso de dispositivos cercanos. La lista muestra todos los dispositivos
+    emparejados, así que si no aparece ninguno es que falta el permiso.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 6 PANTALLA ============ -->
+<section class="page">
+  <div class="kicker">Sección 4</div>
+  <h2><span class="n">04 ·</span> La pantalla de guiado</h2>
+  <div class="hr"></div>
+  <p>Es la pantalla que usarás el 95 % del tiempo. Está pensada para leerse de un vistazo desde el asiento,
+    con los botones grandes para poder usarla con guantes.</p>
+
+  <div class="fig">
+  <svg viewBox="0 0 560 300">
+    <!-- device frame -->
+    <rect x="8" y="8" width="544" height="284" rx="8" fill="#0E1510"/>
+    <!-- tabs -->
+    <rect x="14" y="14" width="532" height="22" rx="3" fill="#16201A"/>
+    <g font-family="Segoe UI" font-size="9" fill="#9AA79C">
+      <rect x="18" y="17" width="60" height="16" rx="3" fill="#243028"/>
+      <text x="48" y="28" text-anchor="middle" fill="#7CDB8A" font-weight="700">Guiado</text>
+      <text x="112" y="28" text-anchor="middle">Parcelas</text>
+      <text x="176" y="28" text-anchor="middle">Trabajos</text>
+      <text x="240" y="28" text-anchor="middle">NTRIP</text>
+      <text x="306" y="28" text-anchor="middle">Receptor</text>
+      <text x="372" y="28" text-anchor="middle">Ajustes</text>
+    </g>
+    <!-- lightbar -->
+    <rect x="14" y="40" width="532" height="34" fill="#101010"/>
+    <g>
+      <circle cx="150" cy="57" r="5" fill="#E53935"/><circle cx="166" cy="57" r="5" fill="#F9A825"/>
+      <circle cx="182" cy="57" r="5" fill="#F9A825"/><circle cx="198" cy="57" r="5" fill="#43A047"/>
+      <circle cx="214" cy="57" r="5" fill="#43A047"/><circle cx="230" cy="57" r="5" fill="#2A2A2A"/>
+      <circle cx="246" cy="57" r="5" fill="#2A2A2A"/>
+      <rect x="256" y="45" width="48" height="24" rx="3" fill="#263238"/>
+      <text x="280" y="62" text-anchor="middle" font-size="15" fill="#fff" font-weight="800" font-family="Segoe UI">32</text>
+      <circle cx="314" cy="57" r="5" fill="#2A2A2A"/><circle cx="330" cy="57" r="5" fill="#2A2A2A"/>
+      <circle cx="346" cy="57" r="5" fill="#2A2A2A"/><circle cx="362" cy="57" r="5" fill="#2A2A2A"/>
+      <circle cx="378" cy="57" r="5" fill="#2A2A2A"/><circle cx="394" cy="57" r="5" fill="#2A2A2A"/>
+      <circle cx="410" cy="57" r="5" fill="#2A2A2A"/>
+    </g>
+    <!-- field canvas -->
+    <rect x="14" y="78" width="386" height="208" fill="#1B2E1B"/>
+    <g stroke="#7CDB8A" stroke-width="0.4" opacity="0.18">
+      <path d="M40,78 V286"/><path d="M110,78 V286"/><path d="M180,78 V286"/><path d="M250,78 V286"/><path d="M320,78 V286"/><path d="M390,78 V286"/>
+      <path d="M14,110 H400"/><path d="M14,150 H400"/><path d="M14,190 H400"/><path d="M14,230 H400"/><path d="M14,270 H400"/>
+    </g>
+    <!-- coverage -->
+    <rect x="120" y="88" width="52" height="190" fill="#32CD32" opacity="0.34"/>
+    <rect x="172" y="88" width="52" height="190" fill="#32CD32" opacity="0.34"/>
+    <rect x="166" y="88" width="12" height="190" fill="#FF6D00" opacity="0.55"/>
+    <!-- pass lines -->
+    <g stroke="#FFFFFF" stroke-width="1" opacity="0.5">
+      <path d="M120,78 V286"/><path d="M224,78 V286"/><path d="M276,78 V286"/>
+    </g>
+    <path d="M172,78 V286" stroke="#FFEB3B" stroke-width="2.4"/>
+    <!-- tractor -->
+    <g>
+      <path d="M186,192 L177,214 L195,214 z" fill="#FFC107"/>
+      <path d="M160,214 H212" stroke="#00E5FF" stroke-width="2.6"/>
+    </g>
+    <!-- badges -->
+    <rect x="300" y="84" width="94" height="16" rx="3" fill="#2E7D32" opacity="0.85"/>
+    <text x="347" y="95" text-anchor="middle" font-size="8.5" fill="#fff" font-weight="700" font-family="Segoe UI">RTK_GNSS_2F41</text>
+    <rect x="20" y="84" width="96" height="16" rx="3" fill="#2E7D32" opacity="0.85"/>
+    <text x="68" y="95" text-anchor="middle" font-size="8.5" fill="#fff" font-weight="700" font-family="Segoe UI">Siembra maíz · ACTIVO</text>
+    <!-- section bar -->
+    <g>
+      <rect x="46" y="264" width="80" height="16" rx="3" fill="#2E7D32"/><text x="86" y="275" text-anchor="middle" font-size="8" fill="#fff" font-weight="700" font-family="Segoe UI">1</text>
+      <rect x="130" y="264" width="80" height="16" rx="3" fill="#37474F"/><text x="170" y="275" text-anchor="middle" font-size="8" fill="#fff" font-weight="700" font-family="Segoe UI">2</text>
+      <rect x="214" y="264" width="80" height="16" rx="3" fill="#2E7D32"/><text x="254" y="275" text-anchor="middle" font-size="8" fill="#fff" font-weight="700" font-family="Segoe UI">3</text>
+      <rect x="298" y="264" width="80" height="16" rx="3" fill="#2E7D32"/><text x="338" y="275" text-anchor="middle" font-size="8" fill="#fff" font-weight="700" font-family="Segoe UI">4</text>
+    </g>
+    <!-- right panel -->
+    <rect x="406" y="78" width="140" height="208" fill="#0E1510"/>
+    <rect x="412" y="84" width="128" height="20" rx="3" fill="#2E7D32"/>
+    <text x="424" y="98" font-size="9" fill="#fff" font-weight="700" font-family="Segoe UI">RTK FIJO</text>
+    <text x="530" y="98" text-anchor="end" font-size="8" fill="#fff" font-family="Segoe UI">18 sat · 7,2 km/h</text>
+    <g font-family="Segoe UI" font-size="8.6" fill="#F2F5F2">
+      <text x="412" y="118">Pasada: 3</text>
+      <text x="412" y="134">Tratado</text><text x="540" y="134" text-anchor="end" font-weight="700">4,82 ha</text>
+      <text x="412" y="147">Solape</text><text x="540" y="147" text-anchor="end" font-weight="700">0,21 ha (4,3 %)</text>
+      <text x="412" y="160">Distancia</text><text x="540" y="160" text-anchor="end" font-weight="700">9,44 km</text>
+    </g>
+    <g>
+      <rect x="412" y="168" width="30" height="14" rx="7" fill="#243028"/><text x="427" y="178" text-anchor="middle" font-size="7.5" fill="#9AA79C" font-family="Segoe UI">Libre</text>
+      <rect x="446" y="168" width="26" height="14" rx="7" fill="#7CDB8A"/><text x="459" y="178" text-anchor="middle" font-size="7.5" fill="#06250B" font-family="Segoe UI" font-weight="700">AB</text>
+      <rect x="476" y="168" width="26" height="14" rx="7" fill="#243028"/><text x="489" y="178" text-anchor="middle" font-size="7.5" fill="#9AA79C" font-family="Segoe UI">A+</text>
+      <rect x="506" y="168" width="34" height="14" rx="7" fill="#243028"/><text x="523" y="178" text-anchor="middle" font-size="7.5" fill="#9AA79C" font-family="Segoe UI">Curva</text>
+    </g>
+    <rect x="412" y="188" width="128" height="18" rx="3" fill="#7CDB8A"/><text x="476" y="200" text-anchor="middle" font-size="8.5" fill="#06250B" font-weight="700" font-family="Segoe UI">Marcar A</text>
+    <rect x="412" y="210" width="128" height="18" rx="3" fill="#7CDB8A"/><text x="476" y="222" text-anchor="middle" font-size="8.5" fill="#06250B" font-weight="700" font-family="Segoe UI">Marcar B</text>
+    <rect x="412" y="232" width="128" height="18" rx="3" fill="none" stroke="#7CDB8A"/><text x="476" y="244" text-anchor="middle" font-size="8.5" fill="#7CDB8A" font-family="Segoe UI">Apero</text>
+    <rect x="412" y="254" width="128" height="18" rx="3" fill="none" stroke="#7CDB8A"/><text x="476" y="266" text-anchor="middle" font-size="8.5" fill="#7CDB8A" font-family="Segoe UI">Fuente</text>
+
+    <!-- callouts -->
+    <g font-family="Segoe UI" font-size="9.5" font-weight="800">
+      <circle cx="466" cy="57" r="9" fill="#F5C518"/><text x="466" y="61" text-anchor="middle" fill="#14201A">1</text>
+      <circle cx="68" cy="112" r="9" fill="#F5C518"/><text x="68" y="116" text-anchor="middle" fill="#14201A">2</text>
+      <circle cx="347" cy="112" r="9" fill="#F5C518"/><text x="347" y="116" text-anchor="middle" fill="#14201A">3</text>
+      <circle cx="252" cy="140" r="9" fill="#F5C518"/><text x="252" y="144" text-anchor="middle" fill="#14201A">4</text>
+      <circle cx="30" cy="272" r="9" fill="#F5C518"/><text x="30" y="276" text-anchor="middle" fill="#14201A">5</text>
+      <circle cx="396" cy="96" r="9" fill="#F5C518"/><text x="396" y="100" text-anchor="middle" fill="#14201A">6</text>
+      <circle cx="396" cy="147" r="9" fill="#F5C518"/><text x="396" y="151" text-anchor="middle" fill="#14201A">7</text>
+      <circle cx="396" cy="199" r="9" fill="#F5C518"/><text x="396" y="203" text-anchor="middle" fill="#14201A">8</text>
+    </g>
+  </svg>
+  </div>
+
+  <div class="grid g2" style="margin-top:3mm; font-size:9.2pt">
+    <div>
+      <p><strong>1 · Lightbar.</strong> Tu desvío respecto a la línea, en centímetros. Se explica en la sección 5.</p>
+      <p><strong>2 · Trabajo activo.</strong> Nombre y estado de la faena que se está grabando (verde activo, ámbar en pausa).</p>
+      <p><strong>3 · Fuente activa.</strong> Verde con el nombre del receptor si está conectado. En naranja avisa de que estás en modo demo.</p>
+      <p><strong>4 · Vista de campo.</strong> Cobertura en verde, solape en naranja, pasadas en blanco y la pasada actual en amarillo.</p>
+    </div>
+    <div>
+      <p><strong>5 · Barra de secciones.</strong> Un botón por tramo del apero: verde abierto, gris cerrado.</p>
+      <p><strong>6 · Estado de la señal.</strong> Calidad del fix, satélites y velocidad.</p>
+      <p><strong>7 · Contadores.</strong> Hectáreas tratadas, solape y distancia recorrida en tiempo real.</p>
+      <p><strong>8 · Modo y acciones.</strong> Tipo de línea y botones contextuales para marcarla.</p>
+    </div>
+  </div>
+
+  <div class="tip" style="margin-top:1mm"><b>Gestos sobre el campo.</b> Pellizca para acercar o alejar y toca dos
+    veces para alternar entre vista orientada al rumbo (el tractor siempre apunta arriba) y vista orientada al norte.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 7 LIGHTBAR ============ -->
+<section class="page">
+  <div class="kicker">Sección 5</div>
+  <h2><span class="n">05 ·</span> El lightbar</h2>
+  <div class="hr"></div>
+  <p class="lead">La barra de luces es la herramienta principal de guiado: te dice cuánto te has desviado y hacia
+    dónde corregir, sin necesidad de leer ningún número.</p>
+
+  <div class="fig">
+  <svg viewBox="0 0 560 150">
+    <rect x="30" y="20" width="500" height="52" rx="4" fill="#101010"/>
+    <g>
+      <circle cx="72" cy="46" r="8" fill="#E53935"/><circle cx="98" cy="46" r="8" fill="#F9A825"/>
+      <circle cx="124" cy="46" r="8" fill="#F9A825"/><circle cx="150" cy="46" r="8" fill="#43A047"/>
+      <circle cx="176" cy="46" r="8" fill="#43A047"/><circle cx="202" cy="46" r="8" fill="#43A047"/>
+      <circle cx="228" cy="46" r="8" fill="#43A047"/>
+      <rect x="246" y="28" width="68" height="36" rx="4" fill="#263238"/>
+      <text x="280" y="54" text-anchor="middle" font-size="22" fill="#fff" font-weight="800" font-family="Segoe UI">42</text>
+      <circle cx="332" cy="46" r="8" fill="#2A2A2A"/><circle cx="358" cy="46" r="8" fill="#2A2A2A"/>
+      <circle cx="384" cy="46" r="8" fill="#2A2A2A"/><circle cx="410" cy="46" r="8" fill="#2A2A2A"/>
+      <circle cx="436" cy="46" r="8" fill="#2A2A2A"/><circle cx="462" cy="46" r="8" fill="#2A2A2A"/>
+      <circle cx="488" cy="46" r="8" fill="#2A2A2A"/>
+    </g>
+    <g font-family="Segoe UI">
+      <path d="M150,88 L88,88" stroke="#2E7D32" stroke-width="1.6" marker-end="url(#ar)"/>
+      <text x="150" y="104" font-size="10.5" fill="#1B5E20" font-weight="700">Se encienden a la izquierda:</text>
+      <text x="150" y="118" font-size="10.5" fill="#33413A">gira el volante hacia la izquierda</text>
+      <text x="280" y="88" text-anchor="middle" font-size="9.5" fill="#6B7A70">desvío en cm</text>
+      <text x="410" y="104" text-anchor="middle" font-size="10" fill="#6B7A70">cada luz = 10 cm</text>
+      <text x="410" y="118" text-anchor="middle" font-size="10" fill="#6B7A70">7 luces = 70 cm o más</text>
+    </g>
+  </svg>
+  <div class="figcap">Ejemplo: estás 42 cm a la derecha de la línea, por lo que se iluminan cuatro luces del lado
+    izquierdo. Corriges hacia la izquierda hasta que se apaguen y el recuadro central se ponga verde.</div>
+  </div>
+
+  <div class="note"><b>Regla de oro: conduce hacia las luces encendidas.</b> No indican dónde estás, sino hacia
+    dónde tienes que girar. Es el mismo criterio que usan las barras de luces de los equipos profesionales.</div>
+
+  <h3>Cómo interpretar los colores</h3>
+  <table>
+    <tr><th style="width:34mm">Aspecto</th><th style="width:32mm">Desvío</th><th>Qué significa</th></tr>
+    <tr><td><span class="pill" style="background:#2E7D32">Recuadro verde</span></td><td>menos de 5 cm</td>
+        <td>Estás en la línea. Mantén el volante firme.</td></tr>
+    <tr><td><span class="pill" style="background:#43A047">Luces verdes</span></td><td>10 – 30 cm</td>
+        <td>Desvío leve. Corrige suavemente, sin brusquedad.</td></tr>
+    <tr><td><span class="pill" style="background:#F9A825">Luces ámbar</span></td><td>30 – 50 cm</td>
+        <td>Te estás separando. Corrige ya o dejarás un hueco o un solape visible.</td></tr>
+    <tr><td><span class="pill" style="background:#E53935">Luces rojas</span></td><td>más de 50 cm</td>
+        <td>Desvío grande. Si continúa, revisa si te has saltado a la pasada contigua.</td></tr>
+    <tr><td><span class="pill" style="background:#424242">Guion (—)</span></td><td>—</td>
+        <td>No hay línea de guiado activa o no hay posición. Marca una línea AB para empezar.</td></tr>
+  </table>
+
+  <div class="tip"><b>El número siempre es positivo.</b> Muestra la magnitud del desvío en centímetros; el lado
+    hacia el que corregir lo indican las luces, no el número.</div>
+
+  <div class="warn"><b>A muy baja velocidad el rumbo es inestable.</b> Por debajo de 0,5 km/h el receptor no puede
+    calcular con fiabilidad hacia dónde apuntas, así que el lightbar puede oscilar con el tractor parado. En marcha
+    normal de trabajo es completamente estable.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 8 FUENTES ============ -->
+<section class="page">
+  <div class="kicker">Sección 6</div>
+  <h2><span class="n">06 ·</span> Fuentes de posición</h2>
+  <div class="hr"></div>
+  <p>La fuente es de dónde saca la aplicación la posición. Se elige con el botón <strong>Fuente</strong> de la
+    pantalla de guiado y hay que pulsar <strong>Iniciar</strong> para arrancarla.</p>
+
+  <div class="grid g3" style="margin-top:3mm">
+    <div class="card hi">
+      <div class="ic" style="background:#2E7D32"><svg width="5mm" height="5mm" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg></div>
+      <h4>Receptor Bluetooth RTK</h4>
+      <p style="margin-bottom:2mm"><span class="pill" style="background:#2E7D32">Recomendada</span></p>
+      <p>La app abre el enlace con el receptor, interpreta sus datos y le envía las correcciones. Es la única
+        opción que alcanza precisión centimétrica real.</p>
+    </div>
+    <div class="card">
+      <div class="ic" style="background:#1565C0"><svg width="5mm" height="5mm" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><circle cx="12" cy="10" r="3"/><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/></svg></div>
+      <h4>Ubicación de Android</h4>
+      <p>Usa el GPS interno del móvil. Sirve para probar la aplicación o para trabajos donde bastan unos metros
+        de precisión. También recoge la señal de aplicaciones externas que simulan posición.</p>
+    </div>
+    <div class="card">
+      <div class="ic" style="background:#EF6C00"><svg width="5mm" height="5mm" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M5 3v18l14-9z"/></svg></div>
+      <h4>Demo (simulado)</h4>
+      <p>Un tractor virtual que avanza solo. Sirve para aprender a usar la aplicación en casa, sin hardware.
+        <strong>No es una posición real.</strong></p>
+    </div>
+  </div>
+
+  <div class="warn"><b>El modo demo se avisa siempre.</b> Cuando está activo, el distintivo de la esquina superior
+    derecha se muestra en naranja con el texto <span class="pill" style="background:#EF6C00">DEMO · SIMULADO</span>.
+    La aplicación nunca arranca sola en este modo: solo se activa si lo eliges expresamente.</div>
+
+  <h3>Diferencias prácticas</h3>
+  <table>
+    <tr><th style="width:44mm">Característica</th><th>Bluetooth RTK</th><th>Ubicación Android</th><th>Demo</th></tr>
+    <tr><td><strong>Precisión</strong></td><td>1 – 3 cm</td><td>2 – 5 m</td><td>Simulada</td></tr>
+    <tr><td><strong>Frecuencia</strong></td><td>Hasta 10 Hz</td><td>Variable</td><td>5 Hz</td></tr>
+    <tr><td><strong>Admite NTRIP</strong></td><td>Sí</td><td>No</td><td>No</td></tr>
+    <tr><td><strong>Utilidades de receptor</strong></td><td>Sí</td><td>No</td><td>No</td></tr>
+    <tr><td><strong>Necesita hardware</strong></td><td>Sí</td><td>No</td><td>No</td></tr>
+  </table>
+
+  <h3>Reconexión automática</h3>
+  <p>Si el receptor se apaga, se aleja o el enlace se corta, la aplicación lo detecta en <strong>5 segundos</strong>
+    y empieza a reintentar la conexión, espaciando los intentos progresivamente (1 s, 2 s, 4 s… hasta 1 minuto) para
+    no agotar la batería. Cuando el receptor vuelve a estar disponible, se reconecta sola y el trabajo continúa
+    sin que tengas que tocar nada.</p>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 9 NTRIP 1 ============ -->
+<section class="page">
+  <div class="kicker">Sección 7</div>
+  <h2><span class="n">07 ·</span> Correcciones NTRIP</h2>
+  <div class="hr"></div>
+  <p class="lead">Es lo que convierte un GPS normal en un sistema centimétrico. Sin correcciones el receptor
+    se equivoca varios metros; con ellas, unos pocos centímetros.</p>
+
+  <div class="fig" style="margin:3mm 0">
+  <svg viewBox="0 0 560 96">
+    <g font-family="Segoe UI">
+      <rect x="0" y="24" width="118" height="44" rx="5" fill="#1B5E20"/>
+      <text x="59" y="44" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">Estación fija</text>
+      <text x="59" y="58" text-anchor="middle" font-size="8.5" fill="#A5D6A7">sabe dónde está</text>
+
+      <path d="M122,46 L146,46" stroke="#2E7D32" stroke-width="1.6" marker-end="url(#ar)"/>
+
+      <rect x="150" y="24" width="118" height="44" rx="5" fill="#2E7D32"/>
+      <text x="209" y="44" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">Servidor NTRIP</text>
+      <text x="209" y="58" text-anchor="middle" font-size="8.5" fill="#C8E6C9">publica correcciones</text>
+
+      <path d="M272,46 L296,46" stroke="#2E7D32" stroke-width="1.6" marker-end="url(#ar)"/>
+
+      <rect x="300" y="24" width="118" height="44" rx="5" fill="#43A047"/>
+      <text x="359" y="44" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">AgroGuide RTK</text>
+      <text x="359" y="58" text-anchor="middle" font-size="8.5" fill="#E8F5E9">datos móviles</text>
+
+      <path d="M422,46 L446,46" stroke="#2E7D32" stroke-width="1.6" marker-end="url(#ar)"/>
+
+      <rect x="450" y="24" width="110" height="44" rx="5" fill="#F5C518"/>
+      <text x="505" y="44" text-anchor="middle" font-size="10" fill="#14201A" font-weight="700">Receptor</text>
+      <text x="505" y="58" text-anchor="middle" font-size="8.5" fill="#5A4A00">aplica y afina</text>
+
+      <text x="280" y="12" text-anchor="middle" font-size="9" fill="#6B7A70">recorrido de las correcciones RTCM3</text>
+      <text x="280" y="88" text-anchor="middle" font-size="9" fill="#C08A00">La app envía además tu posición al servidor si la estación lo requiere (VRS)</text>
+    </g>
+  </svg>
+  </div>
+
+  <h3>Crear un perfil paso a paso</h3>
+  <p>Ve a la pestaña <strong>NTRIP</strong> y pulsa <strong>"Nuevo perfil"</strong>. Rellena los campos con los
+    datos que te haya facilitado tu proveedor de correcciones:</p>
+
+  <table>
+    <tr><th style="width:40mm">Campo</th><th>Qué poner</th></tr>
+    <tr><td><strong>Nombre del perfil</strong></td><td>Un nombre para reconocerlo, por ejemplo "IGN León". Es solo para ti.</td></tr>
+    <tr><td><strong>Servidor</strong></td><td>La dirección del caster, sin <code>http://</code>. Por ejemplo <code>rtk2go.com</code>.</td></tr>
+    <tr><td><strong>Puerto</strong></td><td>Casi siempre <code>2101</code>. Te lo indica el proveedor.</td></tr>
+    <tr><td><strong>Mountpoint</strong></td><td>La estación concreta. Pulsa <strong>"Explorar mountpoints"</strong> para verlas todas y elegir la más cercana a tu parcela.</td></tr>
+    <tr><td><strong>Usuario y contraseña</strong></td><td>Las credenciales del servicio. Algunos servidores públicos no las necesitan.</td></tr>
+    <tr><td><strong>NTRIP v2</strong></td><td>Actívalo solo si tu proveedor especifica la versión 2 del protocolo. Si no lo sabes, déjalo desactivado.</td></tr>
+    <tr><td><strong>Enviar GGA</strong></td><td>Necesario en estaciones virtuales (VRS), que generan la corrección a medida para tu ubicación. Déjalo activado si tienes dudas.</td></tr>
+    <tr><td><strong>Intervalo GGA</strong></td><td>Cada cuántos segundos se envía tu posición al servidor. <code>10</code> es un valor adecuado.</td></tr>
+  </table>
+
+  <div class="tip"><b>Usa el explorador de mountpoints.</b> Es la forma más fiable de acertar: se conecta al
+    servidor y lista las estaciones disponibles con su formato y país. Un candado indica que requiere credenciales
+    y la etiqueta GGA que necesita recibir tu posición.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 10 NTRIP 2 ============ -->
+<section class="page">
+  <div class="kicker">Sección 7 · continuación</div>
+  <h2>Servidores y verificación</h2>
+  <div class="hr"></div>
+
+  <h3>Servidores gratuitos</h3>
+  <div class="grid g2">
+    <div class="card hi">
+      <h4>Red del IGN (España)</h4>
+      <p style="margin-bottom:2mm"><span class="pill" style="background:#2E7D32">Recomendado en España</span></p>
+      <p>El Instituto Geográfico Nacional ofrece acceso gratuito a más de 270 estaciones de referencia, integrando
+        además las redes de las comunidades autónomas en un único servidor. Es una red oficial, con cobertura y
+        fiabilidad muy superiores a las alternativas comunitarias.</p>
+      <p style="margin-top:2mm">Consulta los datos de conexión actualizados en el portal de posicionamiento en
+        tiempo real del IGN (<code>ign.es</code>).</p>
+    </div>
+    <div class="card">
+      <h4>RTK2go (mundial)</h4>
+      <p style="margin-bottom:2mm"><span class="pill" style="background:#EF6C00">Solo para pruebas</span></p>
+      <p>Servidor comunitario donde particulares comparten sus propias bases. Para recibir correcciones no hace
+        falta registrarse:</p>
+      <p style="margin-top:2mm">Servidor <code>rtk2go.com</code> · Puerto <code>2101</code><br>
+         Usuario: tu correo electrónico · Contraseña: <code>none</code></p>
+      <p style="margin-top:2mm">Depende de que haya un voluntario con una base cerca de tu zona y no ofrece
+        garantía de servicio.</p>
+    </div>
+  </div>
+
+  <div class="note"><b>La distancia importa.</b> La precisión se degrada a medida que te alejas de la estación de
+    referencia. Por debajo de 20 km el resultado es excelente; a partir de 40 km empezarás a notar que cuesta más
+    alcanzar el estado RTK FIJO.</div>
+
+  <h3>Activar las correcciones</h3>
+  <p>Tener un perfil creado no basta: hay que activarlo y encender el interruptor.</p>
+  <div class="num-step"><div class="bub">1</div><div class="bd">
+    <p>En la pestaña NTRIP, marca el círculo del perfil que quieras usar. Ese será el <strong>perfil activo</strong>.</p>
+  </div></div>
+  <div class="num-step"><div class="bub">2</div><div class="bd">
+    <p>Vuelve a <strong>Guiado</strong> → <strong>Fuente</strong>, elige tu receptor Bluetooth y activa el
+      interruptor <strong>"Correcciones NTRIP"</strong>.</p>
+  </div></div>
+  <div class="num-step"><div class="bub">3</div><div class="bd">
+    <p>Pulsa <strong>Iniciar</strong>. Verás el indicador <strong>"NTRIP: conectado"</strong> en verde con los
+      kilobytes recibidos aumentando.</p>
+  </div></div>
+
+  <h3>Cómo saber que está funcionando</h3>
+  <table>
+    <tr><th style="width:52mm">Señal</th><th>Interpretación</th></tr>
+    <tr><td><strong>NTRIP: conectado · N KB</strong></td><td>Correcto. Si los KB no suben, el servidor acepta la conexión pero no envía datos: revisa el mountpoint.</td></tr>
+    <tr><td><strong>Edad corr. por debajo de 5 s</strong></td><td>Las correcciones llegan con fluidez. Es el valor normal de trabajo.</td></tr>
+    <tr><td><strong>Calidad RTK FIJO</strong></td><td>Objetivo alcanzado. Precisión centimétrica.</td></tr>
+    <tr><td><strong>NTRIP: sin conexión</strong></td><td>Sin datos móviles, credenciales incorrectas o servidor caído. La app reintenta sola.</td></tr>
+  </table>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 11 RECEPTOR ============ -->
+<section class="page">
+  <div class="kicker">Sección 8</div>
+  <h2><span class="n">08 ·</span> Utilidades del receptor</h2>
+  <div class="hr"></div>
+  <p class="lead">La pestaña <strong>Receptor</strong> permite configurar el ZED-F9P directamente desde la
+    aplicación, sin cables ni programas de ordenador.</p>
+
+  <div class="grid g2" style="margin-top:3mm">
+    <div class="card hi">
+      <h4>Optimizar receptor (5 Hz)</h4>
+      <p>Sube la frecuencia de posición de 1 a <strong>5 veces por segundo</strong> y desactiva las frases de
+        satélites en vista, que ocupan mucho ancho de banda y no se usan para guiar.</p>
+      <p style="margin-top:2mm"><strong>Resultado:</strong> el tractor se mueve mucho más fluido en pantalla y el
+        lightbar responde antes, con menos tráfico por Bluetooth.</p>
+    </div>
+    <div class="card">
+      <h4>Restaurar valores de fábrica</h4>
+      <p>Devuelve los parámetros que toca la aplicación a su estado original: 1 posición por segundo y frases de
+        satélites activadas.</p>
+      <p style="margin-top:2mm">Úsalo si vas a emplear el receptor con otro programa que espere la configuración
+        estándar.</p>
+    </div>
+  </div>
+
+  <div class="note"><b>Los cambios son permanentes.</b> Se guardan en la memoria del receptor (RAM y flash), así
+    que se mantienen aunque lo apagues. Solo hay que hacerlo una vez.</div>
+
+  <h3>Confirmación</h3>
+  <p>Tras pulsar el botón, el receptor responde y la aplicación te muestra un mensaje en la parte inferior:</p>
+  <table>
+    <tr><th style="width:60mm">Mensaje</th><th>Significado</th></tr>
+    <tr><td><strong>Receptor configurado ✓</strong></td><td>El receptor aceptó el comando y ya está aplicado.</td></tr>
+    <tr><td><strong>El receptor rechazó el comando</strong></td><td>El modelo no admite alguno de los parámetros. La configuración anterior se mantiene.</td></tr>
+    <tr><td><strong>Sin respuesta del receptor</strong></td><td>No contestó en 3 segundos. Comprueba que el enlace Bluetooth sigue activo.</td></tr>
+  </table>
+
+  <div class="warn"><b>Requiere conexión Bluetooth activa.</b> Los botones solo se habilitan cuando la fuente en
+    marcha es el receptor Bluetooth. Con el modo demo o la ubicación de Android aparecerán en gris.</div>
+
+  <div class="tip"><b>Compatibilidad.</b> Estas utilidades usan el protocolo de configuración de u-blox y están
+    ajustadas al ZED-F9P del kit ArduSimple. Otros receptores pueden ignorar los comandos, pero nunca resultarán
+    dañados: si no los entienden, simplemente los rechazan.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 12 APERO ============ -->
+<section class="page">
+  <div class="kicker">Sección 9</div>
+  <h2><span class="n">09 ·</span> Configurar el apero</h2>
+  <div class="hr"></div>
+  <p class="lead">Es la configuración que más afecta a la calidad del trabajo. Si el ancho no es exacto, las
+    pasadas no encajarán y tendrás huecos o solapes constantes.</p>
+
+  <div class="fig" style="margin:3mm 0">
+  <svg viewBox="0 0 560 230">
+    <defs>
+      <marker id="am" markerWidth="8" markerHeight="8" refX="6" refY="2.6" orient="auto"><path d="M0,0 L6,2.6 L0,5.2 z" fill="#C62828"/></marker>
+      <marker id="am2" markerWidth="8" markerHeight="8" refX="0" refY="2.6" orient="auto"><path d="M6,0 L0,2.6 L6,5.2 z" fill="#C62828"/></marker>
+      <marker id="ab" markerWidth="8" markerHeight="8" refX="6" refY="2.6" orient="auto"><path d="M0,0 L6,2.6 L0,5.2 z" fill="#1565C0"/></marker>
+      <marker id="ab2" markerWidth="8" markerHeight="8" refX="0" refY="2.6" orient="auto"><path d="M6,0 L0,2.6 L6,5.2 z" fill="#1565C0"/></marker>
+    </defs>
+    <rect x="0" y="0" width="560" height="230" fill="#fff"/>
+
+    <!-- tractor top view -->
+    <g>
+      <rect x="252" y="30" width="46" height="76" rx="5" fill="#2E7D32"/>
+      <rect x="240" y="42" width="14" height="20" rx="3" fill="#1A1A1A"/><rect x="296" y="42" width="14" height="20" rx="3" fill="#1A1A1A"/>
+      <rect x="236" y="76" width="18" height="26" rx="3" fill="#1A1A1A"/><rect x="296" y="76" width="18" height="26" rx="3" fill="#1A1A1A"/>
+      <rect x="262" y="46" width="26" height="26" rx="3" fill="#BFE6F5"/>
+      <circle cx="275" cy="36" r="5" fill="#F5C518" stroke="#14201A" stroke-width="1.2"/>
+      <text x="275" y="22" text-anchor="middle" font-size="9" font-family="Segoe UI" fill="#14201A" font-weight="700">antena GNSS</text>
+    </g>
+
+    <!-- implement bar -->
+    <g>
+      <rect x="120" y="150" width="310" height="12" rx="2" fill="#00838F"/>
+      <path d="M275,106 L275,150" stroke="#455A64" stroke-width="4"/>
+      <!-- sections -->
+      <g fill="#00ACC1" stroke="#fff" stroke-width="1.4">
+        <rect x="120" y="150" width="77.5" height="12"/><rect x="197.5" y="150" width="77.5" height="12"/>
+        <rect x="275" y="150" width="77.5" height="12"/><rect x="352.5" y="150" width="77.5" height="12"/>
+      </g>
+      <g font-family="Segoe UI" font-size="9" fill="#fff" font-weight="700" text-anchor="middle">
+        <text x="158" y="159">1</text><text x="236" y="159">2</text><text x="313" y="159">3</text><text x="391" y="159">4</text>
+      </g>
+    </g>
+
+    <!-- width arrow -->
+    <path d="M120,182 L430,182" stroke="#C62828" stroke-width="1.4" marker-start="url(#am2)" marker-end="url(#am)"/>
+    <text x="275" y="196" text-anchor="middle" font-size="10.5" font-family="Segoe UI" fill="#C62828" font-weight="700">Ancho de trabajo</text>
+    <text x="275" y="210" text-anchor="middle" font-size="9" font-family="Segoe UI" fill="#6B7A70">medido de extremo a extremo del apero</text>
+
+    <!-- longitudinal -->
+    <path d="M470,36 L470,156" stroke="#1565C0" stroke-width="1.4" marker-start="url(#ab2)" marker-end="url(#ab)"/>
+    <path d="M275,36 L470,36" stroke="#1565C0" stroke-width="0.8" stroke-dasharray="3 3"/>
+    <path d="M430,156 L470,156" stroke="#1565C0" stroke-width="0.8" stroke-dasharray="3 3"/>
+    <text x="484" y="92" font-size="10" font-family="Segoe UI" fill="#1565C0" font-weight="700">Antena</text>
+    <text x="484" y="105" font-size="10" font-family="Segoe UI" fill="#1565C0" font-weight="700">→ apero</text>
+
+    <!-- lateral -->
+    <path d="M275,124 L305,124" stroke="#7B1FA2" stroke-width="1.4" marker-end="url(#ar)"/>
+    <text x="316" y="128" font-size="9.5" font-family="Segoe UI" fill="#7B1FA2" font-weight="700">Desfase lateral</text>
+    <text x="316" y="140" font-size="8.5" font-family="Segoe UI" fill="#6B7A70">(0 si va centrado)</text>
+
+    <!-- section labels -->
+    <text x="60" y="158" font-size="9.5" font-family="Segoe UI" fill="#00838F" font-weight="700">Secciones</text>
+    <text x="60" y="170" font-size="8.5" font-family="Segoe UI" fill="#6B7A70">1 = izquierda</text>
+  </svg>
+  <div class="figcap">Vista desde arriba. Todas las medidas se toman respecto a la antena GNSS, no respecto al tractor.</div>
+  </div>
+
+  <h3>Los cuatro campos</h3>
+  <table>
+    <tr><th style="width:44mm">Campo</th><th>Cómo medirlo</th></tr>
+    <tr><td><strong>Ancho de trabajo</strong></td>
+        <td>El ancho real que trabaja el apero, en metros. En una sembradora, la distancia entre la primera y la última línea más una separación entre líneas. <em>Es el dato más importante.</em></td></tr>
+    <tr><td><strong>Desfase lateral</strong></td>
+        <td>Cuánto está desplazado el centro del apero respecto a la antena. <strong>Positivo hacia la derecha</strong>, negativo hacia la izquierda. Déjalo en 0 si el apero va centrado.</td></tr>
+    <tr><td><strong>Antena → apero</strong></td>
+        <td>Distancia desde la antena hasta donde trabaja realmente el apero. <strong>Positivo si va detrás</strong> (lo habitual en aperos arrastrados o suspendidos).</td></tr>
+    <tr><td><strong>Secciones</strong></td>
+        <td>En cuántos tramos independientes se divide el ancho, de 1 a 16. Se reparten por igual y se numeran de izquierda a derecha en el sentido de la marcha.</td></tr>
+  </table>
+
+  <div class="tip"><b>Por qué importa el desfase longitudinal.</b> En las curvas, el apero no sigue la misma
+    trayectoria que la antena. Introducir esta medida hace que la cobertura se pinte donde realmente estás
+    trabajando, y no donde está el tractor.</div>
+
+  <div class="note"><b>Acepta coma o punto.</b> Puedes escribir <code>6,5</code> o <code>6.5</code> indistintamente.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 13 LINEAS ============ -->
+<section class="page">
+  <div class="kicker">Sección 10</div>
+  <h2><span class="n">10 ·</span> Líneas de guiado</h2>
+  <div class="hr"></div>
+  <p>La línea es la referencia que sigues. A partir de ella, la aplicación genera automáticamente todas las
+    pasadas paralelas separadas exactamente por el ancho de tu apero.</p>
+
+  <div class="fig" style="margin:3mm 0">
+  <svg viewBox="0 0 560 190">
+    <rect x="0" y="0" width="560" height="190" fill="#1B2E1B" rx="4"/>
+    <g stroke="#fff" stroke-width="1.2" opacity="0.45">
+      <path d="M120,14 V176"/><path d="M200,14 V176"/><path d="M360,14 V176"/><path d="M440,14 V176"/>
+    </g>
+    <path d="M280,14 V176" stroke="#FFEB3B" stroke-width="3"/>
+    <g fill="#32CD32" opacity="0.3">
+      <rect x="160" y="14" width="80" height="162"/><rect x="320" y="14" width="80" height="162"/>
+    </g>
+    <!-- A and B markers -->
+    <circle cx="280" cy="164" r="7" fill="#66BB6A" stroke="#fff" stroke-width="1.5"/>
+    <text x="280" y="167.5" text-anchor="middle" font-size="9" font-family="Segoe UI" fill="#0B2410" font-weight="800">A</text>
+    <circle cx="280" cy="26" r="7" fill="#EF5350" stroke="#fff" stroke-width="1.5"/>
+    <text x="280" y="29.5" text-anchor="middle" font-size="9" font-family="Segoe UI" fill="#fff" font-weight="800">B</text>
+    <!-- tractor -->
+    <path d="M312,112 L303,134 L321,134 z" fill="#FFC107"/>
+    <path d="M286,134 H338" stroke="#00E5FF" stroke-width="2.6"/>
+    <!-- xte -->
+    <path d="M280,150 L312,150" stroke="#FF5252" stroke-width="1.6" marker-end="url(#ar)"/>
+    <text x="296" y="146" text-anchor="middle" font-size="9" font-family="Segoe UI" fill="#FF8A80" font-weight="700">desvío</text>
+    <g font-family="Segoe UI" font-size="9" fill="#CFE3D2">
+      <text x="120" y="186" text-anchor="middle">pasada −2</text>
+      <text x="200" y="186" text-anchor="middle">pasada −1</text>
+      <text x="280" y="186" text-anchor="middle" fill="#FFEB3B" font-weight="700">línea base (0)</text>
+      <text x="360" y="186" text-anchor="middle">pasada +1</text>
+      <text x="440" y="186" text-anchor="middle">pasada +2</text>
+    </g>
+  </svg>
+  <div class="figcap">La línea amarilla es la pasada en la que estás. La aplicación cambia de pasada
+    automáticamente cuando te acercas más a la contigua: no hay que pulsar nada al girar en la cabecera.</div>
+  </div>
+
+  <h3>Los cuatro modos</h3>
+  <div class="grid g2">
+    <div class="card hi">
+      <h4>AB — dos puntos</h4>
+      <p>El modo habitual. Conduce hasta un extremo, pulsa <strong>Marcar A</strong>, recorre la pasada y pulsa
+        <strong>Marcar B</strong> en el otro extremo. La recta entre ambos define todo el trabajo.</p>
+    </div>
+    <div class="card">
+      <h4>A+ — punto y rumbo</h4>
+      <p>Marca un único punto y la línea se traza en la dirección en la que estás circulando en ese instante.
+        Útil cuando ya sabes la orientación exacta o quieres repetir la de un trabajo anterior.</p>
+    </div>
+    <div class="card">
+      <h4>Curva</h4>
+      <p>Pulsa <strong>Grabar curva</strong> y conduce la primera pasada como quieras: en curva, siguiendo un
+        lindero o una acequia. Al pulsar <strong>Fin curva</strong> se generan las pasadas paralelas a esa forma.</p>
+    </div>
+    <div class="card">
+      <h4>Libre</h4>
+      <p>Sin línea de referencia. La aplicación sigue pintando la cobertura y contando hectáreas, pero el
+        lightbar no muestra desvío. Útil para trabajos sin pasadas definidas.</p>
+    </div>
+  </div>
+
+  <div class="tip"><b>Consejo para la línea AB.</b> Cuanto más larga sea la referencia entre A y B, más precisa
+    será la orientación de todas las pasadas. Marca los puntos en los extremos opuestos de la parcela, no en un
+    tramo corto. La distancia mínima admitida es de 2 metros.</div>
+
+  <div class="note"><b>La línea se guarda.</b> Al cerrar la aplicación no la pierdes: al volver a abrirla sigue
+    activa. Para eliminarla, pulsa <strong>"Borrar línea"</strong>.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 14 COBERTURA ============ -->
+<section class="page">
+  <div class="kicker">Sección 11</div>
+  <h2><span class="n">11 ·</span> Cobertura, solape y secciones</h2>
+  <div class="hr"></div>
+  <p>Mientras avanzas, la aplicación va pintando la superficie que trabaja el apero. Es la forma más directa de
+    ver qué te falta y de evitar pasar dos veces por el mismo sitio.</p>
+
+  <div class="grid g2" style="margin:3mm 0">
+    <div class="fig">
+      <svg viewBox="0 0 250 130">
+        <rect width="250" height="130" fill="#1B2E1B" rx="3"/>
+        <rect x="30" y="12" width="70" height="106" fill="#32CD32" opacity="0.35"/>
+        <rect x="94" y="12" width="70" height="106" fill="#32CD32" opacity="0.35"/>
+        <rect x="94" y="12" width="6" height="106" fill="#FF6D00" opacity="0.75"/>
+        <text x="65" y="70" text-anchor="middle" font-size="9" font-family="Segoe UI" fill="#fff">tratado</text>
+        <text x="190" y="60" text-anchor="middle" font-size="9" font-family="Segoe UI" fill="#FFB74D">solape</text>
+        <path d="M170,64 L104,64" stroke="#FFB74D" stroke-width="1.2" marker-end="url(#ar)"/>
+      </svg>
+      <div class="figcap">Verde: superficie tratada. Naranja: zona pasada dos veces.</div>
+    </div>
+    <div>
+      <h3 style="margin-top:0">Los contadores</h3>
+      <p style="font-size:9.4pt">En el panel derecho se actualizan en tiempo real:</p>
+      <ul style="font-size:9.4pt">
+        <li><strong>Tratado:</strong> hectáreas cubiertas, contando una sola vez lo que has repetido.</li>
+        <li><strong>Solape:</strong> hectáreas pasadas más de una vez, y su porcentaje sobre lo tratado.</li>
+        <li><strong>Distancia:</strong> kilómetros recorridos durante el trabajo.</li>
+      </ul>
+      <p style="font-size:9.4pt">Un porcentaje de solape por debajo del 3 % indica un trabajo muy bien
+        ejecutado. Por encima del 10 % conviene revisar si el ancho configurado es correcto.</p>
+    </div>
+  </div>
+
+  <h3>Control de secciones</h3>
+  <p>Si has configurado varias secciones, aparece una barra en la parte inferior de la vista de campo con un botón
+    por tramo. Toca cualquiera para abrirlo o cerrarlo:</p>
+
+  <svg viewBox="0 0 560 44" style="margin:2mm 0">
+    <rect x="0" y="0" width="70" height="30" rx="4" fill="#243028"/>
+    <text x="35" y="19" text-anchor="middle" font-size="10" font-family="Segoe UI" fill="#7CDB8A">todas</text>
+    <rect x="78" y="0" width="112" height="30" rx="4" fill="#2E7D32"/><text x="134" y="20" text-anchor="middle" font-size="12" font-family="Segoe UI" fill="#fff" font-weight="700">1</text>
+    <rect x="198" y="0" width="112" height="30" rx="4" fill="#37474F"/><text x="254" y="20" text-anchor="middle" font-size="12" font-family="Segoe UI" fill="#fff" font-weight="700">2</text>
+    <rect x="318" y="0" width="112" height="30" rx="4" fill="#2E7D32"/><text x="374" y="20" text-anchor="middle" font-size="12" font-family="Segoe UI" fill="#fff" font-weight="700">3</text>
+    <rect x="438" y="0" width="112" height="30" rx="4" fill="#2E7D32"/><text x="494" y="20" text-anchor="middle" font-size="12" font-family="Segoe UI" fill="#fff" font-weight="700">4</text>
+    <text x="254" y="41" text-anchor="middle" font-size="8.5" font-family="Segoe UI" fill="#6B7A70">sección cerrada</text>
+    <text x="134" y="41" text-anchor="middle" font-size="8.5" font-family="Segoe UI" fill="#2E7D32">abierta</text>
+  </svg>
+
+  <p><strong>Verde</strong> significa abierta y pintando; <strong>gris</strong>, cerrada. El botón "todas" abre o
+    cierra todas a la vez. Es especialmente útil al rematar cabeceras o al entrar en una cuña, donde solo trabaja
+    parte del apero.</p>
+
+  <div class="note"><b>La pintura refleja solo lo activo.</b> Si cierras la sección 2, esa franja deja de pintarse
+    y de contar hectáreas, exactamente como en un sistema de corte de secciones real.</div>
+
+  <div class="warn"><b>Reiniciar cobertura.</b> El botón "Reiniciar cobertura" borra todo lo pintado y pone los
+    contadores a cero. Si estás grabando un trabajo, no elimina lo ya registrado en el histórico, pero sí lo que
+    ves en pantalla. Pide confirmación antes de actuar.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 15 PARCELAS ============ -->
+<section class="page">
+  <div class="kicker">Sección 12</div>
+  <h2><span class="n">12 ·</span> Parcelas</h2>
+  <div class="hr"></div>
+  <p class="lead">Guarda el contorno de tus fincas para conocer su superficie exacta y poder asociarlas a los
+    trabajos que realices en ellas.</p>
+
+  <h3>Crear una parcela</h3>
+  <div class="grid g2">
+    <div class="card hi">
+      <h4>Conduciendo el perímetro</h4>
+      <p>El método más preciso. En la pestaña Parcelas: <strong>Nueva parcela → Conducir perímetro</strong>.
+        Recorre el contorno de la finca y, al volver al punto de partida, pulsa <strong>Cerrar parcela</strong>.</p>
+      <p style="margin-top:2mm">La aplicación va registrando el recorrido del punto de trabajo del apero, no de la
+        antena, así que el contorno coincide con lo realmente cultivable.</p>
+    </div>
+    <div class="card">
+      <h4>Marcando puntos en pantalla</h4>
+      <p>Más rápido para parcelas rectangulares. <strong>Nueva parcela → Marcar puntos</strong> y toca las
+        esquinas sobre la vista de campo. Con un mapa de fondo activado (sección 14) puedes dibujarla siguiendo
+        la imagen de satélite.</p>
+      <p style="margin-top:2mm">Necesitas un mínimo de 3 puntos.</p>
+    </div>
+  </div>
+
+  <p style="margin-top:3mm">Al cerrar la parcela se te pide un nombre y la aplicación calcula automáticamente su
+    <strong>superficie en hectáreas</strong> y su <strong>perímetro en metros</strong>.</p>
+
+  <h3>Importar y exportar</h3>
+  <table>
+    <tr><th style="width:38mm">Acción</th><th>Detalle</th></tr>
+    <tr><td><strong>Exportar GeoJSON</strong></td><td>Formato estándar para programas de SIG y agricultura de precisión. Se abre el menú para compartir por correo, mensajería o guardar en la nube.</td></tr>
+    <tr><td><strong>Exportar KML</strong></td><td>Compatible con Google Earth y la mayoría de programas de mapas. Ideal para ver tus parcelas en el ordenador.</td></tr>
+    <tr><td><strong>Importar</strong></td><td>Admite ambos formatos. Útil para cargar los recintos SIGPAC que te haya facilitado tu técnico o cooperativa.</td></tr>
+    <tr><td><strong>Renombrar / eliminar</strong></td><td>Disponibles en cada parcela del listado. La eliminación pide confirmación.</td></tr>
+  </table>
+
+  <div class="tip"><b>El contorno se dibuja en el campo.</b> Cuando un trabajo tiene una parcela asignada, su
+    perímetro aparece en blanco sobre la vista de guiado, lo que ayuda a saber cuánto falta para llegar al borde.</div>
+
+  <div class="note"><b>Sobre la precisión de la medición.</b> Con estado RTK FIJO, la superficie calculada tiene
+    un error inferior al 0,1 %, muy por debajo de la tolerancia habitual en declaraciones de superficie.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 16 TRABAJOS ============ -->
+<section class="page">
+  <div class="kicker">Sección 13</div>
+  <h2><span class="n">13 ·</span> Trabajos e informes</h2>
+  <div class="hr"></div>
+  <p>Un trabajo graba toda la faena: el recorrido completo, la cobertura, el tiempo efectivo y las hectáreas.
+    Al terminar puedes generar un informe para tu archivo o para el cliente.</p>
+
+  <div class="fig" style="margin:3mm 0">
+  <svg viewBox="0 0 560 110">
+    <g font-family="Segoe UI">
+      <rect x="10" y="34" width="104" height="40" rx="20" fill="#F5F8F4" stroke="#DCE4DC"/>
+      <text x="62" y="58" text-anchor="middle" font-size="10" fill="#6B7A70">Sin trabajo</text>
+
+      <path d="M118,54 L156,54" stroke="#2E7D32" stroke-width="1.6" marker-end="url(#ar)"/>
+      <text x="137" y="46" text-anchor="middle" font-size="8" fill="#2E7D32">Nuevo</text>
+
+      <rect x="160" y="34" width="104" height="40" rx="20" fill="#2E7D32"/>
+      <text x="212" y="58" text-anchor="middle" font-size="10.5" fill="#fff" font-weight="700">ACTIVO</text>
+
+      <path d="M268,44 L306,44" stroke="#C08A00" stroke-width="1.6" marker-end="url(#ary)"/>
+      <text x="287" y="38" text-anchor="middle" font-size="8" fill="#C08A00">Pausar</text>
+      <path d="M306,64 L268,64" stroke="#2E7D32" stroke-width="1.6" marker-end="url(#ar)"/>
+      <text x="287" y="78" text-anchor="middle" font-size="8" fill="#2E7D32">Reanudar</text>
+
+      <rect x="310" y="34" width="104" height="40" rx="20" fill="#F9A825"/>
+      <text x="362" y="58" text-anchor="middle" font-size="10.5" fill="#3E2E00" font-weight="700">EN PAUSA</text>
+
+      <path d="M212,78 L212,96 L462,96 L462,76" stroke="#1B5E20" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+      <text x="337" y="108" text-anchor="middle" font-size="8" fill="#1B5E20">Finalizar</text>
+
+      <rect x="410" y="34" width="104" height="40" rx="20" fill="#1B5E20"/>
+      <text x="462" y="58" text-anchor="middle" font-size="10.5" fill="#fff" font-weight="700">FINALIZADO</text>
+      <text x="462" y="24" text-anchor="middle" font-size="8.5" fill="#6B7A70">informe disponible</text>
+    </g>
+  </svg>
+  </div>
+
+  <h3>Ciclo de trabajo</h3>
+  <p><strong>Nuevo trabajo:</strong> en la pestaña Trabajos, ponle nombre y, opcionalmente, asígnale una parcela.
+    <strong>Pausar</strong> detiene el pintado y la grabación mientras te desplazas o repostas.
+    <strong>Finalizar</strong> cierra el trabajo y guarda sus estadísticas definitivas.</p>
+
+  <div class="note"><b>A prueba de cortes.</b> El trabajo se va guardando continuamente en el dispositivo. Si se
+    apaga el móvil, se queda sin batería o la aplicación se cierra inesperadamente, al volver a arrancar la fuente
+    de posición <strong>el trabajo se recupera con toda su cobertura ya pintada</strong> y continúa donde lo dejaste.</div>
+
+  <h3>Informes</h3>
+  <p>En el histórico, cada trabajo finalizado ofrece dos botones: <strong>Informe HTML</strong> (se abre en
+    cualquier navegador) e <strong>Informe PDF</strong> (ideal para imprimir o archivar). Ambos incluyen:</p>
+
+  <div class="grid g2">
+    <div class="card">
+      <h4>Datos del trabajo</h4>
+      <p>Nombre, parcela asociada, fecha y duración efectiva (sin contar las pausas).</p>
+    </div>
+    <div class="card">
+      <h4>Resultados</h4>
+      <p>Superficie tratada, solape en hectáreas y porcentaje, superficie de la parcela, ancho de apero,
+        velocidad media y distancia recorrida.</p>
+    </div>
+  </div>
+  <p style="margin-top:3mm">Además se incluye una <strong>miniatura del recorrido</strong> realizado, que permite
+    ver de un vistazo la forma del trabajo ejecutado.</p>
+
+  <div class="tip"><b>Solo un trabajo a la vez.</b> Para empezar uno nuevo, finaliza primero el que esté en curso.
+    Así se evita mezclar superficies de faenas distintas.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 17 MAPAS ============ -->
+<section class="page">
+  <div class="kicker">Sección 14</div>
+  <h2><span class="n">14 ·</span> Mapas de fondo</h2>
+  <div class="hr"></div>
+  <p class="lead">De forma opcional puedes mostrar una imagen de satélite o un callejero bajo el guiado. Es muy
+    útil para situarte en la parcela y para dibujar contornos siguiendo la imagen real del terreno.</p>
+
+  <h3>Opciones disponibles</h3>
+  <table>
+    <tr><th style="width:44mm">Opción</th><th style="width:26mm">Coste</th><th>Cuándo usarla</th></tr>
+    <tr><td><strong>Ninguno</strong></td><td>—</td><td>Opción por defecto. Solo cuadrícula. Máximo rendimiento y cero consumo de datos.</td></tr>
+    <tr><td><strong>Satélite Esri</strong></td><td>Gratuito</td><td>La más recomendable: imagen aérea sin necesidad de clave ni registro.</td></tr>
+    <tr><td><strong>Callejero OpenStreetMap</strong></td><td>Gratuito</td><td>Para orientarte por caminos y accesos en lugar de por la imagen del cultivo.</td></tr>
+    <tr><td><strong>Google Maps satélite</strong></td><td>De pago</td><td>Requiere una clave propia de Google Cloud con facturación activada. Solo si ya dispones de ella.</td></tr>
+  </table>
+
+  <div class="note"><b>El guiado nunca depende del mapa.</b> Toda la funcionalidad (líneas, cobertura, secciones,
+    contadores) trabaja sobre la vista de campo propia. El mapa es únicamente una ayuda visual de fondo.</div>
+
+  <h3>Uso sin cobertura</h3>
+  <p>Las imágenes descargadas se <strong>guardan permanentemente en el dispositivo</strong>. Una vez que has visto
+    una zona, sigue disponible aunque no tengas datos móviles en la parcela.</p>
+
+  <div class="num-step"><div class="bub">1</div><div class="bd">
+    <h4>Antes de salir al campo</h4>
+    <p>Con conexión wifi en casa, ve a <strong>Ajustes</strong> y selecciona el mapa que quieras usar.</p>
+  </div></div>
+  <div class="num-step"><div class="bub">2</div><div class="bd">
+    <h4>Descarga la zona</h4>
+    <p>Pulsa <strong>"Descargar zona visible"</strong>. Se guardará aproximadamente 1 km alrededor de tu posición
+      en tres niveles de detalle. Verás el progreso y el tamaño ocupado.</p>
+  </div></div>
+  <div class="num-step"><div class="bub">3</div><div class="bd">
+    <h4>En la parcela</h4>
+    <p>El mapa aparecerá aunque no haya cobertura. Si te sales de la zona descargada, esa parte quedará en negro
+      hasta que vuelvas a tener conexión.</p>
+  </div></div>
+
+  <div class="tip"><b>Gestión del espacio.</b> En Ajustes puedes consultar cuánto ocupa la caché de mapas y
+    borrarla cuando quieras. Una zona de trabajo típica ronda los 20–40 MB.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 18 AJUSTES + PROBLEMAS ============ -->
+<section class="page">
+  <div class="kicker">Sección 15</div>
+  <h2><span class="n">15 ·</span> Ajustes generales</h2>
+  <div class="hr"></div>
+  <table>
+    <tr><th style="width:46mm">Ajuste</th><th>Función</th></tr>
+    <tr><td><strong>Tema</strong></td><td><em>Noche</em> (por defecto): letras claras sobre fondo oscuro, ideal para la cabina y para trabajar de noche. <em>Día</em>: mayor contraste bajo sol directo. <em>Automático</em>: sigue la configuración del móvil.</td></tr>
+    <tr><td><strong>Mantener pantalla encendida</strong></td><td>Evita que la pantalla se apague mientras guías. Actívalo si el móvil va conectado a corriente.</td></tr>
+    <tr><td><strong>Salida mock</strong></td><td>Publica la posición RTK al sistema para que <strong>otras aplicaciones</strong> del móvil la aprovechen. Requiere seleccionar AgroGuide como aplicación de ubicación simulada en las opciones de desarrollador de Android.</td></tr>
+    <tr><td><strong>Optimización de batería</strong></td><td>Muestra si la aplicación está exenta y permite solicitarlo. Imprescindible para que el guiado sobreviva con la pantalla apagada.</td></tr>
+    <tr><td><strong>Mapa de fondo</strong></td><td>Selector de mapa, descarga de zona y gestión de la caché (sección 14).</td></tr>
+  </table>
+
+  <div class="tip"><b>Sobre la salida mock.</b> Es una función avanzada: permite que otras aplicaciones agrícolas
+    del móvil (cuadernos de campo, apps de muestreo) trabajen con la posición centimétrica del receptor en lugar
+    de con el GPS interno. Si no la necesitas, déjala desactivada.</div>
+
+  <div class="note"><b>El tema no afecta a la vista de campo.</b> El lienzo de guiado mantiene siempre su fondo
+    oscuro de alto contraste, porque es el que mejor deja ver la cobertura y las líneas en cualquier condición
+    de luz. El tema cambia el resto de pantallas: pestañas, listados y diálogos.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ PROBLEMAS ============ -->
+<section class="page">
+  <div class="kicker">Sección 16</div>
+  <h2><span class="n">16 ·</span> Resolución de problemas</h2>
+  <div class="hr"></div>
+  <p>Los fallos más habituales y cómo resolverlos sin ayuda técnica.</p>
+  <table>
+    <tr><th style="width:52mm">Síntoma</th><th>Causa probable y solución</th></tr>
+    <tr><td><strong>El tractor se mueve solo en pantalla estando parado</strong></td>
+        <td>Estás en modo demo. Comprueba el distintivo superior derecho: si aparece naranja con "DEMO", pulsa Fuente y selecciona tu receptor Bluetooth.</td></tr>
+    <tr><td><strong>No aparece mi receptor en la lista</strong></td>
+        <td>No está emparejado en Android o falta el permiso de dispositivos cercanos. Empareja desde los ajustes del sistema (PIN 1234) y revisa los permisos de la aplicación.</td></tr>
+    <tr><td><strong>La calidad no pasa de GPS o DGPS</strong></td>
+        <td>No llegan correcciones. Revisa que el interruptor NTRIP esté activado, que tengas datos móviles y que el indicador muestre kilobytes en aumento.</td></tr>
+    <tr><td><strong>Llega a RTK FLOAT pero no a FIJO</strong></td>
+        <td>Visibilidad de cielo insuficiente o estación de referencia demasiado lejos. Aléjate de árboles y edificios y espera uno o dos minutos.</td></tr>
+    <tr><td><strong>El lightbar oscila con el tractor parado</strong></td>
+        <td>Comportamiento normal: por debajo de 0,5 km/h el rumbo no es fiable. Se estabiliza en cuanto avanzas.</td></tr>
+    <tr><td><strong>Las pasadas no encajan: huecos o solapes constantes</strong></td>
+        <td>El ancho de trabajo configurado no coincide con el real. Vuelve a medirlo y corrígelo en el botón Apero.</td></tr>
+    <tr><td><strong>Deja de grabar al apagar la pantalla</strong></td>
+        <td>El sistema está durmiendo la aplicación. Concede la exención de optimización de batería en Ajustes y revisa la configuración del fabricante.</td></tr>
+    <tr><td><strong>El mapa aparece en negro</strong></td>
+        <td>Sin conexión y sin teselas descargadas para esa zona. Descarga la zona con wifi antes de salir.</td></tr>
+    <tr><td><strong>No se genera el informe</strong></td>
+        <td>El mensaje de error indica la causa concreta. Comprueba que el trabajo esté finalizado y que tengas
+            espacio libre en el dispositivo.</td></tr>
+  </table>
+
+  <div class="tip"><b>Antes de dar por perdida una faena.</b> Aunque la aplicación se cierre inesperadamente, el
+    trabajo en curso queda guardado. Vuelve a abrirla, arranca la fuente de posición y comprobarás que la
+    cobertura y los contadores se restauran solos.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 19 REFERENCIA ============ -->
+<section class="page">
+  <div class="kicker">Sección 17</div>
+  <h2><span class="n">17 ·</span> Referencia rápida</h2>
+  <div class="hr"></div>
+  <p class="lead">Resumen para consultar en la cabina.</p>
+
+  <div class="grid g2" style="margin-top:4mm">
+    <div class="card hi">
+      <h4 style="color:#1B5E20; font-size:11pt">Puesta en marcha diaria</h4>
+      <ol style="margin:2mm 0 0 4.5mm; font-size:9.4pt">
+        <li>Enciende el receptor y espera a que fije satélites.</li>
+        <li>Abre la app → <strong>Fuente</strong> → tu receptor → NTRIP activado → <strong>Iniciar</strong>.</li>
+        <li>Espera a <strong>RTK FIJO</strong> (verde).</li>
+        <li>Comprueba el ancho en <strong>Apero</strong>.</li>
+        <li><strong>Trabajos</strong> → Nuevo trabajo → asigna parcela.</li>
+        <li>Modo <strong>AB</strong> → Marcar A → recorre → Marcar B.</li>
+        <li>A trabajar siguiendo el lightbar.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h4 style="color:#1B5E20; font-size:11pt">Al terminar</h4>
+      <ol style="margin:2mm 0 0 4.5mm; font-size:9.4pt">
+        <li><strong>Trabajos</strong> → <strong>Finalizar</strong>.</li>
+        <li>Genera el <strong>Informe PDF</strong> si lo necesitas.</li>
+        <li>Detén la fuente para ahorrar batería.</li>
+      </ol>
+      <h4 style="color:#1B5E20; font-size:11pt; margin-top:4mm">Colores de la pantalla</h4>
+      <p style="font-size:9.4pt">
+        <span class="pill" style="background:#2E7D32">Verde</span> tratado y correcto ·
+        <span class="pill" style="background:#EF6C00">Naranja</span> solape o demo ·
+        <span class="pill" style="background:#FFEB3B; color:#14201A">Amarillo</span> pasada actual ·
+        <span class="pill" style="background:#00838F">Cian</span> apero
+      </p>
+    </div>
+  </div>
+
+  <div class="grid g2" style="margin-top:4mm">
+    <div class="card">
+      <h4 style="color:#1B5E20; font-size:11pt">Valores de referencia</h4>
+      <table style="font-size:8.8pt; margin-top:2mm">
+        <tr><td><strong>Edad correcciones</strong></td><td>menos de 5 s</td></tr>
+        <tr><td><strong>HDOP</strong></td><td>por debajo de 1,5</td></tr>
+        <tr><td><strong>Satélites</strong></td><td>más de 12</td></tr>
+        <tr><td><strong>Solape aceptable</strong></td><td>menos del 3 %</td></tr>
+        <tr><td><strong>Distancia a la base</strong></td><td>menos de 20 km</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h4 style="color:#1B5E20; font-size:11pt">Gestos y atajos</h4>
+      <table style="font-size:8.8pt; margin-top:2mm">
+        <tr><td><strong>Pellizcar</strong></td><td>Acercar o alejar el campo</td></tr>
+        <tr><td><strong>Doble toque</strong></td><td>Vista al rumbo / al norte</td></tr>
+        <tr><td><strong>Botón "todas"</strong></td><td>Abrir o cerrar todas las secciones</td></tr>
+        <tr><td><strong>Borrar línea</strong></td><td>Eliminar la referencia activa</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div style="margin-top:8mm; background:#0B2410; border-radius:3mm; padding:6mm 7mm; color:#CFE3D2">
+    <div style="display:flex; align-items:center; gap:4mm; margin-bottom:3mm">
+      <svg width="10mm" height="10mm" viewBox="0 0 108 108">
+        <path fill="#1A1A1A" d="M18,72 a20,20 0 1,1 40,0 a20,20 0 1,1 -40,0 z"/>
+        <path fill="#F5C518" d="M27,72 a11,11 0 1,1 22,0 a11,11 0 1,1 -22,0 z"/>
+        <path fill="#7CDB8A" d="M30,62 L86,62 L86,74 L30,74 z"/>
+        <path fill="#7CDB8A" d="M28,34 L58,34 L58,64 L28,64 z"/>
+        <path fill="#BFE6F5" d="M33,39 L53,39 L53,53 L33,53 z"/>
+        <path fill="#F5C518" d="M24,29 L62,29 L62,35 L24,35 z"/>
+        <path fill="#1A1A1A" d="M64,80 a12,12 0 1,1 24,0 a12,12 0 1,1 -24,0 z"/>
+        <path fill="#F5C518" d="M70,80 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0 z"/>
+      </svg>
+      <div>
+        <div style="font-size:13pt; color:#fff; font-weight:700">AgroGuide RTK</div>
+        <div style="font-size:9pt; color:#8FB39A">Guiado agrícola de precisión · versión 1.0.2</div>
+      </div>
+    </div>
+    <p style="font-size:9pt; margin:0; color:#9CBBA3">Este manual describe la versión 1.0.2 de la aplicación.
+      La interfaz puede variar ligeramente en versiones posteriores. AgroGuide RTK es un sistema de guiado
+      visual: asiste al conductor, pero no controla la dirección del vehículo. El operador es en todo momento
+      responsable de la conducción y de la seguridad en el trabajo.</p>
+  </div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+</body>
+</html>
