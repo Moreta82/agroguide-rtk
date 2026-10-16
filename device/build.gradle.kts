@@ -11,6 +11,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+    // The 4 h pipeline soak test keeps 216k NMEA events in memory; the default
+    // worker heap is not enough when it runs alongside a full build.
+    testOptions { unitTests.all { it.maxHeapSize = "1g" } }
 }
 dependencies {
     api(project(":core:nmea"))

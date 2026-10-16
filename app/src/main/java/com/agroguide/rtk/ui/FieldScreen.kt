@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -123,7 +124,14 @@ fun FieldScreen(
                     basemapApiKey = basemapApiKey,
                     plane = PositionRepository.activePlane,
                 )
-                SourceBadge(Modifier.align(Alignment.TopEnd).padding(8.dp))
+                Column(
+                    Modifier.align(Alignment.TopEnd).padding(8.dp),
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    SourceBadge()
+                    NtripBadge()
+                }
                 activeJob?.let { job ->
                     val activeState = job.state == com.agroguide.rtk.service.JobManager.STATE_ACTIVE
                     Text(
@@ -300,7 +308,8 @@ fun FieldScreen(
  * receiver; Bluetooth shows the actual device name reported on connect.
  */
 @Composable
-private fun SourceBadge(modifier: Modifier = Modifier) {
+private fun SourceBadge() {
+    val modifier: Modifier = Modifier
     val source by PositionRepository.sourceName.collectAsStateWithLifecycle()
     val connection by PositionRepository.connection.collectAsStateWithLifecycle()
     val (label, color) = when (source) {
@@ -323,6 +332,35 @@ private fun SourceBadge(modifier: Modifier = Modifier) {
         color = Color.White,
         fontWeight = FontWeight.Bold,
         fontSize = 14.sp,
+    )
+}
+
+/**
+ * NTRIP status on the main screen, with the server's actual reason when it is
+ * failing. Hidden when no NTRIP session is configured for the source.
+ */
+@Composable
+private fun NtripBadge() {
+    val enabled by PositionRepository.ntripEnabled.collectAsStateWithLifecycle()
+    if (!enabled) return
+    val stats by PositionRepository.ntrip.collectAsStateWithLifecycle()
+    val gga by PositionRepository.lastGga.collectAsStateWithLifecycle()
+    val failure = stats.failure
+    val (text, color) = when {
+        stats.connected && stats.bytesReceived > 0 ->
+            stringResource(R.string.ntrip_ok, "%.1f".format(stats.bytesReceived / 1024.0)) to Color(0xCC2E7D32)
+        failure != null -> ntripFailureText(failure, stats.lastError, hasGga = gga != null) to Color(0xCCC62828)
+        else -> stringResource(R.string.ntrip_connecting) to Color(0xCCF9A825)
+    }
+    Text(
+        text,
+        Modifier
+            .widthIn(max = 260.dp)
+            .background(color, androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        color = Color.White,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 13.sp,
     )
 }
 

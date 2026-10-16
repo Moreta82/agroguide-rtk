@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Beta build: amber background with a diagonal band, so the test install is
+     impossible to confuse with the regular app on the home screen. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#F5A623"
+        android:pathData="M0,0 L108,0 L108,108 L0,108 z" />
+    <path
+        android:fillColor="#E08E0B"
+        android:pathData="M0,84 L108,84 L108,92 L0,92 z" />
+    <path
+        android:fillColor="#E08E0B"
+        android:pathData="M0,96 L108,96 L108,104 L0,104 z" />
+    <path
+        android:fillColor="#C62828"
+        android:pathData="M60,0 L108,0 L108,22 L82,0 z" />
+</vector>

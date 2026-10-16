@@ -20,8 +20,8 @@ android {
         applicationId = "com.agroguide.rtk"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.0.2"
+        versionCode = 5
+        versionName = "1.0.3"
     }
     buildFeatures { buildConfig = true }
     signingConfigs {
@@ -40,6 +40,14 @@ android {
             if (keystoreProps.isNotEmpty()) {
                 signingConfig = signingConfigs.getByName("release")
             }
+        }
+        // Side-by-side build: separate package (own data, own icon/label) so it
+        // can be installed next to the regular app for A/B field testing.
+        create("beta") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".beta"
+            versionNameSuffix = "-beta"
+            matchingFallbacks += listOf("release")
         }
     }
     compileOptions {

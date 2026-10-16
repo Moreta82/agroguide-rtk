@@ -107,12 +107,11 @@ class GuidanceService : LifecycleService() {
     private fun startNtripIfRequested(intent: Intent?, source: PositionSource) {
         ntripSession?.stop(); ntripSession = null
         val bt = source as? BtSppPositionSource ?: return
-        val events = PositionRepository.sharedEvents ?: return
         if (intent?.getBooleanExtra(EXTRA_NTRIP, false) != true) return
         val session = NtripSession(
             scope = lifecycleScope,
             bt = bt,
-            sourceEvents = events,
+            ggaProvider = { PositionRepository.lastGga.value },
             creds = com.agroguide.rtk.ntrip.NtripCredentials(
                 intent.getStringExtra(EXTRA_NTRIP_HOST) ?: return,
                 intent.getIntExtra(EXTRA_NTRIP_PORT, 2101),
@@ -129,6 +128,7 @@ class GuidanceService : LifecycleService() {
             ggaIntervalS = intent.getIntExtra(EXTRA_NTRIP_GGA_INT, 10),
         )
         ntripSession = session
+        PositionRepository.setNtripEnabled(true)
         session.start()
         lifecycleScope.launch { session.stats.collect { PositionRepository.publishNtrip(it) } }
     }

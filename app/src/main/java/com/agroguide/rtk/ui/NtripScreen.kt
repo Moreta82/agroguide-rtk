@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.agroguide.rtk.R
 import com.agroguide.rtk.data.NtripProfile
 import com.agroguide.rtk.data.NtripProfileStore
@@ -138,8 +139,13 @@ private fun ProfileDialog(
     var ggaInt by remember { mutableStateOf(initial.ggaIntervalS.toString()) }
     var browsing by remember { mutableStateOf(false) }
     var mounts by remember { mutableStateOf<List<MountPoint>?>(null) }
-    var fetchError by remember { mutableStateOf<String?>(null) }
+    var fetchError by remember { mutableStateOf<com.agroguide.rtk.ntrip.NtripFailure?>(null) }
+    var fetchDetail by remember { mutableStateOf<String?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var testing by remember { mutableStateOf(false) }
+    var testResult by remember { mutableStateOf<com.agroguide.rtk.ntrip.NtripProbeResult?>(null) }
+    val vehicle by com.agroguide.rtk.service.PositionRepository.vehicle
+        .collectAsStateWithLifecycle()
 
     // Cap the scrollable body to a fraction of the actual screen so every field
     // is reachable on short/landscape displays; a fixed 420 dp cut the last
@@ -163,13 +169,23 @@ private fun ProfileDialog(
                     OutlinedTextField(mount, { mount = it }, label = { Text(stringResource(R.string.ntrip_mount)) }, singleLine = true, modifier = Modifier.weight(1f))
                     TextButton(
                         onClick = {
-                            fetchError = null; browsing = true; mounts = null
+                            fetchError = null; fetchDetail = null; browsing = true; mounts = null
                             val creds = NtripCredentials(host.trim(), port.toIntOrNull() ?: 2101, user, pass)
                             val version = if (v2) NtripVersion.V2 else NtripVersion.V1
                             scope.launch {
                                 runCatching { NtripClient.fetchSourceTable(creds, version) }
-                                    .onSuccess { mounts = it }
-                                    .onFailure { fetchError = it.message ?: it.javaClass.simpleName }
+                                    .onSuccess { list ->
+                                        // Nearest first: picking a distant base is the
+                                        // classic reason RTK never reaches FIXED.
+                                        val v = vehicle
+                                        mounts = if (v == null) list else list.sortedBy {
+                                            it.distanceKm(v.latDeg, v.lonDeg) ?: Double.MAX_VALUE
+                                        }
+                                    }
+                                    .onFailure {
+                                        fetchError = com.agroguide.rtk.ntrip.ntripFailureOf(it)
+                                        fetchDetail = it.message
+                                    }
                             }
                         },
                         enabled = host.isNotBlank(),
@@ -183,7 +199,45 @@ private fun ProfileDialog(
                 LabeledSwitch(stringResource(R.string.ntrip_v2), v2) { v2 = it }
                 LabeledSwitch(stringResource(R.string.ntrip_send_gga), gga) { gga = it }
                 OutlinedTextField(ggaInt, { ggaInt = it.filter(Char::isDigit) }, label = { Text(stringResource(R.string.ntrip_gga_interval)) }, singleLine = true)
-                fetchError?.let { Text(stringResource(R.string.ntrip_fetch_error, it), color = Color(0xFFC62828)) }
+                fetchError?.let {
+                    Text(
+                        stringResource(R.string.ntrip_fetch_error, ntripFailureText(it, fetchDetail)),
+                        color = Color(0xFFC62828),
+                    )
+                }
+                // Real end-to-end check of this exact profile: tells a wrong
+                // password from a wrong mountpoint from no coverage.
+                Button(
+                    onClick = {
+                        testing = true; testResult = null
+                        val creds = NtripCredentials(host.trim(), port.toIntOrNull() ?: 2101, user, pass)
+                        val version = if (v2) NtripVersion.V2 else NtripVersion.V1
+                        val ggaLine = if (gga) com.agroguide.rtk.service.PositionRepository.lastGga.value else null
+                        scope.launch {
+                            testResult = NtripClient.probe(creds, mount, version, ggaLine)
+                            testing = false
+                        }
+                    },
+                    enabled = host.isNotBlank() && mount.isNotBlank() && !testing,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                ) { Text(stringResource(if (testing) R.string.ntrip_testing else R.string.ntrip_test)) }
+                testResult?.let { r ->
+                    val f = r.failure
+                    when {
+                        f == null -> Text(
+                            stringResource(R.string.ntrip_test_ok, "%.1f".format(r.bytes / 1024.0)),
+                            color = Color(0xFF2E7D32),
+                        )
+                        f == com.agroguide.rtk.ntrip.NtripFailure.NO_DATA && !r.sentGga -> Text(
+                            stringResource(R.string.ntrip_test_ok_nogga),
+                            color = Color(0xFFB07800),
+                        )
+                        else -> Text(
+                            stringResource(R.string.ntrip_test_fail, ntripFailureText(f, r.detail, r.sentGga)),
+                            color = Color(0xFFC62828),
+                        )
+                    }
+                }
                 if (onDelete != null) {
                     TextButton(onClick = { confirmDelete = true }) {
                         Text(stringResource(R.string.ntrip_delete), color = Color(0xFFC62828))
@@ -194,11 +248,15 @@ private fun ProfileDialog(
         confirmButton = {
             TextButton(
                 onClick = {
+                    // Store what the caster needs, not what was pasted
+                    // ("http://host:2101/" → host + port; "/MOUNT" → MOUNT).
+                    val ep = com.agroguide.rtk.ntrip.NtripEndpoint.parse(host, port.toIntOrNull() ?: 2101)
                     onSave(
                         initial.copy(
-                            name = name.ifBlank { host }, host = host.trim(),
-                            port = port.toIntOrNull() ?: 2101, mountPoint = mount.trim(),
-                            username = user, password = pass, ntripV2 = v2,
+                            name = name.ifBlank { ep.host }, host = ep.host,
+                            port = ep.port,
+                            mountPoint = com.agroguide.rtk.ntrip.NtripEndpoint.normalizeMount(mount),
+                            username = user.trim(), password = pass, ntripV2 = v2,
                             uploadGga = gga, ggaIntervalS = ggaInt.toIntOrNull() ?: 10,
                         )
                     )
@@ -228,6 +286,22 @@ private fun ProfileDialog(
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                             }
+                            val v = vehicle
+                            val km = v?.let { m.distanceKm(it.latDeg, it.lonDeg) }
+                            Text(
+                                when {
+                                    km != null -> stringResource(R.string.ntrip_km, "%.0f".format(km))
+                                    m.latDeg == 0.0 && m.lonDeg == 0.0 -> stringResource(R.string.ntrip_network)
+                                    else -> ""
+                                },
+                                Modifier.padding(end = 8.dp),
+                                color = when {
+                                    km == null -> MaterialTheme.colorScheme.onSurface
+                                    km <= 30 -> Color(0xFF2E7D32)
+                                    km <= 60 -> Color(0xFFB07800)
+                                    else -> Color(0xFFC62828)
+                                },
+                            )
                             if (m.requiresGga) Text(stringResource(R.string.ntrip_badge_gga), Modifier.padding(end = 4.dp))
                             if (m.requiresAuth) Text(stringResource(R.string.ntrip_badge_auth))
                         }

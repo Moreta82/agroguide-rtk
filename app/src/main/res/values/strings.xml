@@ -149,6 +149,24 @@
     <string name="battery_dismiss">No volver a mostrar</string>
     <string name="app_version">AgroGuide RTK %1$s</string>
 
+    <string name="ntrip_fail_unauthorized">Usuario o contraseña rechazados por el servidor</string>
+    <string name="ntrip_fail_forbidden">El servidor deniega el acceso a esta estación</string>
+    <string name="ntrip_fail_mount">El mountpoint no existe en este servidor</string>
+    <string name="ntrip_fail_host">No se encuentra el servidor: revisa la dirección</string>
+    <string name="ntrip_fail_unreachable">Servidor inaccesible: sin datos móviles o puerto incorrecto</string>
+    <string name="ntrip_fail_nodata">Conectado, pero el servidor no envía correcciones</string>
+    <string name="ntrip_fail_nodata_gga">Conectado, pero la estación espera tu posición (GGA) y aún no hay fix</string>
+    <string name="ntrip_fail_rejected">El servidor rechazó la conexión: %1$s</string>
+    <string name="ntrip_connecting">NTRIP: conectando…</string>
+    <string name="ntrip_ok">NTRIP · %1$s KB</string>
+    <string name="ntrip_test">Probar conexión</string>
+    <string name="ntrip_testing">Probando conexión (6 s)…</string>
+    <string name="ntrip_test_ok">✓ Correcciones recibidas: %1$s KB en 6 s. El perfil funciona.</string>
+    <string name="ntrip_test_ok_nogga">✓ Usuario y contraseña aceptados. Esta estación necesita tu posición para enviar datos: pruébala con el receptor conectado y con fix.</string>
+    <string name="ntrip_test_fail">✗ %1$s</string>
+    <string name="ntrip_km">%1$s km</string>
+    <string name="ntrip_network">red</string>
+
     <string name="source_badge_demo">DEMO · SIMULADO</string>
     <string name="source_badge_none">SIN FUENTE</string>
     <string name="source_badge_android">Ubicación Android</string>

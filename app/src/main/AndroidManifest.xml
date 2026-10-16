@@ -9,7 +9,7 @@
         android:supportsRtl="false">
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.agroguide.rtk.files"
+            android:authorities="${applicationId}.files"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

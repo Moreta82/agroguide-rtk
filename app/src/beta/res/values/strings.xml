@@ -1,0 +1,4 @@
+<resources>
+    <!-- Distinct launcher label for the side-by-side test build. -->
+    <string name="app_name">AgroGuide RTK Beta</string>
+</resources>

@@ -30,6 +30,24 @@ class SourceTableTest {
         assertEquals(false, l.requiresAuth)
     }
 
+    @Test fun `IGN 0-360 longitudes are normalized and distances are computed`() {
+        // Verbatim record shape from ergnss-ip.ign.es: west longitudes as 0..360.
+        val t = SourceTable.parse(
+            "STR;LEON0;Leon;RTCM 3.2;1004(1);2;GPS+GLO;IGN;ESP;42.59;354.35;0;0;sNTRIP;none;B;N;9600;"
+        )
+        val leon = t.single()
+        assertEquals(-5.65, leon.lonDeg!!, 1e-9)
+        // From the demo position near Leon (42.598, -5.567): about 7 km
+        assertEquals(6.9, leon.distanceKm(42.598, -5.567)!!, 0.5)
+    }
+
+    @Test fun `network mountpoints at 0,0 have no meaningful distance`() {
+        val t = SourceTable.parse(
+            "STR;VRS3M;VRS3M;RTCM3.2;;2;GPS+GLO+GAL;ERGNSS;ESP;0.00;0.00;1;1;GNSMART;none;B;N;0;"
+        )
+        assertEquals(null, t.single().distanceKm(42.6, -5.6))
+    }
+
     @Test fun `tolerates malformed lines`() {
         assertEquals(0, SourceTable.parse("STR;\ngarbage\n").size + SourceTable.parse("").size)
     }

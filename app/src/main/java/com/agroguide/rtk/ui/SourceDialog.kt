@@ -112,11 +112,14 @@ fun SourceDialog(
                         )
                     }
                     if (active != null && activeNtripProfile != null && ntripEnabled) {
+                        val failure = ntripStats.failure
+                        val gga by PositionRepository.lastGga.collectAsStateWithLifecycle()
                         Text(
-                            if (ntripStats.connected) {
-                                stringResource(R.string.ntrip_connected) + " · ${ntripStats.bytesReceived / 1024} KB"
-                            } else {
-                                stringResource(R.string.ntrip_disconnected)
+                            when {
+                                ntripStats.connected ->
+                                    stringResource(R.string.ntrip_connected) + " · ${ntripStats.bytesReceived / 1024} KB"
+                                failure != null -> ntripFailureText(failure, ntripStats.lastError, gga != null)
+                                else -> stringResource(R.string.ntrip_connecting)
                             },
                             color = if (ntripStats.connected) Color(0xFF2E7D32) else Color(0xFFC62828),
                         )

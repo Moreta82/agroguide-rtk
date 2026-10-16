@@ -7,7 +7,9 @@ import java.io.File
 
 /** Writes an export file and opens the share sheet. */
 object ExportFiles {
-    private const val AUTHORITY = "com.agroguide.rtk.files"
+    // Derived from the package so side-by-side builds (".beta") don't clash:
+    // two installed apps can never declare the same provider authority.
+    private fun authority(context: Context) = context.packageName + ".files"
 
     fun writeAndShare(context: Context, fileName: String, mime: String, content: ByteArray) {
         val file = File(exportDir(context), fileName)
@@ -16,7 +18,7 @@ object ExportFiles {
     }
 
     fun share(context: Context, file: File, mime: String) {
-        val uri = FileProvider.getUriForFile(context, AUTHORITY, file)
+        val uri = FileProvider.getUriForFile(context, authority(context), file)
         val intent = Intent(Intent.ACTION_SEND)
             .setType(mime)
             .putExtra(Intent.EXTRA_STREAM, uri)

@@ -40,6 +40,18 @@ object PositionRepository {
     val ntrip: StateFlow<com.agroguide.rtk.ntrip.NtripStats> = _ntrip.asStateFlow()
     fun publishNtrip(stats: com.agroguide.rtk.ntrip.NtripStats) { _ntrip.value = stats }
 
+    /** True while an NTRIP session is running for the current source. */
+    private val _ntripEnabled = MutableStateFlow(false)
+    val ntripEnabled: StateFlow<Boolean> = _ntripEnabled.asStateFlow()
+    fun setNtripEnabled(on: Boolean) { _ntripEnabled.value = on }
+
+    /**
+     * Latest raw GGA sentence from the receiver. VRS casters need it, and the
+     * profile editor's connection test sends it so the test is realistic.
+     */
+    private val _lastGga = MutableStateFlow<String?>(null)
+    val lastGga: StateFlow<String?> = _lastGga.asStateFlow()
+
     /** Shared per-session source events, for consumers beyond the pipeline (NTRIP GGA, UBX ACK UI). */
     @Volatile var sharedEvents: kotlinx.coroutines.flow.SharedFlow<SourceEvent>? = null
         private set
@@ -97,6 +109,12 @@ object PositionRepository {
             shared.filterIsInstance<SourceEvent.ConnectionState>().collect { _connection.value = it }
         }
         s.launch {
+            shared.filterIsInstance<SourceEvent.Nmea>().collect {
+                // "$GNGGA,...": talker id is 2 chars, sentence type at index 3
+                if (it.line.length > 6 && it.line.regionMatches(3, "GGA", 0, 3)) _lastGga.value = it.line
+            }
+        }
+        s.launch {
             pipeline.states.collect { projector.onFix(it); _vehicle.value = it }
         }
         s.launch {
@@ -114,5 +132,7 @@ object PositionRepository {
         _sourceName.value = null
         _connection.value = SourceEvent.ConnectionState(SourceEvent.ConnectionState.State.DISCONNECTED)
         _ntrip.value = com.agroguide.rtk.ntrip.NtripStats()
+        _ntripEnabled.value = false
+        _lastGga.value = null
     }
 }
