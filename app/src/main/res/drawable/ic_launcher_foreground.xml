@@ -1,63 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Side view of an agricultural tractor in the classic green/yellow farm-machinery
-  livery. Deliberately a generic drawing: no manufacturer logo, wordmark or
-  emblem is used, so the icon carries no third-party trademark.
-  Adaptive-icon canvas is 108x108 with the inner 72x72 as the safe zone.
+  Launcher foreground: tractor seen from behind, driving on the guidance line,
+  with the GNSS/RTK signal above the cab. Kept inside the 66 dp safe zone.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- rear wheel tyre -->
-    <path
-        android:fillColor="#1A1A1A"
-        android:pathData="M18,72 a20,20 0 1,1 40,0 a20,20 0 1,1 -40,0 z" />
-    <!-- rear wheel rim -->
-    <path
-        android:fillColor="#F5C518"
-        android:pathData="M27,72 a11,11 0 1,1 22,0 a11,11 0 1,1 -22,0 z" />
-    <path
-        android:fillColor="#1A1A1A"
-        android:pathData="M34,72 a4,4 0 1,1 8,0 a4,4 0 1,1 -8,0 z" />
+    <!-- GNSS / RTK signal -->
+    <path android:pathData="M49.8,33.2 A6,6 0 0,1 58.2,33.2" android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.2" android:strokeLineCap="round" />
+    <path android:pathData="M46.2,29.6 A11,11 0 0,1 61.8,29.6" android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.85" android:strokeWidth="2.2" android:strokeLineCap="round" />
+    <path android:pathData="M42.6,26 A16,16 0 0,1 65.4,26" android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.6" android:strokeWidth="2.2" android:strokeLineCap="round" />
 
-    <!-- front wheel tyre -->
-    <path
-        android:fillColor="#1A1A1A"
-        android:pathData="M64,80 a12,12 0 1,1 24,0 a12,12 0 1,1 -24,0 z" />
-    <!-- front wheel rim -->
-    <path
-        android:fillColor="#F5C518"
-        android:pathData="M70,80 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0 z" />
+    <!-- ground shadow -->
+    <path android:pathData="M30,82 a24,3.4 0 1,0 48,0 a24,3.4 0 1,0 -48,0 z"
+        android:fillColor="#000000" android:fillAlpha="0.35" />
 
-    <!-- chassis -->
-    <path
-        android:fillColor="#2E7D32"
-        android:pathData="M30,62 L86,62 L86,74 L30,74 z" />
-    <!-- engine hood -->
-    <path
-        android:fillColor="#357A38"
-        android:pathData="M58,44 L84,44 A4,4 0 0,1 88,48 L88,64 L58,64 z" />
-    <!-- grille -->
-    <path
-        android:fillColor="#F5C518"
-        android:pathData="M84,50 L88,50 L88,62 L84,62 z" />
-    <!-- cab body -->
-    <path
-        android:fillColor="#2E7D32"
-        android:pathData="M28,34 L58,34 L58,64 L28,64 z" />
-    <!-- cab window -->
-    <path
-        android:fillColor="#BFE6F5"
-        android:pathData="M33,39 L53,39 L53,53 L33,53 z" />
-    <!-- cab roof -->
-    <path
-        android:fillColor="#F5C518"
-        android:pathData="M24,29 L62,29 L62,35 L24,35 z" />
-    <!-- exhaust stack -->
-    <path
-        android:fillColor="#4A4A4A"
-        android:pathData="M63,20 L69,20 L69,45 L63,45 z" />
+    <!-- rear tyres -->
+    <path android:pathData="M33,62 h12 a2,2 0 0,1 2,2 v16 a2,2 0 0,1 -2,2 h-12 a2,2 0 0,1 -2,-2 v-16 a2,2 0 0,1 2,-2 z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="31" android:startY="0" android:endX="47" android:endY="0">
+                <item android:offset="0" android:color="#FF141414" />
+                <item android:offset="0.5" android:color="#FF3A3A3A" />
+                <item android:offset="1" android:color="#FF141414" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M63,62 h12 a2,2 0 0,1 2,2 v16 a2,2 0 0,1 -2,2 h-12 a2,2 0 0,1 -2,-2 v-16 a2,2 0 0,1 2,-2 z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="61" android:startY="0" android:endX="77" android:endY="0">
+                <item android:offset="0" android:color="#FF141414" />
+                <item android:offset="0.5" android:color="#FF3A3A3A" />
+                <item android:offset="1" android:color="#FF141414" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- tyre lugs -->
+    <path android:pathData="M32,66 h14 v1.6 h-14 z M32,70.5 h14 v1.6 h-14 z M32,75 h14 v1.6 h-14 z M32,79.5 h14 v1.4 h-14 z"
+        android:fillColor="#050505" android:fillAlpha="0.55" />
+    <path android:pathData="M62,66 h14 v1.6 h-14 z M62,70.5 h14 v1.6 h-14 z M62,75 h14 v1.6 h-14 z M62,79.5 h14 v1.4 h-14 z"
+        android:fillColor="#050505" android:fillAlpha="0.55" />
+
+    <!-- rear body and hitch -->
+    <path android:pathData="M46,60 h16 v18 h-16 z" android:fillColor="#2F8F35" />
+    <path android:pathData="M51,76 h6 v5 h-6 z" android:fillColor="#3B3B3B" />
+    <path android:pathData="M47,79 h14 v2 h-14 z" android:fillColor="#555555" />
+
+    <!-- fenders -->
+    <path android:pathData="M30,62 a9,5 0 0,1 18,0 v1.5 h-18 z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="0" android:startY="57" android:endX="0" android:endY="63.5">
+                <item android:offset="0" android:color="#FF66C96A" />
+                <item android:offset="1" android:color="#FF2F8F35" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M60,62 a9,5 0 0,1 18,0 v1.5 h-18 z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="0" android:startY="57" android:endX="0" android:endY="63.5">
+                <item android:offset="0" android:color="#FF66C96A" />
+                <item android:offset="1" android:color="#FF2F8F35" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- cab -->
+    <path android:pathData="M41,43 h26 a2,2 0 0,1 2,2 v18 h-30 v-18 a2,2 0 0,1 2,-2 z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="0" android:startY="43" android:endX="0" android:endY="63">
+                <item android:offset="0" android:color="#FF66C96A" />
+                <item android:offset="1" android:color="#FF2F8F35" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M43.5,46 h21 v13 h-21 z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="0" android:startY="46" android:endX="0" android:endY="59">
+                <item android:offset="0" android:color="#FFD8F1FF" />
+                <item android:offset="1" android:color="#FF7FB8D6" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- glass reflection -->
+    <path android:pathData="M45,46 l5,0 l-4,13 l-1,0 z" android:fillColor="#FFFFFF" android:fillAlpha="0.45" />
+    <!-- roof, beacon, rear lights -->
+    <path android:pathData="M38,39.5 h32 a1.5,1.5 0 0,1 1.5,1.5 v2.5 h-35 v-2.5 a1.5,1.5 0 0,1 1.5,-1.5 z"
+        android:fillColor="#F5C518" />
+    <path android:pathData="M52,37 h4 v2.5 h-4 z" android:fillColor="#FF8F00" />
+    <path android:pathData="M40,60 h3 v2 h-3 z M65,60 h3 v2 h-3 z" android:fillColor="#E53935" />
 </vector>

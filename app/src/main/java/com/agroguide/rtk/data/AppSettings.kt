@@ -10,6 +10,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 enum class ThemeMode { AUTO, DAY, NIGHT }
+enum class ScreenOrientation { LANDSCAPE, PORTRAIT, AUTO }
+enum class VehicleIcon { TRACTOR, ARROW }
 
 @Serializable
 data class AppSettings(
@@ -20,8 +22,20 @@ data class AppSettings(
     val batteryDialogShown: Boolean = false,
     val basemap: String = "none",            // MapProvider id
     val googleMapsApiKey: String = "",
+    val orientation: String = "LANDSCAPE",   // ScreenOrientation name
+    /** "Pausar pintado al detenerse": off = continuous painting. */
+    val pauseWhenStopped: Boolean = false,
+    /** Field view colours as ARGB. Defaults: white field, translucent grey paint. */
+    val fieldBackground: Long = 0xFFFFFFFF,
+    val coverageColor: Long = 0x73707070L,
+    val overlapColor: Long = 0x99E53935,
+    val showGrid: Boolean = true,
+    val vehicleIcon: String = "TRACTOR",     // VehicleIcon name
 ) {
     val themeMode: ThemeMode get() = runCatching { ThemeMode.valueOf(theme) }.getOrDefault(ThemeMode.AUTO)
+    val screenOrientation: ScreenOrientation
+        get() = runCatching { ScreenOrientation.valueOf(orientation) }.getOrDefault(ScreenOrientation.LANDSCAPE)
+    val vehicle: VehicleIcon get() = runCatching { VehicleIcon.valueOf(vehicleIcon) }.getOrDefault(VehicleIcon.TRACTOR)
 }
 
 private val Context.appDataStore by preferencesDataStore("app_settings")

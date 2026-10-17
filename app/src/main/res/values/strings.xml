@@ -167,6 +167,25 @@
     <string name="ntrip_km">%1$s km</string>
     <string name="ntrip_network">red</string>
 
+    <string name="show_data">Datos</string>
+    <string name="fullscreen">Pantalla completa</string>
+
+    <string name="orientation_label">Orientación de pantalla</string>
+    <string name="orientation_landscape">Horizontal</string>
+    <string name="orientation_portrait">Vertical</string>
+    <string name="orientation_auto">Automática</string>
+    <string name="field_view_label">Vista de campo</string>
+    <string name="field_background">Color de fondo</string>
+    <string name="field_coverage">Color de la zona trabajada</string>
+    <string name="field_overlap">Color del solape</string>
+    <string name="field_grid">Mostrar cuadrícula</string>
+    <string name="field_vehicle">Vehículo en pantalla</string>
+    <string name="vehicle_tractor">Mini tractor</string>
+    <string name="vehicle_arrow">Triángulo</string>
+    <string name="painting_label">Pintado</string>
+    <string name="pause_when_stopped">Pausar pintado al detenerse</string>
+    <string name="pause_when_stopped_hint">Desactivado: se pinta siempre, sin cortes. Activado: deja de pintar cuando el tractor va parado o casi parado (útil si al detenerse aparecen manchas de solape).</string>
+
     <string name="source_badge_demo">DEMO · SIMULADO</string>
     <string name="source_badge_none">SIN FUENTE</string>
     <string name="source_badge_android">Ubicación Android</string>

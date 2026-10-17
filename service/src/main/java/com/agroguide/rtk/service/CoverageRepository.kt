@@ -78,15 +78,25 @@ object CoverageRepository {
         }
     }
 
-    /** Called by the service's vehicle collector for every state. */
+    /**
+     * Setting "Pausar pintado al detenerse". Off (default): painting is
+     * continuous — the engine's 5 cm anchor already ignores RTK jitter at a
+     * standstill. On: painting stops below [STOP_SPEED_MPS].
+     */
+    @Volatile var pauseWhenStopped: Boolean = false
+
+    const val STOP_SPEED_MPS = 0.2
+
+    /** True when, under the current setting, this state should not paint. */
+    fun isPaused(state: VehicleState): Boolean = pauseWhenStopped && state.speedMps <= STOP_SPEED_MPS
+
+    /** Called by the service's vehicle collector for every real (non-projected) fix. */
     fun update(state: VehicleState, workPoint: EnuPoint) {
         val active = _sections.value.toBooleanArray()
+        val paused = isPaused(state)
         scope.launch {
-            if (state.speedMps > 0.2) {
-                engine.update(WorkPose(workPoint, state.headingDeg), active)
-            } else {
-                engine.breakSegment()
-            }
+            if (paused) engine.breakSegment()
+            else engine.update(WorkPose(workPoint, state.headingDeg), active)
             publish()
         }
     }

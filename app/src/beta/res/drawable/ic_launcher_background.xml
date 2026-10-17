@@ -1,21 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Beta build: amber background with a diagonal band, so the test install is
-     impossible to confuse with the regular app on the home screen. -->
+<!-- Beta build: same scene under an amber sky, so the side-by-side test
+     install can never be confused with the regular app. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#F5A623"
-        android:pathData="M0,0 L108,0 L108,108 L0,108 z" />
-    <path
-        android:fillColor="#E08E0B"
-        android:pathData="M0,84 L108,84 L108,92 L0,92 z" />
-    <path
-        android:fillColor="#E08E0B"
-        android:pathData="M0,96 L108,96 L108,104 L0,104 z" />
-    <path
-        android:fillColor="#C62828"
-        android:pathData="M60,0 L108,0 L108,22 L82,0 z" />
+    <path android:pathData="M0,0 L108,0 L108,108 L0,108 z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="0" android:startY="0"
+                android:endX="0" android:endY="40">
+                <item android:offset="0" android:color="#FFB45309" />
+                <item android:offset="1" android:color="#FFF59E0B" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M0,36 L108,36 L108,108 L0,108 z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="0" android:startY="36"
+                android:endX="0" android:endY="108">
+                <item android:offset="0" android:color="#FF1F6B30" />
+                <item android:offset="1" android:color="#FF0B3315" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M54,36 L-30,108 L-6,108 z" android:fillColor="#06260F" android:fillAlpha="0.5" />
+    <path android:pathData="M54,36 L18,108 L42,108 z" android:fillColor="#06260F" android:fillAlpha="0.5" />
+    <path android:pathData="M54,36 L66,108 L90,108 z" android:fillColor="#06260F" android:fillAlpha="0.5" />
+    <path android:pathData="M54,36 L114,108 L138,108 z" android:fillColor="#06260F" android:fillAlpha="0.5" />
+    <path android:pathData="M54,36 L51,108 L57,108 z" android:fillColor="#F5D90A" />
 </vector>

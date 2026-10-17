@@ -39,9 +39,15 @@ import com.agroguide.rtk.data.db.ParcelEntity
 import com.agroguide.rtk.data.parcel.ParcelCodec
 import com.agroguide.rtk.data.parcel.ParcelGeometry
 import com.agroguide.rtk.geo.TangentPlane
+import android.content.pm.ActivityInfo
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.agroguide.rtk.data.AppSettings
 import com.agroguide.rtk.data.AppSettingsStore
+import com.agroguide.rtk.data.ScreenOrientation
 import com.agroguide.rtk.data.ThemeMode
+import com.agroguide.rtk.ui.FieldStyle
 import com.agroguide.rtk.ui.FieldScreen
 import com.agroguide.rtk.ui.JobsScreen
 import com.agroguide.rtk.ui.NtripScreen
@@ -129,6 +135,16 @@ class MainActivity : ComponentActivity() {
                     window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 }
             }
+            LaunchedEffect(appSettings.screenOrientation) {
+                requestedOrientation = when (appSettings.screenOrientation) {
+                    ScreenOrientation.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+                    ScreenOrientation.PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+                    ScreenOrientation.AUTO -> ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+                }
+            }
+            LaunchedEffect(appSettings.pauseWhenStopped) {
+                com.agroguide.rtk.service.CoverageRepository.pauseWhenStopped = appSettings.pauseWhenStopped
+            }
             AgroGuideTheme(night = night) {
                 val settings by store.settings.collectAsStateWithLifecycle(initialValue = NtripSettings())
                 LaunchedEffect(Unit) {
@@ -149,14 +165,34 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 var tab by remember { mutableIntStateOf(0) }
+                // Starting a job jumps to the field in full screen; "Datos"
+                // brings the tabs and the panel back while the job runs.
+                val activeJob by com.agroguide.rtk.service.JobManager.activeJob.collectAsStateWithLifecycle()
+                var fullscreen by remember { mutableStateOf(false) }
+                LaunchedEffect(activeJob?.id) {
+                    if (activeJob != null) { tab = 0; fullscreen = true } else fullscreen = false
+                }
+                val immersive = fullscreen && tab == 0
+                LaunchedEffect(immersive) {
+                    val controller = WindowCompat.getInsetsController(window, window.decorView)
+                    if (immersive) {
+                        controller.systemBarsBehavior =
+                            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                        controller.hide(WindowInsetsCompat.Type.systemBars())
+                    } else {
+                        controller.show(WindowInsetsCompat.Type.navigationBars())
+                    }
+                }
                 Column(Modifier.fillMaxSize()) {
-                    androidx.compose.material3.ScrollableTabRow(selectedTabIndex = tab, edgePadding = 0.dp) {
-                        Tab(selected = tab == 0, onClick = { tab = 0 }) { TabLabel(R.string.tab_guidance) }
-                        Tab(selected = tab == 1, onClick = { tab = 1 }) { TabLabel(R.string.tab_parcels) }
-                        Tab(selected = tab == 2, onClick = { tab = 2 }) { TabLabel(R.string.tab_jobs) }
-                        Tab(selected = tab == 3, onClick = { tab = 3 }) { TabLabel(R.string.tab_ntrip) }
-                        Tab(selected = tab == 4, onClick = { tab = 4 }) { TabLabel(R.string.tab_receiver) }
-                        Tab(selected = tab == 5, onClick = { tab = 5 }) { TabLabel(R.string.tab_settings) }
+                    if (!immersive) {
+                        androidx.compose.material3.ScrollableTabRow(selectedTabIndex = tab, edgePadding = 0.dp) {
+                            Tab(selected = tab == 0, onClick = { tab = 0 }) { TabLabel(R.string.tab_guidance) }
+                            Tab(selected = tab == 1, onClick = { tab = 1 }) { TabLabel(R.string.tab_parcels) }
+                            Tab(selected = tab == 2, onClick = { tab = 2 }) { TabLabel(R.string.tab_jobs) }
+                            Tab(selected = tab == 3, onClick = { tab = 3 }) { TabLabel(R.string.tab_ntrip) }
+                            Tab(selected = tab == 4, onClick = { tab = 4 }) { TabLabel(R.string.tab_receiver) }
+                            Tab(selected = tab == 5, onClick = { tab = 5 }) { TabLabel(R.string.tab_settings) }
+                        }
                     }
                     when (tab) {
                         0 -> FieldScreen(
@@ -166,6 +202,9 @@ class MainActivity : ComponentActivity() {
                             mockProvider = appSettings.mockProvider,
                             basemap = com.agroguide.rtk.map.MapProvider.fromId(appSettings.basemap),
                             basemapApiKey = appSettings.googleMapsApiKey.ifBlank { null },
+                            style = FieldStyle.from(appSettings),
+                            fullscreen = immersive,
+                            onFullscreenChange = { fullscreen = it },
                         )
                         1 -> ParcelsScreen(
                             onImport = { importLauncher.launch(arrayOf("*/*")) },

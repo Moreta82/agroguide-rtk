@@ -56,9 +56,13 @@ fun FieldView(
     basemapApiKey: String? = null,
     plane: com.agroguide.rtk.geo.TangentPlane? = null,
     onScaleChange: (Float) -> Unit = {},
+    style: FieldStyle = FieldStyle(),
     modifier: Modifier = Modifier,
 ) {
-    var scale by remember { mutableFloatStateOf(4f) }        // px per meter
+    // px per meter; starts at 5 dp/m so a 6 m swath is about as wide as the
+    // (fixed-size) vehicle icon instead of a thin line next to it
+    val density = androidx.compose.ui.platform.LocalDensity.current.density
+    var scale by remember { mutableFloatStateOf((5f * density).coerceIn(0.5f, 30f)) }
     var headingUp by remember { mutableStateOf(true) }
     val tapHandler by androidx.compose.runtime.rememberUpdatedState(onTapWorld)
     val vehicleNow by androidx.compose.runtime.rememberUpdatedState(vehicle)
@@ -104,7 +108,7 @@ fun FieldView(
                 )
             },
     ) {
-        drawRect(Color(0xFF1B2E1B))
+        drawRect(style.background)
         val v = vehicle ?: return@Canvas
         val camHeading = if (headingUp) v.headingDeg else 0.0
         val h = Math.toRadians(camHeading)
@@ -128,21 +132,23 @@ fun FieldView(
             )
         }
 
-        // world-aligned 10 m grid
-        val gridColor = if (basemap == com.agroguide.rtk.map.MapProvider.NONE) {
-            Color(0x2200FF00)
-        } else {
-            Color(0x18FFFFFF)   // subtler over imagery
-        }
-        var gx = floor((v.x - extent) / 10.0) * 10.0
-        while (gx <= v.x + extent) {
-            drawLine(gridColor, project(gx, v.y - extent), project(gx, v.y + extent), 1f)
-            gx += 10.0
-        }
-        var gy = floor((v.y - extent) / 10.0) * 10.0
-        while (gy <= v.y + extent) {
-            drawLine(gridColor, project(v.x - extent, gy), project(v.x + extent, gy), 1f)
-            gy += 10.0
+        // world-aligned 10 m grid (optional)
+        if (style.showGrid) {
+            val gridColor = if (basemap == com.agroguide.rtk.map.MapProvider.NONE) {
+                style.grid
+            } else {
+                Color(0x18FFFFFF)   // subtler over imagery
+            }
+            var gx = floor((v.x - extent) / 10.0) * 10.0
+            while (gx <= v.x + extent) {
+                drawLine(gridColor, project(gx, v.y - extent), project(gx, v.y + extent), 1f)
+                gx += 10.0
+            }
+            var gy = floor((v.y - extent) / 10.0) * 10.0
+            while (gy <= v.y + extent) {
+                drawLine(gridColor, project(v.x - extent, gy), project(v.x + extent, gy), 1f)
+                gy += 10.0
+            }
         }
 
         // coverage tiles: world-space paths (y negated) under one affine
@@ -157,8 +163,8 @@ fun FieldView(
             for ((key, paths) in tilePathCache) {
                 val tcx = (key.ix + 0.5) * tileSize; val tcy = (key.iy + 0.5) * tileSize
                 if (kotlin.math.abs(tcx - v.x) > extent + tileSize || kotlin.math.abs(tcy - v.y) > extent + tileSize) continue
-                drawPath(paths.covered, Color(0x5532CD32))
-                drawPath(paths.overlap, Color(0x88FF6D00))
+                drawPath(paths.covered, style.coverage)
+                drawPath(paths.overlap, style.overlap)
             }
         }
 
@@ -171,20 +177,20 @@ fun FieldView(
                 val p = project(trail[i].x, trail[i].y)
                 path.lineTo(p.x, p.y)
             }
-            drawPath(path, Color(0x66FFFFFF), style = Stroke(width = 2.dp.toPx()))
+            drawPath(path, style.trail, style = Stroke(width = 2.dp.toPx()))
         }
 
         // guidance passes
         when (line) {
             is GuidanceLine.Ab -> drawStraightPasses(
                 line.a, line.b.x - line.a.x, line.b.y - line.a.y,
-                v, passIndex ?: 0, implement.widthM, extent, ::project,
+                v, passIndex ?: 0, implement.widthM, extent, ::project, style,
             )
             is GuidanceLine.APlus -> {
                 val lh = Math.toRadians(line.headingDeg)
-                drawStraightPasses(line.a, sin(lh), cos(lh), v, passIndex ?: 0, implement.widthM, extent, ::project)
+                drawStraightPasses(line.a, sin(lh), cos(lh), v, passIndex ?: 0, implement.widthM, extent, ::project, style)
             }
-            is GuidanceLine.Curve -> drawCurvePasses(line.points, passIndex ?: 0, implement.widthM, ::project)
+            is GuidanceLine.Curve -> drawCurvePasses(line.points, passIndex ?: 0, implement.widthM, ::project, style)
             null -> {}
         }
 
@@ -198,20 +204,20 @@ fun FieldView(
                 path.lineTo(p.x, p.y)
             }
             path.close()
-            drawPath(path, Color(0xCCFFFFFF), style = Stroke(width = 3.dp.toPx()))
+            drawPath(path, style.outline, style = Stroke(width = 3.dp.toPx()))
         }
 
         // parcel draft in progress: vertices + open polyline
         if (draftRing.isNotEmpty()) {
             for (i in 1 until draftRing.size) {
                 drawLine(
-                    Color(0xFF00E5FF),
+                    style.draft,
                     project(draftRing[i - 1].x, draftRing[i - 1].y),
                     project(draftRing[i].x, draftRing[i].y),
                     2.dp.toPx(),
                 )
             }
-            for (p in draftRing) drawCircle(Color(0xFF00E5FF), 5.dp.toPx(), project(p.x, p.y))
+            for (p in draftRing) drawCircle(style.draft, 5.dp.toPx(), project(p.x, p.y))
         }
 
         // AB markers + pending A
@@ -227,29 +233,75 @@ fun FieldView(
         val wp = implement.workPoint(EnuPoint(v.x, v.y), v.headingDeg)
         val half = implement.widthM / 2
         drawLine(
-            Color(0xFF00E5FF),
+            style.implement,
             project(wp.x - wrx * half, wp.y - wry * half),
             project(wp.x + wrx * half, wp.y + wry * half),
             5.dp.toPx(),
         )
 
-        // tractor triangle at anchor; in heading-up it always points up, in
-        // north-up rotate by vehicle heading
-        val tr = Path()
-        if (headingUp) {
-            tr.moveTo(cx, cy - 16f); tr.lineTo(cx - 10f, cy + 12f); tr.lineTo(cx + 10f, cy + 12f)
-        } else {
-            val a = Math.toRadians(v.headingDeg)
-            fun rot(px: Float, py: Float): Offset {
-                val s = sin(a).toFloat(); val c = cos(a).toFloat()
-                return Offset(cx + px * c + py * s, cy + -px * s + py * c)
+        // Vehicle at the anchor. Heading-up: always points up. North-up:
+        // rotate clockwise by the heading (screen y grows downwards). The old
+        // hand-rolled rotation was mirrored and pointed west when driving east.
+        val vehicleRotation = if (headingUp) 0f else v.headingDeg.toFloat()
+        withTransform({
+            translate(cx, cy)
+            rotate(degrees = vehicleRotation, pivot = Offset.Zero)
+        }) {
+            when (style.vehicle) {
+                com.agroguide.rtk.data.VehicleIcon.TRACTOR -> drawMiniTractor(1.dp.toPx())
+                com.agroguide.rtk.data.VehicleIcon.ARROW -> drawArrowVehicle()
             }
-            val p1 = rot(0f, -16f); val p2 = rot(-10f, 12f); val p3 = rot(10f, 12f)
-            tr.moveTo(p1.x, p1.y); tr.lineTo(p2.x, p2.y); tr.lineTo(p3.x, p3.y)
         }
-        tr.close()
-        drawPath(tr, Color(0xFFFFC107))
     }
+}
+
+/** Classic yellow triangle marker, tip pointing forward (up), centred on 0,0. */
+private fun DrawScope.drawArrowVehicle() {
+    val tr = Path().apply { moveTo(0f, -16f); lineTo(-10f, 12f); lineTo(10f, 12f); close() }
+    drawPath(tr, Color(0xFFFFC107))
+    drawPath(tr, Color(0xFF5D4300), style = Stroke(width = 1.5f))
+}
+
+/**
+ * Mini tractor seen from above, nose pointing up, antenna (0,0) on the cab.
+ * Drawn in dp units scaled by [u] so it keeps its size at every zoom level.
+ */
+private fun DrawScope.drawMiniTractor(u: Float) {
+    fun r(l: Float, t: Float, w: Float, h: Float, c: Color, radius: Float = 1.5f) =
+        drawRoundRect(
+            c,
+            topLeft = Offset(l * u, t * u),
+            size = androidx.compose.ui.geometry.Size(w * u, h * u),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius * u),
+        )
+    val tyre = Color(0xFF1E1E1E)
+    val tread = Color(0xFF3A3A3A)
+    val body = Color(0xFF2E7D32)
+    val bodyDark = Color(0xFF1B5E20)
+    val yellow = Color(0xFFF5C518)
+
+    // drop shadow so it reads on white and dark fields alike
+    r(-15f, -27f, 30f, 47f, Color(0x33000000), 6f)
+    // rear tyres (big) and front tyres (narrow)
+    r(-17f, 0f, 8f, 18f, tyre, 2f); r(9f, 0f, 8f, 18f, tyre, 2f)
+    for (k in 0..3) { r(-17f, 2f + k * 4f, 8f, 1.4f, tread, 0f); r(9f, 2f + k * 4f, 8f, 1.4f, tread, 0f) }
+    r(-13f, -24f, 5f, 11f, tyre, 1.5f); r(8f, -24f, 5f, 11f, tyre, 1.5f)
+    // front axle
+    r(-9f, -19.5f, 18f, 2f, Color(0xFF424242), 0.5f)
+    // hood and grille
+    r(-6f, -26f, 12f, 22f, body, 3f)
+    r(-4f, -27f, 8f, 3f, yellow, 1f)
+    // rear fenders over the big tyres
+    r(-18f, -1f, 10f, 4f, bodyDark, 1.5f); r(8f, -1f, 10f, 4f, bodyDark, 1.5f)
+    // cab body and roof
+    r(-9f, -6f, 18f, 20f, body, 3f)
+    r(-8f, -5f, 16f, 16f, yellow, 2.5f)
+    r(-6.5f, -3.5f, 13f, 13f, Color(0xFFFFE082), 2f)
+    // exhaust stack beside the hood
+    drawCircle(Color(0xFF424242), 1.6f * u, Offset(4.5f * u, -9f * u))
+    // GNSS antenna on the roof (the guided reference point)
+    drawCircle(Color(0xFF14201A), 2.4f * u, Offset.Zero)
+    drawCircle(Color.White, 1.1f * u, Offset.Zero)
 }
 
 /**
@@ -337,6 +389,7 @@ private inline fun DrawScope.drawStraightPasses(
     a: EnuPoint, dirX: Double, dirY: Double,
     v: VehicleState, passIndex: Int, widthM: Double, extent: Double,
     project: (Double, Double) -> Offset,
+    style: FieldStyle,
 ) {
     val len = kotlin.math.hypot(dirX, dirY)
     if (len < 1e-9) return
@@ -349,7 +402,7 @@ private inline fun DrawScope.drawStraightPasses(
         val p2 = project(ox + ux * (along + extent), oy + uy * (along + extent))
         val current = k == passIndex
         drawLine(
-            if (current) Color(0xFFFFEB3B) else Color(0x88FFFFFF),
+            if (current) style.currentPass else style.pass,
             p1, p2,
             if (current) 4.dp.toPx() else 2.dp.toPx(),
         )
@@ -359,6 +412,7 @@ private inline fun DrawScope.drawStraightPasses(
 private inline fun DrawScope.drawCurvePasses(
     points: List<EnuPoint>, passIndex: Int, widthM: Double,
     project: (Double, Double) -> Offset,
+    style: FieldStyle,
 ) {
     if (points.size < 2) return
     // per-point normals averaged from adjacent segments
@@ -382,7 +436,7 @@ private inline fun DrawScope.drawCurvePasses(
         val current = k == passIndex
         drawPath(
             path,
-            if (current) Color(0xFFFFEB3B) else Color(0x88FFFFFF),
+            if (current) style.currentPass else style.pass,
             style = Stroke(width = if (current) 4.dp.toPx() else 2.dp.toPx()),
         )
     }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -53,6 +54,9 @@ fun FieldScreen(
     mockProvider: Boolean = false,
     basemap: com.agroguide.rtk.map.MapProvider = com.agroguide.rtk.map.MapProvider.NONE,
     basemapApiKey: String? = null,
+    style: FieldStyle = FieldStyle(),
+    fullscreen: Boolean = false,
+    onFullscreenChange: (Boolean) -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     val vehicle by PositionRepository.vehicle.collectAsStateWithLifecycle()
@@ -107,10 +111,9 @@ fun FieldScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize()) {
-        Lightbar(result?.xteM)
-        Row(Modifier.fillMaxSize().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier.weight(1f)) {
+    // The canvas with its overlays; shared by every layout.
+    val canvasArea: @Composable (Modifier) -> Unit = { areaModifier ->
+            Box(areaModifier) {
                 FieldView(
                     vehicle = vehicle, line = line, passIndex = result?.passIndex,
                     pendingA = pendingA, trail = trail, implement = implement,
@@ -123,30 +126,52 @@ fun FieldScreen(
                     basemap = basemap,
                     basemapApiKey = basemapApiKey,
                     plane = PositionRepository.activePlane,
+                    style = style,
                 )
+                // One row so the job banner (left) gives way to the badges
+                // (right) and wraps instead of overlapping them in portrait.
+                Row(
+                    Modifier.align(Alignment.TopStart).fillMaxWidth().padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                 Column(
-                    Modifier.align(Alignment.TopEnd).padding(8.dp),
+                    Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    activeJob?.let { job ->
+                        val activeState = job.state == com.agroguide.rtk.service.JobManager.STATE_ACTIVE
+                        Text(
+                            job.name + "  ·  " + stringResource(
+                                if (activeState) R.string.job_active else R.string.job_paused
+                            ),
+                            Modifier
+                                .background(
+                                    if (activeState) Color(0xCC2E7D32) else Color(0xCCF9A825),
+                                    androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
+                                )
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    // In full screen the data panel is hidden: keep the essentials.
+                    if (fullscreen) FullscreenStatus(coverageStats)
+                }
+                Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     SourceBadge()
                     NtripBadge()
                 }
-                activeJob?.let { job ->
-                    val activeState = job.state == com.agroguide.rtk.service.JobManager.STATE_ACTIVE
-                    Text(
-                        job.name + "  ·  " + stringResource(
-                            if (activeState) R.string.job_active else R.string.job_paused
-                        ),
-                        Modifier.align(Alignment.TopStart).padding(8.dp)
-                            .background(
-                                if (activeState) Color(0xCC2E7D32) else Color(0xCCF9A825),
-                                androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
-                            )
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                }
+                if (fullscreen) {
+                    androidx.compose.material3.FilledTonalButton(
+                        onClick = { onFullscreenChange(false) },
+                        modifier = Modifier.align(Alignment.BottomEnd)
+                            .padding(end = 12.dp, bottom = 76.dp)
+                            .height(60.dp),
+                    ) { Text(stringResource(R.string.show_data), fontSize = 17.sp, fontWeight = FontWeight.Bold) }
                 }
                 if (draftMode != ParcelDraft.Mode.NONE) {
                     Row(
@@ -177,7 +202,7 @@ fun FieldScreen(
                     Text(
                         stringResource(R.string.field_no_position),
                         Modifier.align(Alignment.Center),
-                        color = Color.White,
+                        color = style.onField,
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }
@@ -186,10 +211,17 @@ fun FieldScreen(
                     modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(8.dp),
                 )
             }
+    }
+
+    // The data/controls panel; to the right in landscape, below in portrait.
+    val panel: @Composable (Modifier) -> Unit = { panelModifier ->
             Column(
-                Modifier.width(272.dp).verticalScroll(rememberScrollState()),
+                panelModifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                if (activeJob != null) {
+                    ActionButton(stringResource(R.string.fullscreen)) { onFullscreenChange(true) }
+                }
                 StatusStrip()
                 Text(
                     "${stringResource(R.string.label_pass)}: ${result?.passIndex ?: "—"}",
@@ -228,6 +260,30 @@ fun FieldScreen(
                 OutlinedActionButton(stringResource(R.string.implement_button)) { showImplement = true }
                 OutlinedActionButton(stringResource(R.string.source_button)) { showSource = true }
                 OutlinedActionButton(stringResource(R.string.coverage_reset)) { showResetConfirm = true }
+            }
+    }
+
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+        val portrait = maxHeight > maxWidth
+        val panelMaxHeight = maxHeight * 0.42f
+        Column(Modifier.fillMaxSize()) {
+            Lightbar(result?.xteM)
+            when {
+                fullscreen -> canvasArea(Modifier.fillMaxSize())
+                portrait -> Column(
+                    Modifier.fillMaxSize().padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    canvasArea(Modifier.weight(1f).fillMaxWidth())
+                    panel(Modifier.fillMaxWidth().heightIn(max = panelMaxHeight))
+                }
+                else -> Row(
+                    Modifier.fillMaxSize().padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    canvasArea(Modifier.weight(1f))
+                    panel(Modifier.width(272.dp))
+                }
             }
         }
     }
@@ -364,6 +420,35 @@ private fun NtripBadge() {
     )
 }
 
+/**
+ * What stays visible in full-screen mode: fix quality, speed and treated area,
+ * in one translucent pill so the field keeps the whole screen.
+ */
+@Composable
+private fun FullscreenStatus(stats: com.agroguide.rtk.coverage.CoverageStats) {
+    val vehicle by PositionRepository.vehicle.collectAsStateWithLifecycle()
+    val quality = vehicle?.quality ?: com.agroguide.rtk.geo.GnssQuality.NO_FIX
+    Row(
+        Modifier
+            .background(Color(0xCC14201A), androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            qualityLabel(quality),
+            Modifier
+                .background(qualityColor(quality), androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+                .padding(horizontal = 6.dp, vertical = 2.dp),
+            color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp,
+        )
+        Text(
+            "%.1f km/h · %.2f ha".format((vehicle?.speedMps ?: 0.0) * 3.6, stats.treatedM2 / 10_000),
+            color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp,
+        )
+    }
+}
+
 /** Compact quality chip + sats + speed, reusing FixPanel color/label mapping. */
 @Composable
 private fun StatusStrip() {
@@ -409,10 +494,16 @@ private fun SectionBar(states: List<Boolean>, modifier: Modifier = Modifier) {
     val repo = com.agroguide.rtk.service.CoverageRepository
     Row(modifier.height(56.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         val allOn = states.all { it }
-        androidx.compose.material3.TextButton(
-            onClick = { repo.setAllSections(!allOn) },
-            modifier = Modifier.height(56.dp),
-        ) { Text(stringResource(R.string.sections_all), color = Color.White) }
+        // Own dark pill: the bar floats over the field, whose background is
+        // user-configurable (white by default), so plain white text vanishes.
+        Box(
+            Modifier
+                .height(56.dp)
+                .background(Color(0xFF263238), androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+                .clickable { repo.setAllSections(!allOn) }
+                .padding(horizontal = 14.dp),
+            contentAlignment = Alignment.Center,
+        ) { Text(stringResource(R.string.sections_all), color = Color.White, fontWeight = FontWeight.SemiBold) }
         states.forEachIndexed { i, on ->
             Box(
                 Modifier

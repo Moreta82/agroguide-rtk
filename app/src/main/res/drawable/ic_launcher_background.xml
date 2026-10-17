@@ -1,20 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ploughed-field background: wheat base with subtle furrow bands. -->
+<!--
+  Launcher background: dusk sky over a field in perspective, crop rows and
+  parallel guidance passes converging on the horizon, the active guidance
+  line in yellow. Generic illustration, no third-party trademarks.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#E8DCB5"
-        android:pathData="M0,0 L108,0 L108,108 L0,108 z" />
-    <path
-        android:fillColor="#DBCB9C"
-        android:pathData="M0,84 L108,84 L108,92 L0,92 z" />
-    <path
-        android:fillColor="#DBCB9C"
-        android:pathData="M0,96 L108,96 L108,104 L0,104 z" />
-    <path
-        android:fillColor="#DBCB9C"
-        android:pathData="M0,16 L108,16 L108,24 L0,24 z" />
+
+    <!-- sky -->
+    <path android:pathData="M0,0 L108,0 L108,108 L0,108 z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="0" android:startY="0"
+                android:endX="0" android:endY="108">
+                <item android:offset="0" android:color="#FF0A2A3A" />
+                <item android:offset="1" android:color="#FF17605A" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- horizon glow -->
+    <path android:pathData="M0,34 L108,34 L108,40 L0,40 z"
+        android:fillColor="#A8E6A0" android:fillAlpha="0.35" />
+    <!-- field -->
+    <path android:pathData="M0,36 L108,36 L108,108 L0,108 z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="0" android:startY="36"
+                android:endX="0" android:endY="108">
+                <item android:offset="0" android:color="#FF1F6B30" />
+                <item android:offset="1" android:color="#FF0B3315" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- crop rows converging on the vanishing point -->
+    <path android:pathData="M54,36 L-30,108 L-6,108 z" android:fillColor="#06260F" android:fillAlpha="0.5" />
+    <path android:pathData="M54,36 L18,108 L42,108 z" android:fillColor="#06260F" android:fillAlpha="0.5" />
+    <path android:pathData="M54,36 L66,108 L90,108 z" android:fillColor="#06260F" android:fillAlpha="0.5" />
+    <path android:pathData="M54,36 L114,108 L138,108 z" android:fillColor="#06260F" android:fillAlpha="0.5" />
+    <!-- parallel guidance passes -->
+    <path android:pathData="M54,36 L6,108" android:strokeColor="#C9F7B8"
+        android:strokeAlpha="0.35" android:strokeWidth="1" />
+    <path android:pathData="M54,36 L102,108" android:strokeColor="#C9F7B8"
+        android:strokeAlpha="0.35" android:strokeWidth="1" />
+    <!-- active guidance line -->
+    <path android:pathData="M54,36 L51,108 L57,108 z" android:fillColor="#F5D90A" />
 </vector>

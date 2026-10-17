@@ -78,7 +78,8 @@ object JobManager {
         if (job.state != STATE_ACTIVE) return
         val w = writer ?: return
         val t = SystemClock.elapsedRealtime() - jobStartRealtime
-        val moving = state.speedMps > 0.2
+        // Record exactly what is painted, so a replay after a restart matches.
+        val moving = !CoverageRepository.isPaused(state)
         // A journal write failure (full disk, storage detached) must degrade to
         // "recording stopped", never to a crash mid-work.
         try {

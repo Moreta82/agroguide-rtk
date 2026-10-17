@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.verticalScroll
 import android.widget.Toast
 import androidx.compose.material3.Button
@@ -45,6 +47,15 @@ import com.agroguide.rtk.R
 import com.agroguide.rtk.data.AppSettings
 import com.agroguide.rtk.data.AppSettingsStore
 import com.agroguide.rtk.data.ThemeMode
+import com.agroguide.rtk.data.ScreenOrientation
+import com.agroguide.rtk.data.VehicleIcon
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import com.agroguide.rtk.device.BatteryVendors
 import kotlinx.coroutines.launch
 
@@ -91,6 +102,52 @@ fun SettingsScreen(settings: AppSettings, store: AppSettingsStore) {
                 scope.launch { store.update { it.copy(theme = ThemeMode.NIGHT.name) } }
             }
         }
+
+        Text(stringResource(R.string.orientation_label), style = MaterialTheme.typography.titleMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            ThemeOption(R.string.orientation_landscape, settings.screenOrientation == ScreenOrientation.LANDSCAPE) {
+                scope.launch { store.update { it.copy(orientation = ScreenOrientation.LANDSCAPE.name) } }
+            }
+            ThemeOption(R.string.orientation_portrait, settings.screenOrientation == ScreenOrientation.PORTRAIT) {
+                scope.launch { store.update { it.copy(orientation = ScreenOrientation.PORTRAIT.name) } }
+            }
+            ThemeOption(R.string.orientation_auto, settings.screenOrientation == ScreenOrientation.AUTO) {
+                scope.launch { store.update { it.copy(orientation = ScreenOrientation.AUTO.name) } }
+            }
+        }
+
+        Text(stringResource(R.string.field_view_label), style = MaterialTheme.typography.titleMedium)
+        val bg = Color(settings.fieldBackground.toInt())
+        Text(stringResource(R.string.field_background), style = MaterialTheme.typography.bodyMedium)
+        SwatchRow(FieldStyle.BACKGROUNDS, settings.fieldBackground, underlay = null) { c ->
+            scope.launch { store.update { it.copy(fieldBackground = c) } }
+        }
+        Text(stringResource(R.string.field_coverage), style = MaterialTheme.typography.bodyMedium)
+        SwatchRow(FieldStyle.COVERAGES, settings.coverageColor, underlay = bg) { c ->
+            scope.launch { store.update { it.copy(coverageColor = c) } }
+        }
+        Text(stringResource(R.string.field_overlap), style = MaterialTheme.typography.bodyMedium)
+        SwatchRow(FieldStyle.OVERLAPS, settings.overlapColor, underlay = bg) { c ->
+            scope.launch { store.update { it.copy(overlapColor = c) } }
+        }
+        SettingSwitch(stringResource(R.string.field_grid), settings.showGrid) { on ->
+            scope.launch { store.update { it.copy(showGrid = on) } }
+        }
+        Text(stringResource(R.string.field_vehicle), style = MaterialTheme.typography.bodyMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            ThemeOption(R.string.vehicle_tractor, settings.vehicle == VehicleIcon.TRACTOR) {
+                scope.launch { store.update { it.copy(vehicleIcon = VehicleIcon.TRACTOR.name) } }
+            }
+            ThemeOption(R.string.vehicle_arrow, settings.vehicle == VehicleIcon.ARROW) {
+                scope.launch { store.update { it.copy(vehicleIcon = VehicleIcon.ARROW.name) } }
+            }
+        }
+
+        Text(stringResource(R.string.painting_label), style = MaterialTheme.typography.titleMedium)
+        SettingSwitch(stringResource(R.string.pause_when_stopped), settings.pauseWhenStopped) { on ->
+            scope.launch { store.update { it.copy(pauseWhenStopped = on) } }
+        }
+        Text(stringResource(R.string.pause_when_stopped_hint), style = MaterialTheme.typography.bodySmall)
 
         SettingSwitch(stringResource(R.string.setting_keep_screen), settings.keepScreenOn) { on ->
             scope.launch { store.update { it.copy(keepScreenOn = on) } }
@@ -188,6 +245,33 @@ fun SettingsScreen(settings: AppSettings, store: AppSettingsStore) {
     }
 }
 
+/**
+ * Colour picker as large tappable swatches (glove-friendly). Translucent paint
+ * colours are previewed over [underlay] — the chosen field background — so
+ * what you pick is what you will see on the field.
+ */
+@Composable
+private fun SwatchRow(options: List<Long>, selected: Long, underlay: Color?, onPick: (Long) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        for (c in options) {
+            val isSelected = c == selected
+            Box(
+                Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(underlay ?: Color.Transparent)
+                    .background(Color(c.toInt()))
+                    .border(
+                        width = if (isSelected) 4.dp else 1.dp,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color(0x66888888),
+                        shape = CircleShape,
+                    )
+                    .clickable { onPick(c) },
+            )
+        }
+    }
+}
+
 @Composable
 private fun BasemapOption(
     labelRes: Int,
@@ -195,23 +279,31 @@ private fun BasemapOption(
     currentId: String,
     onSelect: (MapProvider) -> Unit,
 ) {
+    val selected = MapProvider.fromId(currentId) == provider
     Row(
-        Modifier.fillMaxWidth().height(48.dp),
+        Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(provider) }),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RadioButton(
-            selected = MapProvider.fromId(currentId) == provider,
-            onClick = { onSelect(provider) },
-        )
-        Text(stringResource(labelRes))
+        RadioButton(selected = selected, onClick = null)
+        Text(stringResource(labelRes), Modifier.padding(start = 12.dp))
     }
 }
 
+/** Whole row (circle + label) is the touch target: easier with gloves in the cab. */
 @Composable
 private fun ThemeOption(labelRes: Int, selected: Boolean, onClick: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        RadioButton(selected = selected, onClick = onClick)
-        Text(stringResource(labelRes))
+    Row(
+        Modifier
+            .height(48.dp)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Text(stringResource(labelRes), Modifier.padding(start = 12.dp))
     }
 }
 

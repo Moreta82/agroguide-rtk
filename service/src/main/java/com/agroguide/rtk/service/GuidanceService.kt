@@ -88,8 +88,11 @@ class GuidanceService : LifecycleService() {
                     val work = GuidanceRepository.implement.value.workPoint(
                         com.agroguide.rtk.geo.EnuPoint(state.x, state.y), state.headingDeg,
                     )
-                    // paused job = no painting and no recording
-                    if (!JobManager.isPaused) {
+                    // Coverage and the job journal use real fixes only: the
+                    // 15 Hz CV-projected states exist for a smooth display, and
+                    // painting/recording them would store invented positions.
+                    // A paused job = no painting and no recording.
+                    if (!state.projected && !JobManager.isPaused) {
                         CoverageRepository.update(state, work)
                         var mask = 0
                         CoverageRepository.sections.value.forEachIndexed { i, on -> if (on) mask = mask or (1 shl i) }

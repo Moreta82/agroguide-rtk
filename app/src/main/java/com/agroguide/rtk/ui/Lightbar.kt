@@ -3,7 +3,9 @@ package com.agroguide.rtk.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -16,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.abs
@@ -29,19 +32,24 @@ import kotlin.math.roundToInt
 @Composable
 fun Lightbar(xteM: Double?, ledStepM: Double = 0.10, ledsPerSide: Int = 7) {
     val onTarget = xteM != null && abs(xteM) < ledStepM / 2
+    BoxWithConstraints(Modifier.fillMaxWidth().height(72.dp).background(Color(0xFF101010))) {
+    // Portrait phones are ~400 dp wide: shrink the centre box and LEDs so all
+    // 2 x perSide LEDs always fit instead of being clipped at the edges.
+    val centreW = if (maxWidth < 480.dp) 104.dp else 128.dp
+    val ledSlot = ((maxWidth - centreW - 24.dp) / (2 * ledsPerSide)).coerceIn(10.dp, 28.dp)
     Row(
-        Modifier.fillMaxWidth().height(72.dp).background(Color(0xFF101010)),
+        Modifier.fillMaxSize(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val lit = if (xteM == null) 0 else (abs(xteM) / ledStepM).roundToInt().coerceAtMost(ledsPerSide)
         // left side LEDs light when xte > 0 (steer left); innermost LED first
         for (i in ledsPerSide downTo 1) {
-            Led(active = xteM != null && xteM > 0 && i <= lit, index = i, perSide = ledsPerSide)
+            Led(active = xteM != null && xteM > 0 && i <= lit, index = i, perSide = ledsPerSide, slot = ledSlot)
         }
         Box(
             Modifier.padding(horizontal = 12.dp)
-                .size(width = 128.dp, height = 56.dp)
+                .size(width = centreW, height = 56.dp)
                 .background(if (onTarget) Color(0xFF2E7D32) else Color(0xFF263238), RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center,
         ) {
@@ -51,13 +59,14 @@ fun Lightbar(xteM: Double?, ledStepM: Double = 0.10, ledsPerSide: Int = 7) {
             )
         }
         for (i in 1..ledsPerSide) {
-            Led(active = xteM != null && xteM < 0 && i <= lit, index = i, perSide = ledsPerSide)
+            Led(active = xteM != null && xteM < 0 && i <= lit, index = i, perSide = ledsPerSide, slot = ledSlot)
         }
+    }
     }
 }
 
 @Composable
-private fun Led(active: Boolean, index: Int, perSide: Int) {
+private fun Led(active: Boolean, index: Int, perSide: Int, slot: Dp) {
     val severity = index.toFloat() / perSide
     val color = when {
         !active -> Color(0xFF2A2A2A)
@@ -65,5 +74,6 @@ private fun Led(active: Boolean, index: Int, perSide: Int) {
         severity < 0.75f -> Color(0xFFF9A825)
         else -> Color(0xFFE53935)
     }
-    Box(Modifier.padding(3.dp).size(22.dp).background(color, CircleShape))
+    val gap = slot * 0.12f
+    Box(Modifier.padding(gap).size(slot - gap * 2).background(color, CircleShape))
 }
