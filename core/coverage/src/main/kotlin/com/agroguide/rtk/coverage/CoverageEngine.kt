@@ -4,7 +4,9 @@ import org.locationtech.jts.geom.Envelope
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.MultiPolygon
 import org.locationtech.jts.geom.Polygon
+import org.locationtech.jts.geom.PrecisionModel
 import org.locationtech.jts.geom.util.PolygonExtracter
+import org.locationtech.jts.operation.overlayng.OverlayNG
 import kotlin.math.floor
 import kotlin.math.hypot
 
@@ -106,16 +108,16 @@ class CoverageEngine(
             val square = Swath.factory.toGeometry(
                 Envelope(ix * tileSizeM, (ix + 1) * tileSizeM, iy * tileSizeM, (iy + 1) * tileSizeM)
             )
-            val part = toPolygonal(quad.intersection(square))
+            val part = op(quad, square, OverlayNG.INTERSECTION)
             if (part.isEmpty || part.area < 1e-9) continue
             val tile = tilesMap.getOrPut(key) {
                 Tile(Swath.factory.createPolygon(), Swath.factory.createPolygon())
             }
-            val inter = toPolygonal(tile.covered.intersection(part))
-            if (!inter.isEmpty && inter.area > 1e-9) {
-                tile.overlap = toPolygonal(toPolygonal(tile.overlap).union(inter))
+            val inter = op(tile.covered, part, OverlayNG.INTERSECTION)
+            if (!inter.isEmpty && inter.area > MIN_OVERLAP_M2) {
+                tile.overlap = op(tile.overlap, inter, OverlayNG.UNION)
             }
-            tile.covered = toPolygonal(toPolygonal(tile.covered).union(part))
+            tile.covered = op(tile.covered, part, OverlayNG.UNION)
             val newCovered = tile.covered.area
             val newOverlap = tile.overlap.area
             treated += newCovered - tile.coveredArea
@@ -129,8 +131,27 @@ class CoverageEngine(
     }
 
     /**
+     * Polygon overlay on a fixed 1 mm grid (OverlayNG snap-rounding).
+     *
+     * The legacy `Geometry.union/intersection` path uses floating-point
+     * noding and throws TopologyException on near-coincident edges — which is
+     * exactly what consecutive swaths from a real, slightly noisy receiver
+     * produce. In a field replay it rejected ~45 % of segments, leaving
+     * unpainted gaps and almost no overlap. Snap-rounding is provably robust;
+     * millimetre precision is far below anything that matters for area.
+     */
+    private fun op(a: Geometry, b: Geometry, opCode: Int): Geometry =
+        toPolygonal(OverlayNG.overlay(a, b, opCode, PRECISION))
+
+    private companion object {
+        val PRECISION = PrecisionModel(1000.0)   // 1 mm grid
+        /** Ignore overlap specks smaller than a hand span (rounding at joints). */
+        const val MIN_OVERLAP_M2 = 0.01
+    }
+
+    /**
      * Overlay ops on touching polygons can yield mixed GeometryCollections
-     * (polygon + edge lines); union() rejects those. Keep only the areal part.
+     * (polygon + edge lines); keep only the areal part.
      */
     private fun toPolygonal(g: Geometry): Geometry {
         if (g.isEmpty) return Swath.factory.createPolygon()

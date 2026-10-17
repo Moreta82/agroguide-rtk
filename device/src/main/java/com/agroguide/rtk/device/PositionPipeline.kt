@@ -22,6 +22,7 @@ class PositionPipeline(
 ) {
     private val aggregator = FixAggregator()
     private val jumpFilter = JumpFilter()
+    private val headingHold = com.agroguide.rtk.geo.HeadingHold()
 
     val states: Flow<VehicleState> = source.events.transform { ev ->
         val fix: GnssFix = when (ev) {
@@ -41,7 +42,7 @@ class PositionPipeline(
         emit(
             VehicleState(
                 x = enu.x, y = enu.y, latDeg = fix.latDeg, lonDeg = fix.lonDeg,
-                headingDeg = fix.courseDeg ?: 0.0, speedMps = speed,
+                headingDeg = headingHold.update(fix.courseDeg, speed), speedMps = speed,
                 quality = fix.quality.toGnssQuality(), satellites = fix.satellites,
                 hdop = fix.hdop, correctionAgeS = fix.correctionAgeS,
                 fixMonotonicMs = fix.monotonicMs, projected = false,

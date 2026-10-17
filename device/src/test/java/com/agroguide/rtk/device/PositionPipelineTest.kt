@@ -29,6 +29,29 @@ class PositionPipelineTest {
         assertEquals(4.0, states[1].speedMps, 0.1)
     }
 
+    @Test fun `heading is held when the receiver stops and reports no course`() = runTest {
+        fun cs(body: String): String {
+            var x = 0; for (c in body.drop(1)) x = x xor c.code
+            return body + "*" + x.toString(16).uppercase().padStart(2, '0')
+        }
+        val lines = listOf(
+            // moving east
+            cs("\$GNRMC,120000.00,A,4236.00000,N,00534.00000,W,4.0,90.0,161026,,,R,V"),
+            cs("\$GNGGA,120000.00,4236.00000,N,00534.00000,W,4,12,0.6,800.0,M,50.0,M,1.0,0000"),
+            // stopped: u-blox leaves speed ~0 and the course field EMPTY
+            cs("\$GNRMC,120001.00,A,4236.00000,N,00534.00000,W,0.0,,161026,,,R,V"),
+            cs("\$GNGGA,120001.00,4236.00000,N,00534.00000,W,4,12,0.6,800.0,M,50.0,M,1.0,0000"),
+        )
+        val source = object : PositionSource {
+            override val name = "test"
+            override val events = lines.mapIndexed { i, l -> SourceEvent.Nmea(l, i * 500L) }.asFlow()
+        }
+        val states = PositionPipeline(source).states.toList()
+        assertEquals(2, states.size)
+        assertEquals(90.0, states[0].headingDeg, 1e-9)
+        assertEquals(90.0, states[1].headingDeg, 1e-9)   // was 0.0 -> view snapped north
+    }
+
     @Test fun `outlier fix is dropped`() = runTest {
         val gen = SyntheticNmeaGenerator(42.0, -5.0, speedMps = 2.0, headingDeg = 0.0)
         val good = (0 until 3).flatMap { gen.next() }
