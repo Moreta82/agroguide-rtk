@@ -6,3 +6,7 @@ keystore.properties
 .idea/
 *.iml
 .kotlin/
+
+# Built APKs and loose binaries are published as GitHub Release assets, not committed
+*.apk
+/AgroGuideRTK-Manual.pdf

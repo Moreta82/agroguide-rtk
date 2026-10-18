@@ -1,0 +1,79 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0A2A3A"/>
+      <stop offset="1" stop-color="#17605A"/>
+    </linearGradient>
+    <linearGradient id="field" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1F6B30"/>
+      <stop offset="1" stop-color="#0B3315"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D8F1FF"/>
+      <stop offset="1" stop-color="#7FB8D6"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#66C96A"/>
+      <stop offset="1" stop-color="#2F8F35"/>
+    </linearGradient>
+    <linearGradient id="tyre" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#141414"/>
+      <stop offset="0.5" stop-color="#3A3A3A"/>
+      <stop offset="1" stop-color="#141414"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ===== background layer ===== -->
+  <g id="background">
+    <rect width="108" height="108" fill="url(#sky)"/>
+    <!-- horizon glow -->
+    <path d="M0,34 L108,34 L108,40 L0,40 z" fill="#A8E6A0" fill-opacity="0.35"/>
+    <!-- field -->
+    <path d="M0,36 L108,36 L108,108 L0,108 z" fill="url(#field)"/>
+    <!-- alternating crop rows converging to the vanishing point (54,36) -->
+    <path d="M54,36 L-30,108 L-6,108 z" fill="#06260F" fill-opacity="0.5"/>
+    <path d="M54,36 L18,108 L42,108 z" fill="#06260F" fill-opacity="0.5"/>
+    <path d="M54,36 L66,108 L90,108 z" fill="#06260F" fill-opacity="0.5"/>
+    <path d="M54,36 L114,108 L138,108 z" fill="#06260F" fill-opacity="0.5"/>
+    <!-- parallel guidance passes -->
+    <path d="M54,36 L6,108" stroke="#C9F7B8" stroke-opacity="0.35" stroke-width="1"/>
+    <path d="M54,36 L102,108" stroke="#C9F7B8" stroke-opacity="0.35" stroke-width="1"/>
+    <!-- active guidance line -->
+    <path d="M54,36 L51,108 L57,108 z" fill="#F5D90A"/>
+  </g>
+
+  <!-- ===== foreground layer ===== -->
+  <g id="foreground">
+    <!-- GNSS / RTK signal -->
+    <path d="M49.8,33.2 A6,6 0 0,1 58.2,33.2" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M46.2,29.6 A11,11 0 0,1 61.8,29.6" fill="none" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M42.6,26 A16,16 0 0,1 65.4,26" fill="none" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="2.2" stroke-linecap="round"/>
+    <!-- ground shadow -->
+    <path d="M30,82 a24,3.4 0 1,0 48,0 a24,3.4 0 1,0 -48,0 z" fill="#000000" fill-opacity="0.35"/>
+    <!-- rear tyres -->
+    <path d="M33,62 h12 a2,2 0 0,1 2,2 v16 a2,2 0 0,1 -2,2 h-12 a2,2 0 0,1 -2,-2 v-16 a2,2 0 0,1 2,-2 z" fill="url(#tyre)"/>
+    <path d="M63,62 h12 a2,2 0 0,1 2,2 v16 a2,2 0 0,1 -2,2 h-12 a2,2 0 0,1 -2,-2 v-16 a2,2 0 0,1 2,-2 z" fill="url(#tyre)"/>
+    <!-- tyre lugs -->
+    <path d="M32,66 h14 v1.6 h-14 z M32,70.5 h14 v1.6 h-14 z M32,75 h14 v1.6 h-14 z M32,79.5 h14 v1.4 h-14 z" fill="#050505" fill-opacity="0.55"/>
+    <path d="M62,66 h14 v1.6 h-14 z M62,70.5 h14 v1.6 h-14 z M62,75 h14 v1.6 h-14 z M62,79.5 h14 v1.4 h-14 z" fill="#050505" fill-opacity="0.55"/>
+    <!-- rear body between the wheels -->
+    <path d="M46,60 h16 v18 h-16 z" fill="#2F8F35"/>
+    <!-- three-point hitch / drawbar -->
+    <path d="M51,76 h6 v5 h-6 z" fill="#3B3B3B"/>
+    <path d="M47,79 h14 v2 h-14 z" fill="#555555"/>
+    <!-- fenders -->
+    <path d="M30,62 a9,5 0 0,1 18,0 v1.5 h-18 z" fill="url(#body)"/>
+    <path d="M60,62 a9,5 0 0,1 18,0 v1.5 h-18 z" fill="url(#body)"/>
+    <!-- cab -->
+    <path d="M41,43 h26 a2,2 0 0,1 2,2 v18 h-30 v-18 a2,2 0 0,1 2,-2 z" fill="url(#body)"/>
+    <path d="M43.5,46 h21 v13 h-21 z" fill="url(#glass)"/>
+    <!-- glass reflection -->
+    <path d="M45,46 l5,0 l-4,13 l-1,0 z" fill="#FFFFFF" fill-opacity="0.45"/>
+    <!-- roof -->
+    <path d="M38,39.5 h32 a1.5,1.5 0 0,1 1.5,1.5 v2.5 h-35 v-2.5 a1.5,1.5 0 0,1 1.5,-1.5 z" fill="#F5C518"/>
+    <!-- beacon -->
+    <path d="M52,37 h4 v2.5 h-4 z" fill="#FF8F00"/>
+    <!-- rear lights -->
+    <path d="M40,60 h3 v2 h-3 z M65,60 h3 v2 h-3 z" fill="#E53935"/>
+  </g>
+</svg>

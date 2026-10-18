@@ -1,21 +1,46 @@
+<p align="center">
+  <img src="docs/icon.svg" width="120" alt="AgroGuide RTK">
+</p>
+
 # AgroGuide RTK
 
-Aplicación Android de guiado agrícola por GNSS-RTK (guiado visual tipo lightbar, sin autosteer físico), pensada para el kit ArduSimple RTK Portable Bluetooth (u-blox ZED-F9P). UI en español, offline-first (sin mapas), landscape para tablet.
+Aplicación Android libre de **guiado agrícola por GNSS-RTK**: guiado visual con barra de luces y vista de campo, pintado de la zona trabajada y del solape, parcelas, trabajos e informes. Pensada para un móvil o tablet en la cabina del tractor y un receptor RTK por Bluetooth (probada con el kit ArduSimple RTK Portable Bluetooth, u-blox ZED-F9P).
+
+*Free (GPL-3.0) Android app for GNSS-RTK tractor guidance: lightbar + field view, real-time coverage and overlap painting, NTRIP client, fields, jobs and PDF reports. Spanish UI.*
+
+> **Aviso:** es una ayuda visual al conductor, no un sistema de autoguiado. No controla la dirección del tractor. Úsala bajo tu responsabilidad y sin quitar la vista del terreno.
+
+<p align="center">
+  <img src="docs/screenshots/guiado-pantalla-completa.png" width="62%" alt="Guiado a pantalla completa">
+  <img src="docs/screenshots/guiado-vertical.png" width="22%" alt="Vista vertical">
+</p>
+<p align="center">
+  <img src="docs/screenshots/guiado-datos.png" width="62%" alt="Guiado con panel de datos">
+</p>
+
+## Instalación
+
+1. Descarga el APK de la última versión en **[Releases](../../releases)**.
+2. Ábrelo en el móvil y permite "Instalar aplicaciones desconocidas" cuando Android lo pida.
+3. Sigue el [manual de usuario (PDF)](docs/manual/AgroGuideRTK-Manual.pdf) para emparejar el receptor y configurar NTRIP.
+
+Requiere Android 8.0 o superior.
 
 ## Qué hace
 
-- **Posicionamiento**: Bluetooth SPP directo al receptor (parser NMEA propio con watchdog de 5 s y reconexión con backoff), API de ubicación de Android, o modo demo simulado sin hardware.
-- **Correcciones RTK**: cliente NTRIP v1/v2 integrado (perfiles, navegador de mountpoints, subida de GGA para VRS, indicador de tráfico RTCM) escribiendo RTCM3 al receptor por el mismo socket.
-- **Receptor**: "Optimizar" a 5 Hz + GSV off vía UBX-CFG-VALSET (RAM+flash) con confirmación por ACK; restaurar valores de fábrica.
-- **Guiado**: líneas AB, A+, curvas grabadas y modo libre; XTE con auto-snap a la pasada más cercana; offsets de apero (ancho, lateral, longitudinal); lightbar drive-to legible a 2 m; vista de campo Canvas con cámara heading-up, zoom y modo north-up.
-- **Cobertura**: franjas pintadas en tiempo real (JTS, mosaico incremental de teselas de 50 m), solape en color distinto, control manual de hasta 16 secciones, contadores en vivo (ha, solape, distancia). Soak verificado: 4 h a 5 Hz = 72.000 segmentos en ~4 s de CPU y ~1 MB de heap.
-- **Parcelas**: creación conduciendo el perímetro o marcando puntos; área/perímetro; import/export GeoJSON y KML.
-- **Trabajos**: iniciar/pausar/reanudar/finalizar con journal binario append-only crash-safe; reanudación tras reinicio con la cobertura reconstruida; informes HTML y PDF con miniatura del track.
-- **Robustez**: foreground service con wake lock, onboarding para gestores de batería agresivos (MIUI/EMUI/One UI), salida como mock location provider, tema día/noche, línea de guiado persistente.
+- **Posicionamiento:** receptor GNSS por Bluetooth SPP (parser NMEA propio, watchdog y reconexión automática), ubicación interna de Android o modo demo simulado sin hardware.
+- **Correcciones RTK:** cliente NTRIP v1/v2 integrado (perfiles, explorador de mountpoints ordenado por distancia, envío de GGA para redes VRS, prueba de conexión con el motivo real del rechazo del caster). El RTCM3 se envía al receptor por el mismo enlace Bluetooth.
+- **Receptor u-blox:** botón "Optimizar" (5 Hz, GSV desactivado) vía UBX-CFG-VALSET con confirmación por ACK, y restaurar valores de fábrica.
+- **Guiado:** líneas AB, A+, curvas grabadas y modo libre; desviación lateral con salto automático a la pasada más cercana; offsets del apero; barra de luces legible a 2 m.
+- **Vista de campo:** orientación horizontal, vertical o automática; pantalla completa al iniciar un trabajo; colores de fondo, zona trabajada y solape configurables; cuadrícula opcional; vehículo como mini tractor o triángulo; mapas base OpenStreetMap, satélite Esri o Google (con tu propia API key) con caché offline.
+- **Cobertura:** pintado en tiempo real con solape en otro color, hasta 16 secciones manuales, contadores de hectáreas, solape y distancia. Opción de pausar el pintado al detenerse.
+- **Parcelas:** creación conduciendo el perímetro o marcando puntos; área y perímetro; importación y exportación GeoJSON y KML.
+- **Trabajos:** iniciar, pausar, reanudar y finalizar con un diario binario a prueba de cierres inesperados; al reabrir la app se reconstruye la cobertura; informes HTML y PDF.
+- **Robustez:** servicio en primer plano, ayuda para los gestores de batería de MIUI/EMUI/One UI, salida como proveedor de ubicación simulada para otras apps, tema día/noche.
 
 ## Compilar
 
-Requisitos: Android Studio (JDK 21 incluido) y SDK 36.
+Requisitos: Android Studio (incluye el JDK) y Android SDK 36.
 
 ```powershell
 $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
@@ -23,19 +48,35 @@ $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
 # APK: app\build\outputs\apk\debug\app-debug.apk
 ```
 
-## Módulos
+En Linux/macOS: `./gradlew test assembleDebug`.
+
+La compilación `release` se firma solo si existe un `keystore.properties` local (no incluido en el repositorio); sin él se genera sin firmar. El tipo de compilación `beta` (`com.agroguide.rtk.beta`) se instala junto a la versión normal para hacer pruebas A/B.
+
+## Arquitectura
 
 | Módulo | Tipo | Contenido |
 |---|---|---|
-| `:core:geo` | JVM | Plano tangente ENU WGS84, filtro de saltos, proyector CV, motor de guiado (AB/A+/curvas, XTE, snap) |
-| `:core:nmea` | JVM | Parser NMEA 0183, agregador de fixes, ensamblador de líneas, UBX (VALSET, ACK), replay/generador sintético |
-| `:core:ntrip` | JVM | Cliente NTRIP v1/v2, sourcetable, decodificador chunked |
-| `:core:coverage` | JVM | Cobertura incremental por teselas con JTS, solape, contadores |
-| `:data` | Android | Room (parcelas, trabajos), journal AGJ1, codecs GeoJSON/KML, informes HTML/PDF, codec de línea |
-| `:device` | Android | Fuentes de posición (BT SPP, Android, demo), pipeline, mock provider, detección de fabricantes |
-| `:service` | Android | Foreground service, repositorios (posición, guiado, cobertura), NTRIP session, JobManager |
-| `:app` | Android | UI Compose: campo+lightbar, parcelas, trabajos, NTRIP, receptor, ajustes |
+| `:core:geo` | JVM | Plano tangente ENU WGS84, filtro de saltos, proyector, motor de guiado (AB/A+/curvas, desviación, snap), retención de rumbo en paradas |
+| `:core:nmea` | JVM | Parser NMEA 0183, agregador de fixes, UBX (VALSET, ACK), generador sintético para demo y tests |
+| `:core:ntrip` | JVM | Cliente NTRIP v1/v2, sourcetable, clasificación de errores del caster |
+| `:core:coverage` | JVM | Cobertura incremental por teselas con JTS (OverlayNG), solape, contadores |
+| `:data` | Android | Room (parcelas, trabajos), diario de trabajo, GeoJSON/KML, informes HTML/PDF |
+| `:device` | Android | Fuentes de posición (Bluetooth, Android, demo), pipeline, proveedor de ubicación simulada |
+| `:service` | Android | Servicio en primer plano, repositorios de posición/guiado/cobertura, sesión NTRIP, gestor de trabajos |
+| `:app` | Android | Interfaz Jetpack Compose |
 
-Tests: `.\gradlew.bat test` (~110 tests JVM, sin dispositivo). El hardware se sustituye con el modo demo (generador NMEA sintético).
+Tests: `.\gradlew.bat test` (unos 140 tests JVM, sin dispositivo). El hardware se sustituye por el generador NMEA sintético.
 
-Specs y planes de implementación en `docs/superpowers/`.
+Especificación y planes de implementación en `docs/superpowers/`.
+
+## Contribuir
+
+Los informes de errores y las mejoras son bienvenidos: abre un *issue* o un *pull request*. Para errores de campo ayuda mucho indicar el receptor, el caster NTRIP (sin credenciales) y el modelo de móvil.
+
+## Licencia
+
+Copyright (C) 2026 Moreta82
+
+Este programa es software libre: puedes redistribuirlo y/o modificarlo bajo los términos de la **GNU General Public License versión 3** publicada por la Free Software Foundation. Se distribuye con la esperanza de que sea útil, pero **SIN NINGUNA GARANTÍA**. Consulta el fichero [LICENSE](LICENSE).
+
+Los mapas base pertenecen a sus proveedores (© colaboradores de OpenStreetMap, Esri, Google) y su uso está sujeto a sus propias condiciones.
