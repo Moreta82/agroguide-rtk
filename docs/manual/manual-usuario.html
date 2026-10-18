@@ -143,21 +143,85 @@
 
   <div class="cover-inner">
     <div class="brandline">
-      <svg width="17mm" height="17mm" viewBox="0 0 108 108">
-        <rect width="108" height="108" rx="24" fill="#E8DCB5"/>
-        <path fill="#1A1A1A" d="M18,72 a20,20 0 1,1 40,0 a20,20 0 1,1 -40,0 z"/>
-        <path fill="#F5C518" d="M27,72 a11,11 0 1,1 22,0 a11,11 0 1,1 -22,0 z"/>
-        <path fill="#1A1A1A" d="M34,72 a4,4 0 1,1 8,0 a4,4 0 1,1 -8,0 z"/>
-        <path fill="#1A1A1A" d="M64,80 a12,12 0 1,1 24,0 a12,12 0 1,1 -24,0 z"/>
-        <path fill="#F5C518" d="M70,80 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0 z"/>
-        <path fill="#2E7D32" d="M30,62 L86,62 L86,74 L30,74 z"/>
-        <path fill="#357A38" d="M58,44 L84,44 A4,4 0 0,1 88,48 L88,64 L58,64 z"/>
-        <path fill="#F5C518" d="M84,50 L88,50 L88,62 L84,62 z"/>
-        <path fill="#2E7D32" d="M28,34 L58,34 L58,64 L28,64 z"/>
-        <path fill="#BFE6F5" d="M33,39 L53,39 L53,53 L33,53 z"/>
-        <path fill="#F5C518" d="M24,29 L62,29 L62,35 L24,35 z"/>
-        <path fill="#4A4A4A" d="M63,20 L69,20 L69,45 L63,45 z"/>
-      </svg>
+      <svg width="17mm" height="17mm" viewBox="0 0 108 108"><defs><clipPath id="ic-clip"><rect width="108" height="108" rx="24"/></clipPath></defs><g clip-path="url(#ic-clip)">
+  <defs>
+    <linearGradient id="ic-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0A2A3A"/>
+      <stop offset="1" stop-color="#17605A"/>
+    </linearGradient>
+    <linearGradient id="ic-field" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1F6B30"/>
+      <stop offset="1" stop-color="#0B3315"/>
+    </linearGradient>
+    <linearGradient id="ic-glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D8F1FF"/>
+      <stop offset="1" stop-color="#7FB8D6"/>
+    </linearGradient>
+    <linearGradient id="ic-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#66C96A"/>
+      <stop offset="1" stop-color="#2F8F35"/>
+    </linearGradient>
+    <linearGradient id="ic-tyre" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#141414"/>
+      <stop offset="0.5" stop-color="#3A3A3A"/>
+      <stop offset="1" stop-color="#141414"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ===== background layer ===== -->
+  <g id="background">
+    <rect width="108" height="108" fill="url(#ic-sky)"/>
+    <!-- horizon glow -->
+    <path d="M0,34 L108,34 L108,40 L0,40 z" fill="#A8E6A0" fill-opacity="0.35"/>
+    <!-- field -->
+    <path d="M0,36 L108,36 L108,108 L0,108 z" fill="url(#ic-field)"/>
+    <!-- alternating crop rows converging to the vanishing point (54,36) -->
+    <path d="M54,36 L-30,108 L-6,108 z" fill="#06260F" fill-opacity="0.5"/>
+    <path d="M54,36 L18,108 L42,108 z" fill="#06260F" fill-opacity="0.5"/>
+    <path d="M54,36 L66,108 L90,108 z" fill="#06260F" fill-opacity="0.5"/>
+    <path d="M54,36 L114,108 L138,108 z" fill="#06260F" fill-opacity="0.5"/>
+    <!-- parallel guidance passes -->
+    <path d="M54,36 L6,108" stroke="#C9F7B8" stroke-opacity="0.35" stroke-width="1"/>
+    <path d="M54,36 L102,108" stroke="#C9F7B8" stroke-opacity="0.35" stroke-width="1"/>
+    <!-- active guidance line -->
+    <path d="M54,36 L51,108 L57,108 z" fill="#F5D90A"/>
+  </g>
+
+  <!-- ===== foreground layer ===== -->
+  <g id="foreground">
+    <!-- GNSS / RTK signal -->
+    <path d="M49.8,33.2 A6,6 0 0,1 58.2,33.2" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M46.2,29.6 A11,11 0 0,1 61.8,29.6" fill="none" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M42.6,26 A16,16 0 0,1 65.4,26" fill="none" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="2.2" stroke-linecap="round"/>
+    <!-- ground shadow -->
+    <path d="M30,82 a24,3.4 0 1,0 48,0 a24,3.4 0 1,0 -48,0 z" fill="#000000" fill-opacity="0.35"/>
+    <!-- rear tyres -->
+    <path d="M33,62 h12 a2,2 0 0,1 2,2 v16 a2,2 0 0,1 -2,2 h-12 a2,2 0 0,1 -2,-2 v-16 a2,2 0 0,1 2,-2 z" fill="url(#ic-tyre)"/>
+    <path d="M63,62 h12 a2,2 0 0,1 2,2 v16 a2,2 0 0,1 -2,2 h-12 a2,2 0 0,1 -2,-2 v-16 a2,2 0 0,1 2,-2 z" fill="url(#ic-tyre)"/>
+    <!-- tyre lugs -->
+    <path d="M32,66 h14 v1.6 h-14 z M32,70.5 h14 v1.6 h-14 z M32,75 h14 v1.6 h-14 z M32,79.5 h14 v1.4 h-14 z" fill="#050505" fill-opacity="0.55"/>
+    <path d="M62,66 h14 v1.6 h-14 z M62,70.5 h14 v1.6 h-14 z M62,75 h14 v1.6 h-14 z M62,79.5 h14 v1.4 h-14 z" fill="#050505" fill-opacity="0.55"/>
+    <!-- rear body between the wheels -->
+    <path d="M46,60 h16 v18 h-16 z" fill="#2F8F35"/>
+    <!-- three-point hitch / drawbar -->
+    <path d="M51,76 h6 v5 h-6 z" fill="#3B3B3B"/>
+    <path d="M47,79 h14 v2 h-14 z" fill="#555555"/>
+    <!-- fenders -->
+    <path d="M30,62 a9,5 0 0,1 18,0 v1.5 h-18 z" fill="url(#ic-body)"/>
+    <path d="M60,62 a9,5 0 0,1 18,0 v1.5 h-18 z" fill="url(#ic-body)"/>
+    <!-- cab -->
+    <path d="M41,43 h26 a2,2 0 0,1 2,2 v18 h-30 v-18 a2,2 0 0,1 2,-2 z" fill="url(#ic-body)"/>
+    <path d="M43.5,46 h21 v13 h-21 z" fill="url(#ic-glass)"/>
+    <!-- glass reflection -->
+    <path d="M45,46 l5,0 l-4,13 l-1,0 z" fill="#FFFFFF" fill-opacity="0.45"/>
+    <!-- roof -->
+    <path d="M38,39.5 h32 a1.5,1.5 0 0,1 1.5,1.5 v2.5 h-35 v-2.5 a1.5,1.5 0 0,1 1.5,-1.5 z" fill="#F5C518"/>
+    <!-- beacon -->
+    <path d="M52,37 h4 v2.5 h-4 z" fill="#FF8F00"/>
+    <!-- rear lights -->
+    <path d="M40,60 h3 v2 h-3 z M65,60 h3 v2 h-3 z" fill="#E53935"/>
+  </g>
+</g></svg>
       <span class="bname">AgroGuide RTK</span>
     </div>
 
@@ -166,7 +230,7 @@
       Configuración, uso en campo y resolución de problemas, explicado paso a paso.</p>
 
     <div class="meta">
-      <div><span>Versión</span><strong>1.0.2</strong></div>
+      <div><span>Versión</span><strong>1.0.4</strong></div>
       <div><span>Receptor</span><strong>u-blox ZED-F9P</strong></div>
       <div><span>Sistema</span><strong>Android 8.0 o superior</strong></div>
     </div>
@@ -184,18 +248,18 @@
   <div class="toc-item"><span class="tn">1</span><span class="tt">Qué es AgroGuide RTK</span><span class="td">Para qué sirve y qué incluye</span></div>
   <div class="toc-item"><span class="tn">2</span><span class="tt">Cómo funciona el sistema</span><span class="td">Del satélite a la pantalla: arquitectura y precisión</span></div>
   <div class="toc-item"><span class="tn">3</span><span class="tt">Primeros pasos</span><span class="td">Permisos, batería y emparejar el receptor</span></div>
-  <div class="toc-item"><span class="tn">4</span><span class="tt">La pantalla de guiado</span><span class="td">Cada elemento de la pantalla, explicado</span></div>
+  <div class="toc-item"><span class="tn">4</span><span class="tt">La pantalla de guiado</span><span class="td">Elementos, pantalla completa y vista vertical</span></div>
   <div class="toc-item"><span class="tn">5</span><span class="tt">El lightbar</span><span class="td">Cómo leer la barra de luces mientras conduces</span></div>
   <div class="toc-item"><span class="tn">6</span><span class="tt">Fuentes de posición</span><span class="td">Bluetooth RTK, ubicación de Android y modo demo</span></div>
   <div class="toc-item"><span class="tn">7</span><span class="tt">Correcciones NTRIP</span><span class="td">Qué son y cómo configurar un perfil</span></div>
   <div class="toc-item"><span class="tn">8</span><span class="tt">Utilidades del receptor</span><span class="td">Optimizar el ZED-F9P a 5 Hz</span></div>
   <div class="toc-item"><span class="tn">9</span><span class="tt">Configurar el apero</span><span class="td">Ancho, desfases y número de secciones</span></div>
   <div class="toc-item"><span class="tn">10</span><span class="tt">Líneas de guiado</span><span class="td">AB, A+, curvas y modo libre</span></div>
-  <div class="toc-item"><span class="tn">11</span><span class="tt">Cobertura, solape y secciones</span><span class="td">Pintado en tiempo real y contadores</span></div>
+  <div class="toc-item"><span class="tn">11</span><span class="tt">Cobertura, solape y secciones</span><span class="td">Pintado en tiempo real, colores y contadores</span></div>
   <div class="toc-item"><span class="tn">12</span><span class="tt">Parcelas</span><span class="td">Crear, medir, importar y exportar</span></div>
   <div class="toc-item"><span class="tn">13</span><span class="tt">Trabajos e informes</span><span class="td">Grabar la faena y generar HTML o PDF</span></div>
   <div class="toc-item"><span class="tn">14</span><span class="tt">Mapas de fondo</span><span class="td">Satélite y callejero, con descarga sin cobertura</span></div>
-  <div class="toc-item"><span class="tn">15</span><span class="tt">Ajustes generales</span><span class="td">Tema, pantalla y salida de posición</span></div>
+  <div class="toc-item"><span class="tn">15</span><span class="tt">Ajustes generales</span><span class="td">Tema, orientación, colores del campo y pintado</span></div>
   <div class="toc-item"><span class="tn">16</span><span class="tt">Resolución de problemas</span><span class="td">Síntoma, causa y solución</span></div>
   <div class="toc-item"><span class="tn">17</span><span class="tt">Referencia rápida</span><span class="td">Chuleta para llevar en la cabina</span></div>
 
@@ -251,9 +315,9 @@
   <h3>Qué necesitas</h3>
   <table>
     <tr><th style="width:38mm">Elemento</th><th>Detalle</th></tr>
-    <tr><td><strong>Móvil o tablet</strong></td><td>Android 8.0 o superior. Se recomienda tablet en horizontal para ver mejor el campo.</td></tr>
+    <tr><td><strong>Móvil o tablet</strong></td><td>Android 8.0 o superior. Funciona en horizontal o en vertical; una tablet permite ver más campo.</td></tr>
     <tr><td><strong>Receptor GNSS</strong></td><td>ArduSimple RTK Portable Bluetooth Kit (u-blox ZED-F9P) u otro receptor que emita NMEA por Bluetooth SPP.</td></tr>
-    <tr><td><strong>Correcciones RTK</strong></td><td>Acceso a un servidor NTRIP (el del IGN es gratuito en España). Sin ellas funciona, pero con precisión de metros.</td></tr>
+    <tr><td><strong>Correcciones RTK</strong></td><td>Acceso a un servidor NTRIP (el del IGN es gratuito en España, previo registro). Sin ellas funciona, pero con precisión de metros.</td></tr>
     <tr><td><strong>Datos móviles</strong></td><td>Solo para recibir las correcciones. El consumo es muy bajo, en torno a 1 MB cada 10 minutos.</td></tr>
   </table>
 
@@ -479,24 +543,30 @@
       <circle cx="410" cy="57" r="5" fill="#2A2A2A"/>
     </g>
     <!-- field canvas -->
-    <rect x="14" y="78" width="386" height="208" fill="#1B2E1B"/>
-    <g stroke="#7CDB8A" stroke-width="0.4" opacity="0.18">
+    <rect x="14" y="78" width="386" height="208" fill="#FFFFFF"/>
+    <g stroke="#000000" stroke-width="0.4" opacity="0.12">
       <path d="M40,78 V286"/><path d="M110,78 V286"/><path d="M180,78 V286"/><path d="M250,78 V286"/><path d="M320,78 V286"/><path d="M390,78 V286"/>
       <path d="M14,110 H400"/><path d="M14,150 H400"/><path d="M14,190 H400"/><path d="M14,230 H400"/><path d="M14,270 H400"/>
     </g>
     <!-- coverage -->
-    <rect x="120" y="88" width="52" height="190" fill="#32CD32" opacity="0.34"/>
-    <rect x="172" y="88" width="52" height="190" fill="#32CD32" opacity="0.34"/>
-    <rect x="166" y="88" width="12" height="190" fill="#FF6D00" opacity="0.55"/>
+    <rect x="120" y="88" width="52" height="190" fill="#707070" opacity="0.45"/>
+    <rect x="172" y="88" width="52" height="190" fill="#707070" opacity="0.45"/>
+    <rect x="166" y="88" width="12" height="190" fill="#E53935" opacity="0.6"/>
     <!-- pass lines -->
-    <g stroke="#FFFFFF" stroke-width="1" opacity="0.5">
+    <g stroke="#000000" stroke-width="1" opacity="0.4">
       <path d="M120,78 V286"/><path d="M224,78 V286"/><path d="M276,78 V286"/>
     </g>
-    <path d="M172,78 V286" stroke="#FFEB3B" stroke-width="2.4"/>
-    <!-- tractor -->
+    <path d="M172,78 V286" stroke="#1565C0" stroke-width="2.4"/>
+    <!-- mini tractor -->
     <g>
-      <path d="M186,192 L177,214 L195,214 z" fill="#FFC107"/>
-      <path d="M160,214 H212" stroke="#00E5FF" stroke-width="2.6"/>
+      <rect x="160" y="217" width="52" height="3" rx="1" fill="#00838F"/>
+      <rect x="176" y="201" width="6" height="12" rx="1.5" fill="#212121"/>
+      <rect x="190" y="201" width="6" height="12" rx="1.5" fill="#212121"/>
+      <rect x="178.5" y="185" width="4" height="7" rx="1" fill="#212121"/>
+      <rect x="189.5" y="185" width="4" height="7" rx="1" fill="#212121"/>
+      <rect x="181" y="183" width="10" height="20" rx="2" fill="#2E7D32"/>
+      <rect x="180" y="200" width="12" height="12" rx="2" fill="#FDD835" stroke="#2E7D32" stroke-width="1"/>
+      <rect x="183" y="182" width="6" height="2" fill="#F5C518"/>
     </g>
     <!-- badges -->
     <rect x="300" y="84" width="94" height="16" rx="3" fill="#2E7D32" opacity="0.85"/>
@@ -505,6 +575,7 @@
     <text x="68" y="95" text-anchor="middle" font-size="8.5" fill="#fff" font-weight="700" font-family="Segoe UI">Siembra maíz · ACTIVO</text>
     <!-- section bar -->
     <g>
+      <rect x="16" y="264" width="27" height="16" rx="3" fill="#263238"/><text x="29.5" y="275" text-anchor="middle" font-size="6.6" fill="#fff" font-weight="700" font-family="Segoe UI">todas</text>
       <rect x="46" y="264" width="80" height="16" rx="3" fill="#2E7D32"/><text x="86" y="275" text-anchor="middle" font-size="8" fill="#fff" font-weight="700" font-family="Segoe UI">1</text>
       <rect x="130" y="264" width="80" height="16" rx="3" fill="#37474F"/><text x="170" y="275" text-anchor="middle" font-size="8" fill="#fff" font-weight="700" font-family="Segoe UI">2</text>
       <rect x="214" y="264" width="80" height="16" rx="3" fill="#2E7D32"/><text x="254" y="275" text-anchor="middle" font-size="8" fill="#fff" font-weight="700" font-family="Segoe UI">3</text>
@@ -538,7 +609,7 @@
       <circle cx="68" cy="112" r="9" fill="#F5C518"/><text x="68" y="116" text-anchor="middle" fill="#14201A">2</text>
       <circle cx="347" cy="112" r="9" fill="#F5C518"/><text x="347" y="116" text-anchor="middle" fill="#14201A">3</text>
       <circle cx="252" cy="140" r="9" fill="#F5C518"/><text x="252" y="144" text-anchor="middle" fill="#14201A">4</text>
-      <circle cx="30" cy="272" r="9" fill="#F5C518"/><text x="30" y="276" text-anchor="middle" fill="#14201A">5</text>
+      <circle cx="30" cy="250" r="9" fill="#F5C518"/><text x="30" y="254" text-anchor="middle" fill="#14201A">5</text>
       <circle cx="396" cy="96" r="9" fill="#F5C518"/><text x="396" y="100" text-anchor="middle" fill="#14201A">6</text>
       <circle cx="396" cy="147" r="9" fill="#F5C518"/><text x="396" y="151" text-anchor="middle" fill="#14201A">7</text>
       <circle cx="396" cy="199" r="9" fill="#F5C518"/><text x="396" y="203" text-anchor="middle" fill="#14201A">8</text>
@@ -551,10 +622,10 @@
       <p><strong>1 · Lightbar.</strong> Tu desvío respecto a la línea, en centímetros. Se explica en la sección 5.</p>
       <p><strong>2 · Trabajo activo.</strong> Nombre y estado de la faena que se está grabando (verde activo, ámbar en pausa).</p>
       <p><strong>3 · Fuente activa.</strong> Verde con el nombre del receptor si está conectado. En naranja avisa de que estás en modo demo.</p>
-      <p><strong>4 · Vista de campo.</strong> Cobertura en verde, solape en naranja, pasadas en blanco y la pasada actual en amarillo.</p>
+      <p><strong>4 · Vista de campo.</strong> Fondo blanco, zona trabajada en gris y solape en rojo; pasadas en gris oscuro y la actual en azul. Los colores se cambian en Ajustes.</p>
     </div>
     <div>
-      <p><strong>5 · Barra de secciones.</strong> Un botón por tramo del apero: verde abierto, gris cerrado.</p>
+      <p><strong>5 · Barra de secciones.</strong> Un botón por tramo del apero: verde abierto, gris cerrado. "todas" los abre o cierra a la vez.</p>
       <p><strong>6 · Estado de la señal.</strong> Calidad del fix, satélites y velocidad.</p>
       <p><strong>7 · Contadores.</strong> Hectáreas tratadas, solape y distancia recorrida en tiempo real.</p>
       <p><strong>8 · Modo y acciones.</strong> Tipo de línea y botones contextuales para marcarla.</p>
@@ -562,7 +633,53 @@
   </div>
 
   <div class="tip" style="margin-top:1mm"><b>Gestos sobre el campo.</b> Pellizca para acercar o alejar y toca dos
-    veces para alternar entre vista orientada al rumbo (el tractor siempre apunta arriba) y vista orientada al norte.</div>
+    veces para alternar entre vista orientada al rumbo (el tractor siempre apunta arriba) y vista orientada al norte.
+    El vehículo se dibuja como un mini tractor; en Ajustes puedes cambiarlo por un triángulo.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 6b PANTALLA COMPLETA ============ -->
+<section class="page">
+  <div class="kicker">Sección 4 · continuación</div>
+  <h2>Pantalla completa y vista vertical</h2>
+  <div class="hr"></div>
+  <p class="lead">Al iniciar un trabajo, la vista de campo pasa a ocupar toda la pantalla para que veas el máximo
+    de terreno. Los datos siguen a un toque de distancia.</p>
+
+  <div style="display:flex; gap:5mm; margin:3mm 0 2mm">
+    <div style="flex:0 0 122mm">
+      <img src="../screenshots/guiado-pantalla-completa.png" style="width:100%; display:block; border-radius:2mm; border:1px solid var(--line)">
+      <div class="figcap" style="margin-bottom:2.5mm">Pantalla completa: solo el campo, la barra de luces y lo imprescindible.</div>
+      <img src="../screenshots/guiado-datos.png" style="width:100%; display:block; border-radius:2mm; border:1px solid var(--line)">
+      <div class="figcap">Tras pulsar "Datos": vuelve el panel con contadores y botones.</div>
+    </div>
+    <div style="flex:1">
+      <img src="../screenshots/guiado-vertical.png" style="width:100%; display:block; border-radius:2mm; border:1px solid var(--line)">
+      <div class="figcap">Vista vertical, también a pantalla completa.</div>
+    </div>
+  </div>
+
+  <h3>Qué se ve a pantalla completa</h3>
+  <p style="font-size:9.6pt">La barra de luces arriba; el nombre y estado del trabajo; un recuadro con la
+    <strong>calidad de la señal, la velocidad y las hectáreas tratadas</strong>; el aviso de fuente y NTRIP; la
+    barra de secciones abajo y el botón <strong>"Datos"</strong>. Se ocultan las pestañas y las barras de Android
+    (desliza desde el borde si necesitas verlas un momento).</p>
+
+  <div class="grid g2">
+    <div class="num-step" style="margin:0"><div class="bub">1</div><div class="bd">
+      <h4>Ver los datos</h4>
+      <p>Pulsa <strong>"Datos"</strong> para mostrar el panel completo: contadores, modos de línea, Apero y Fuente.</p>
+    </div></div>
+    <div class="num-step" style="margin:0"><div class="bub">2</div><div class="bd">
+      <h4>Volver a pantalla completa</h4>
+      <p>Pulsa el botón <strong>"Pantalla completa"</strong>, el primero del panel. Solo aparece con un trabajo en marcha.</p>
+    </div></div>
+  </div>
+
+  <div class="tip"><b>Horizontal o vertical.</b> En <strong>Ajustes → Orientación de pantalla</strong> eliges
+    Horizontal (por defecto), Vertical o Automática (gira con el móvil). En vertical el campo queda arriba y el
+    panel de datos debajo.</div>
 
   <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
 </section>
@@ -624,9 +741,9 @@
   <div class="tip"><b>El número siempre es positivo.</b> Muestra la magnitud del desvío en centímetros; el lado
     hacia el que corregir lo indican las luces, no el número.</div>
 
-  <div class="warn"><b>A muy baja velocidad el rumbo es inestable.</b> Por debajo de 0,5 km/h el receptor no puede
-    calcular con fiabilidad hacia dónde apuntas, así que el lightbar puede oscilar con el tractor parado. En marcha
-    normal de trabajo es completamente estable.</div>
+  <div class="tip"><b>Con el tractor parado la vista no gira.</b> Al detenerse, el receptor deja de saber hacia
+    dónde apuntas. La aplicación conserva el último rumbo válido hasta que vuelves a avanzar, así que la vista y el
+    lightbar se quedan quietos en las paradas y en las maniobras lentas.</div>
 
   <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
 </section>
@@ -742,6 +859,8 @@
   <div class="tip"><b>Usa el explorador de mountpoints.</b> Es la forma más fiable de acertar: se conecta al
     servidor y lista las estaciones disponibles con su formato y país. Un candado indica que requiere credenciales
     y la etiqueta GGA que necesita recibir tu posición.</div>
+  <div class="tip"><b>Probar conexión.</b> En el editor del perfil, este botón comprueba en 6 segundos si el
+    servidor acepta tus credenciales y envía correcciones, sin necesidad de salir al campo.</div>
 
   <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
 </section>
@@ -757,11 +876,10 @@
     <div class="card hi">
       <h4>Red del IGN (España)</h4>
       <p style="margin-bottom:2mm"><span class="pill" style="background:#2E7D32">Recomendado en España</span></p>
-      <p>El Instituto Geográfico Nacional ofrece acceso gratuito a más de 270 estaciones de referencia, integrando
-        además las redes de las comunidades autónomas en un único servidor. Es una red oficial, con cobertura y
-        fiabilidad muy superiores a las alternativas comunitarias.</p>
-      <p style="margin-top:2mm">Consulta los datos de conexión actualizados en el portal de posicionamiento en
-        tiempo real del IGN (<code>ign.es</code>).</p>
+      <p>Red oficial del IGN, gratuita y con cobertura en toda España. <strong>Requiere registro:</strong>
+        pide usuario y contraseña en <code>ign.es</code>; sin ellos el servidor rechaza la conexión.</p>
+      <p style="margin-top:2mm"><code>ergnss-tr.ign.es</code>: soluciones de red (VRS3, MAC3…), con "Enviar GGA".<br>
+        <code>ergnss-ip.ign.es</code>: estaciones individuales. Puerto <code>2101</code>.</p>
     </div>
     <div class="card">
       <h4>RTK2go (mundial)</h4>
@@ -799,7 +917,7 @@
     <tr><td><strong>NTRIP: conectado · N KB</strong></td><td>Correcto. Si los KB no suben, el servidor acepta la conexión pero no envía datos: revisa el mountpoint.</td></tr>
     <tr><td><strong>Edad corr. por debajo de 5 s</strong></td><td>Las correcciones llegan con fluidez. Es el valor normal de trabajo.</td></tr>
     <tr><td><strong>Calidad RTK FIJO</strong></td><td>Objetivo alcanzado. Precisión centimétrica.</td></tr>
-    <tr><td><strong>NTRIP: sin conexión</strong></td><td>Sin datos móviles, credenciales incorrectas o servidor caído. La app reintenta sola.</td></tr>
+    <tr><td><strong>Mensaje con el motivo</strong></td><td>La app muestra el motivo que da el servidor (credenciales, mountpoint, servidor inaccesible…). Corrige ese dato; mientras, reintenta sola.</td></tr>
   </table>
 
   <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
@@ -1026,15 +1144,15 @@
   <div class="grid g2" style="margin:3mm 0">
     <div class="fig">
       <svg viewBox="0 0 250 130">
-        <rect width="250" height="130" fill="#1B2E1B" rx="3"/>
-        <rect x="30" y="12" width="70" height="106" fill="#32CD32" opacity="0.35"/>
-        <rect x="94" y="12" width="70" height="106" fill="#32CD32" opacity="0.35"/>
-        <rect x="94" y="12" width="6" height="106" fill="#FF6D00" opacity="0.75"/>
-        <text x="65" y="70" text-anchor="middle" font-size="9" font-family="Segoe UI" fill="#fff">tratado</text>
-        <text x="190" y="60" text-anchor="middle" font-size="9" font-family="Segoe UI" fill="#FFB74D">solape</text>
-        <path d="M170,64 L104,64" stroke="#FFB74D" stroke-width="1.2" marker-end="url(#ar)"/>
+        <rect width="250" height="130" fill="#FFFFFF" rx="3" stroke="#DCE4DC"/>
+        <rect x="30" y="12" width="70" height="106" fill="#707070" opacity="0.45"/>
+        <rect x="94" y="12" width="70" height="106" fill="#707070" opacity="0.45"/>
+        <rect x="94" y="12" width="6" height="106" fill="#E53935" opacity="0.6"/>
+        <text x="65" y="70" text-anchor="middle" font-size="9" font-family="Segoe UI" fill="#14201A">tratado</text>
+        <text x="200" y="60" text-anchor="middle" font-size="9" font-family="Segoe UI" fill="#C62828" font-weight="700">solape</text>
+        <path d="M178,64 L104,64" stroke="#C62828" stroke-width="1.2" marker-end="url(#ar)"/>
       </svg>
-      <div class="figcap">Verde: superficie tratada. Naranja: zona pasada dos veces.</div>
+      <div class="figcap">Gris: superficie tratada. Rojo: zona pasada dos veces. Colores configurables en Ajustes.</div>
     </div>
     <div>
       <h3 style="margin-top:0">Los contadores</h3>
@@ -1054,8 +1172,8 @@
     por tramo. Toca cualquiera para abrirlo o cerrarlo:</p>
 
   <svg viewBox="0 0 560 44" style="margin:2mm 0">
-    <rect x="0" y="0" width="70" height="30" rx="4" fill="#243028"/>
-    <text x="35" y="19" text-anchor="middle" font-size="10" font-family="Segoe UI" fill="#7CDB8A">todas</text>
+    <rect x="0" y="0" width="70" height="30" rx="4" fill="#263238"/>
+    <text x="35" y="19" text-anchor="middle" font-size="10" font-family="Segoe UI" fill="#fff" font-weight="700">todas</text>
     <rect x="78" y="0" width="112" height="30" rx="4" fill="#2E7D32"/><text x="134" y="20" text-anchor="middle" font-size="12" font-family="Segoe UI" fill="#fff" font-weight="700">1</text>
     <rect x="198" y="0" width="112" height="30" rx="4" fill="#37474F"/><text x="254" y="20" text-anchor="middle" font-size="12" font-family="Segoe UI" fill="#fff" font-weight="700">2</text>
     <rect x="318" y="0" width="112" height="30" rx="4" fill="#2E7D32"/><text x="374" y="20" text-anchor="middle" font-size="12" font-family="Segoe UI" fill="#fff" font-weight="700">3</text>
@@ -1070,6 +1188,10 @@
 
   <div class="note"><b>La pintura refleja solo lo activo.</b> Si cierras la sección 2, esa franja deja de pintarse
     y de contar hectáreas, exactamente como en un sistema de corte de secciones real.</div>
+
+  <div class="tip"><b>Pintado continuo.</b> Por defecto se pinta siempre, también a muy baja velocidad, sin cortes.
+    Si al detenerte aparecen manchas por el ruido del GPS, activa <strong>Ajustes → Pausar pintado al
+    detenerse</strong>: la pintura se detiene con el tractor parado y continúa al arrancar.</div>
 
   <div class="warn"><b>Reiniciar cobertura.</b> El botón "Reiniciar cobertura" borra todo lo pintado y pone los
     contadores a cero. Si estás grabando un trabajo, no elimina lo ya registrado en el histórico, pero sí lo que
@@ -1248,20 +1370,44 @@
   <div class="hr"></div>
   <table>
     <tr><th style="width:46mm">Ajuste</th><th>Función</th></tr>
-    <tr><td><strong>Tema</strong></td><td><em>Noche</em> (por defecto): letras claras sobre fondo oscuro, ideal para la cabina y para trabajar de noche. <em>Día</em>: mayor contraste bajo sol directo. <em>Automático</em>: sigue la configuración del móvil.</td></tr>
+    <tr><td><strong>Tema</strong></td><td><em>Noche</em> (por defecto): letras claras sobre fondo oscuro, ideal para la cabina. <em>Día</em>: mayor contraste bajo sol directo. <em>Automático</em>: sigue al móvil.</td></tr>
+    <tr><td><strong>Orientación de pantalla</strong></td><td><em>Horizontal</em> (por defecto), <em>Vertical</em> o <em>Automática</em>, que gira con el móvil.</td></tr>
+    <tr><td><strong>Vista de campo</strong></td><td>Color de fondo (blanco por defecto), color de la zona trabajada (gris semitransparente), color del solape (rojo), mostrar u ocultar la cuadrícula y vehículo en pantalla: <em>mini tractor</em> o <em>triángulo</em>.</td></tr>
+    <tr><td><strong>Pausar pintado al detenerse</strong></td><td>Desactivado (por defecto): se pinta siempre. Activado: no pinta con el tractor parado o casi parado (sección 11).</td></tr>
     <tr><td><strong>Mantener pantalla encendida</strong></td><td>Evita que la pantalla se apague mientras guías. Actívalo si el móvil va conectado a corriente.</td></tr>
-    <tr><td><strong>Salida mock</strong></td><td>Publica la posición RTK al sistema para que <strong>otras aplicaciones</strong> del móvil la aprovechen. Requiere seleccionar AgroGuide como aplicación de ubicación simulada en las opciones de desarrollador de Android.</td></tr>
+    <tr><td><strong>Salida mock</strong></td><td>Publica la posición RTK al sistema para que <strong>otras aplicaciones</strong> la aprovechen. Requiere elegir AgroGuide como aplicación de ubicación simulada en las opciones de desarrollador.</td></tr>
     <tr><td><strong>Optimización de batería</strong></td><td>Muestra si la aplicación está exenta y permite solicitarlo. Imprescindible para que el guiado sobreviva con la pantalla apagada.</td></tr>
     <tr><td><strong>Mapa de fondo</strong></td><td>Selector de mapa, descarga de zona y gestión de la caché (sección 14).</td></tr>
   </table>
 
-  <div class="tip"><b>Sobre la salida mock.</b> Es una función avanzada: permite que otras aplicaciones agrícolas
-    del móvil (cuadernos de campo, apps de muestreo) trabajen con la posición centimétrica del receptor en lugar
-    de con el GPS interno. Si no la necesitas, déjala desactivada.</div>
+  <div class="fig" style="margin-top:4mm">
+    <svg viewBox="0 0 560 70">
+      <g font-family="Segoe UI" font-size="9.5" fill="#33413A">
+        <text x="0" y="12" font-weight="700" fill="#14201A">Color de fondo</text>
+        <circle cx="16" cy="36" r="13" fill="#FFFFFF" stroke="#2E7D32" stroke-width="3"/>
+        <circle cx="50" cy="36" r="13" fill="#E9ECE6" stroke="#B0B8B0"/>
+        <circle cx="84" cy="36" r="13" fill="#F1E6C8" stroke="#B0B8B0"/>
+        <circle cx="118" cy="36" r="13" fill="#1B2E1B"/>
+        <circle cx="152" cy="36" r="13" fill="#101010"/>
+        <text x="200" y="12" font-weight="700" fill="#14201A">Zona trabajada</text>
+        <circle cx="216" cy="36" r="13" fill="#707070" fill-opacity="0.6" stroke="#2E7D32" stroke-width="3"/>
+        <circle cx="250" cy="36" r="13" fill="#32CD32" fill-opacity="0.55"/>
+        <circle cx="284" cy="36" r="13" fill="#1E88E5" fill-opacity="0.55"/>
+        <circle cx="318" cy="36" r="13" fill="#FBC02D" fill-opacity="0.65"/>
+        <circle cx="352" cy="36" r="13" fill="#8D6E63" fill-opacity="0.6"/>
+        <text x="400" y="12" font-weight="700" fill="#14201A">Solape</text>
+        <circle cx="416" cy="36" r="13" fill="#E53935" fill-opacity="0.75" stroke="#2E7D32" stroke-width="3"/>
+        <circle cx="450" cy="36" r="13" fill="#FB8C00" fill-opacity="0.75"/>
+        <circle cx="484" cy="36" r="13" fill="#8E24AA" fill-opacity="0.75"/>
+        <circle cx="518" cy="36" r="13" fill="#1565C0" fill-opacity="0.75"/>
+        <text x="0" y="66" font-size="8.5" fill="#6B7A70">Toca un color para elegirlo; el borde verde marca el seleccionado (aquí, los valores por defecto).</text>
+      </g>
+    </svg>
+  </div>
 
-  <div class="note"><b>El tema no afecta a la vista de campo.</b> El lienzo de guiado mantiene siempre su fondo
-    oscuro de alto contraste, porque es el que mejor deja ver la cobertura y las líneas en cualquier condición
-    de luz. El tema cambia el resto de pantallas: pestañas, listados y diálogos.</div>
+  <div class="tip"><b>Sobre la salida mock.</b> Es una función avanzada: permite que otras aplicaciones agrícolas
+    del móvil (cuadernos de campo, apps de muestreo) trabajen con la posición centimétrica del receptor. Si no la
+    necesitas, déjala desactivada.</div>
 
   <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
 </section>
@@ -1282,12 +1428,16 @@
         <td>No llegan correcciones. Revisa que el interruptor NTRIP esté activado, que tengas datos móviles y que el indicador muestre kilobytes en aumento.</td></tr>
     <tr><td><strong>Llega a RTK FLOAT pero no a FIJO</strong></td>
         <td>Visibilidad de cielo insuficiente o estación de referencia demasiado lejos. Aléjate de árboles y edificios y espera uno o dos minutos.</td></tr>
-    <tr><td><strong>El lightbar oscila con el tractor parado</strong></td>
-        <td>Comportamiento normal: por debajo de 0,5 km/h el rumbo no es fiable. Se estabiliza en cuanto avanzas.</td></tr>
+    <tr><td><strong>No se pinta mientras estoy parado</strong></td>
+        <td>Tienes activado "Pausar pintado al detenerse" en Ajustes. Desactívalo si quieres pintado continuo.</td></tr>
+    <tr><td><strong>NTRIP muestra un mensaje de error</strong></td>
+        <td>Lee el motivo: credenciales, mountpoint o servidor. En el IGN hay que estar registrado. Usa "Probar conexión" en el perfil para comprobarlo.</td></tr>
     <tr><td><strong>Las pasadas no encajan: huecos o solapes constantes</strong></td>
         <td>El ancho de trabajo configurado no coincide con el real. Vuelve a medirlo y corrígelo en el botón Apero.</td></tr>
     <tr><td><strong>Deja de grabar al apagar la pantalla</strong></td>
         <td>El sistema está durmiendo la aplicación. Concede la exención de optimización de batería en Ajustes y revisa la configuración del fabricante.</td></tr>
+    <tr><td><strong>No veo el panel de datos</strong></td>
+        <td>Estás a pantalla completa: pulsa el botón "Datos" de la vista de campo.</td></tr>
     <tr><td><strong>El mapa aparece en negro</strong></td>
         <td>Sin conexión y sin teselas descargadas para esa zona. Descarga la zona con wifi antes de salir.</td></tr>
     <tr><td><strong>No se genera el informe</strong></td>
@@ -1331,10 +1481,11 @@
       </ol>
       <h4 style="color:#1B5E20; font-size:11pt; margin-top:4mm">Colores de la pantalla</h4>
       <p style="font-size:9.4pt">
-        <span class="pill" style="background:#2E7D32">Verde</span> tratado y correcto ·
-        <span class="pill" style="background:#EF6C00">Naranja</span> solape o demo ·
-        <span class="pill" style="background:#FFEB3B; color:#14201A">Amarillo</span> pasada actual ·
-        <span class="pill" style="background:#00838F">Cian</span> apero
+        <span class="pill" style="background:#8A8A8A">Gris</span> tratado ·
+        <span class="pill" style="background:#E53935">Rojo</span> solape ·
+        <span class="pill" style="background:#1565C0">Azul</span> pasada actual ·
+        <span class="pill" style="background:#00838F">Cian</span> apero ·
+        <span class="pill" style="background:#EF6C00">Naranja</span> modo demo
       </p>
     </div>
   </div>
@@ -1356,6 +1507,7 @@
         <tr><td><strong>Pellizcar</strong></td><td>Acercar o alejar el campo</td></tr>
         <tr><td><strong>Doble toque</strong></td><td>Vista al rumbo / al norte</td></tr>
         <tr><td><strong>Botón "todas"</strong></td><td>Abrir o cerrar todas las secciones</td></tr>
+        <tr><td><strong>Botón "Datos"</strong></td><td>Ver el panel en pantalla completa</td></tr>
         <tr><td><strong>Borrar línea</strong></td><td>Eliminar la referencia activa</td></tr>
       </table>
     </div>
@@ -1363,22 +1515,91 @@
 
   <div style="margin-top:8mm; background:#0B2410; border-radius:3mm; padding:6mm 7mm; color:#CFE3D2">
     <div style="display:flex; align-items:center; gap:4mm; margin-bottom:3mm">
-      <svg width="10mm" height="10mm" viewBox="0 0 108 108">
-        <path fill="#1A1A1A" d="M18,72 a20,20 0 1,1 40,0 a20,20 0 1,1 -40,0 z"/>
-        <path fill="#F5C518" d="M27,72 a11,11 0 1,1 22,0 a11,11 0 1,1 -22,0 z"/>
-        <path fill="#7CDB8A" d="M30,62 L86,62 L86,74 L30,74 z"/>
-        <path fill="#7CDB8A" d="M28,34 L58,34 L58,64 L28,64 z"/>
-        <path fill="#BFE6F5" d="M33,39 L53,39 L53,53 L33,53 z"/>
-        <path fill="#F5C518" d="M24,29 L62,29 L62,35 L24,35 z"/>
-        <path fill="#1A1A1A" d="M64,80 a12,12 0 1,1 24,0 a12,12 0 1,1 -24,0 z"/>
-        <path fill="#F5C518" d="M70,80 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0 z"/>
-      </svg>
+      <svg width="10mm" height="10mm" viewBox="0 0 108 108"><defs><clipPath id="ic2-clip"><rect width="108" height="108" rx="24"/></clipPath></defs><g clip-path="url(#ic2-clip)">
+  <defs>
+    <linearGradient id="ic2-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0A2A3A"/>
+      <stop offset="1" stop-color="#17605A"/>
+    </linearGradient>
+    <linearGradient id="ic2-field" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1F6B30"/>
+      <stop offset="1" stop-color="#0B3315"/>
+    </linearGradient>
+    <linearGradient id="ic2-glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D8F1FF"/>
+      <stop offset="1" stop-color="#7FB8D6"/>
+    </linearGradient>
+    <linearGradient id="ic2-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#66C96A"/>
+      <stop offset="1" stop-color="#2F8F35"/>
+    </linearGradient>
+    <linearGradient id="ic2-tyre" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#141414"/>
+      <stop offset="0.5" stop-color="#3A3A3A"/>
+      <stop offset="1" stop-color="#141414"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ===== background layer ===== -->
+  <g id="background">
+    <rect width="108" height="108" fill="url(#ic2-sky)"/>
+    <!-- horizon glow -->
+    <path d="M0,34 L108,34 L108,40 L0,40 z" fill="#A8E6A0" fill-opacity="0.35"/>
+    <!-- field -->
+    <path d="M0,36 L108,36 L108,108 L0,108 z" fill="url(#ic2-field)"/>
+    <!-- alternating crop rows converging to the vanishing point (54,36) -->
+    <path d="M54,36 L-30,108 L-6,108 z" fill="#06260F" fill-opacity="0.5"/>
+    <path d="M54,36 L18,108 L42,108 z" fill="#06260F" fill-opacity="0.5"/>
+    <path d="M54,36 L66,108 L90,108 z" fill="#06260F" fill-opacity="0.5"/>
+    <path d="M54,36 L114,108 L138,108 z" fill="#06260F" fill-opacity="0.5"/>
+    <!-- parallel guidance passes -->
+    <path d="M54,36 L6,108" stroke="#C9F7B8" stroke-opacity="0.35" stroke-width="1"/>
+    <path d="M54,36 L102,108" stroke="#C9F7B8" stroke-opacity="0.35" stroke-width="1"/>
+    <!-- active guidance line -->
+    <path d="M54,36 L51,108 L57,108 z" fill="#F5D90A"/>
+  </g>
+
+  <!-- ===== foreground layer ===== -->
+  <g id="foreground">
+    <!-- GNSS / RTK signal -->
+    <path d="M49.8,33.2 A6,6 0 0,1 58.2,33.2" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M46.2,29.6 A11,11 0 0,1 61.8,29.6" fill="none" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M42.6,26 A16,16 0 0,1 65.4,26" fill="none" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="2.2" stroke-linecap="round"/>
+    <!-- ground shadow -->
+    <path d="M30,82 a24,3.4 0 1,0 48,0 a24,3.4 0 1,0 -48,0 z" fill="#000000" fill-opacity="0.35"/>
+    <!-- rear tyres -->
+    <path d="M33,62 h12 a2,2 0 0,1 2,2 v16 a2,2 0 0,1 -2,2 h-12 a2,2 0 0,1 -2,-2 v-16 a2,2 0 0,1 2,-2 z" fill="url(#ic2-tyre)"/>
+    <path d="M63,62 h12 a2,2 0 0,1 2,2 v16 a2,2 0 0,1 -2,2 h-12 a2,2 0 0,1 -2,-2 v-16 a2,2 0 0,1 2,-2 z" fill="url(#ic2-tyre)"/>
+    <!-- tyre lugs -->
+    <path d="M32,66 h14 v1.6 h-14 z M32,70.5 h14 v1.6 h-14 z M32,75 h14 v1.6 h-14 z M32,79.5 h14 v1.4 h-14 z" fill="#050505" fill-opacity="0.55"/>
+    <path d="M62,66 h14 v1.6 h-14 z M62,70.5 h14 v1.6 h-14 z M62,75 h14 v1.6 h-14 z M62,79.5 h14 v1.4 h-14 z" fill="#050505" fill-opacity="0.55"/>
+    <!-- rear body between the wheels -->
+    <path d="M46,60 h16 v18 h-16 z" fill="#2F8F35"/>
+    <!-- three-point hitch / drawbar -->
+    <path d="M51,76 h6 v5 h-6 z" fill="#3B3B3B"/>
+    <path d="M47,79 h14 v2 h-14 z" fill="#555555"/>
+    <!-- fenders -->
+    <path d="M30,62 a9,5 0 0,1 18,0 v1.5 h-18 z" fill="url(#ic2-body)"/>
+    <path d="M60,62 a9,5 0 0,1 18,0 v1.5 h-18 z" fill="url(#ic2-body)"/>
+    <!-- cab -->
+    <path d="M41,43 h26 a2,2 0 0,1 2,2 v18 h-30 v-18 a2,2 0 0,1 2,-2 z" fill="url(#ic2-body)"/>
+    <path d="M43.5,46 h21 v13 h-21 z" fill="url(#ic2-glass)"/>
+    <!-- glass reflection -->
+    <path d="M45,46 l5,0 l-4,13 l-1,0 z" fill="#FFFFFF" fill-opacity="0.45"/>
+    <!-- roof -->
+    <path d="M38,39.5 h32 a1.5,1.5 0 0,1 1.5,1.5 v2.5 h-35 v-2.5 a1.5,1.5 0 0,1 1.5,-1.5 z" fill="#F5C518"/>
+    <!-- beacon -->
+    <path d="M52,37 h4 v2.5 h-4 z" fill="#FF8F00"/>
+    <!-- rear lights -->
+    <path d="M40,60 h3 v2 h-3 z M65,60 h3 v2 h-3 z" fill="#E53935"/>
+  </g>
+</g></svg>
       <div>
         <div style="font-size:13pt; color:#fff; font-weight:700">AgroGuide RTK</div>
-        <div style="font-size:9pt; color:#8FB39A">Guiado agrícola de precisión · versión 1.0.2</div>
+        <div style="font-size:9pt; color:#8FB39A">Guiado agrícola de precisión · versión 1.0.4</div>
       </div>
     </div>
-    <p style="font-size:9pt; margin:0; color:#9CBBA3">Este manual describe la versión 1.0.2 de la aplicación.
+    <p style="font-size:9pt; margin:0; color:#9CBBA3">Este manual describe la versión 1.0.4 de la aplicación.
       La interfaz puede variar ligeramente en versiones posteriores. AgroGuide RTK es un sistema de guiado
       visual: asiste al conductor, pero no controla la dirección del vehículo. El operador es en todo momento
       responsable de la conducción y de la seguridad en el trabajo.</p>
