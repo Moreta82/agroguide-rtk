@@ -80,31 +80,54 @@ class GuidanceService : LifecycleService() {
             android.util.Log.e("GuidanceService", "vehicle collector failed", e)
         }
         collectorJob = lifecycleScope.launch(handler) {
-            PositionRepository.vehicle.collect { state ->
-                if (state == null) return@collect
-                try {
-                    mockPublisher?.publish(state)
-                    GuidanceRepository.update(state)
-                    val work = GuidanceRepository.implement.value.workPoint(
-                        com.agroguide.rtk.geo.EnuPoint(state.x, state.y), state.headingDeg,
-                    )
-                    // Coverage and the job journal use real fixes only: the
-                    // 15 Hz CV-projected states exist for a smooth display, and
-                    // painting/recording them would store invented positions.
-                    // A paused job = no painting and no recording.
-                    if (!state.projected && !JobManager.isPaused) {
-                        CoverageRepository.update(state, work)
-                        var mask = 0
-                        CoverageRepository.sections.value.forEachIndexed { i, on -> if (on) mask = mask or (1 shl i) }
-                        JobManager.onState(state, work, mask)
+            // Display/guidance: every state, including the 15 Hz projections.
+            launch {
+                PositionRepository.vehicle.collect { state ->
+                    if (state == null) return@collect
+                    try {
+                        mockPublisher?.publish(state)
+                        GuidanceRepository.update(state)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        android.util.Log.e("GuidanceService", "state update failed", e)
                     }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    android.util.Log.e("GuidanceService", "state update failed", e)
+                }
+            }
+            // Coverage and the job journal: every real fix, in order, off the
+            // main thread. They used to ride the conflated display flow on the
+            // main thread, so a busy UI frame could swallow fixes and the paint
+            // lagged behind the implement. Projected states are never painted
+            // or recorded (they are invented positions).
+            launch(kotlinx.coroutines.Dispatchers.Default) {
+                PositionRepository.fixes.collect { state ->
+                    try {
+                        onRealFix(state)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        android.util.Log.e("GuidanceService", "fix update failed", e)
+                    }
                 }
             }
         }
+    }
+
+    private fun onRealFix(state: com.agroguide.rtk.geo.VehicleState) {
+        // A paused job = no painting and no recording. Break the swath so
+        // resuming does not paint a straight band across the ground covered
+        // while paused.
+        if (JobManager.isPaused) {
+            CoverageRepository.breakSegment()
+            return
+        }
+        val work = GuidanceRepository.implement.value.workPoint(
+            com.agroguide.rtk.geo.EnuPoint(state.x, state.y), state.headingDeg,
+        )
+        CoverageRepository.update(state, work)
+        var mask = 0
+        CoverageRepository.sections.value.forEachIndexed { i, on -> if (on) mask = mask or (1 shl i) }
+        JobManager.onState(state, work, mask)
     }
 
     private fun startNtripIfRequested(intent: Intent?, source: PositionSource) {

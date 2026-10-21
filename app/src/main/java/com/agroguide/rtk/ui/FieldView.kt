@@ -55,15 +55,15 @@ fun FieldView(
     basemap: com.agroguide.rtk.map.MapProvider = com.agroguide.rtk.map.MapProvider.NONE,
     basemapApiKey: String? = null,
     plane: com.agroguide.rtk.geo.TangentPlane? = null,
-    onScaleChange: (Float) -> Unit = {},
     style: FieldStyle = FieldStyle(),
+    /** Live paint from the end of the painted swath to the implement (see CoverageRepository.tail). */
+    tail: com.agroguide.rtk.coverage.WorkPose? = null,
+    sections: List<Boolean> = listOf(true),
+    camera: FieldCamera = rememberFieldCamera(),
     modifier: Modifier = Modifier,
 ) {
-    // px per meter; starts at 5 dp/m so a 6 m swath is about as wide as the
-    // (fixed-size) vehicle icon instead of a thin line next to it
-    val density = androidx.compose.ui.platform.LocalDensity.current.density
-    var scale by remember { mutableFloatStateOf((5f * density).coerceIn(0.5f, 30f)) }
-    var headingUp by remember { mutableStateOf(true) }
+    var scale by camera.scaleState
+    var headingUp by camera.headingUpState
     val tapHandler by androidx.compose.runtime.rememberUpdatedState(onTapWorld)
     val vehicleNow by androidx.compose.runtime.rememberUpdatedState(vehicle)
     val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -85,10 +85,7 @@ fun FieldView(
             // lines would otherwise paint over the tab bar above the canvas.
             .clipToBounds()
             .pointerInput(Unit) {
-                detectTransformGestures { _, _, zoom, _ ->
-                    scale = (scale * zoom).coerceIn(0.5f, 30f)
-                    onScaleChange(scale)
-                }
+                detectTransformGestures { _, _, zoom, _ -> camera.zoomBy(zoom) }
             }
             .pointerInput(Unit) {
                 detectTapGestures(
@@ -168,6 +165,33 @@ fun FieldView(
             }
         }
 
+        // Live tail: fixes (and so the painted tiles) arrive at the receiver
+        // rate, the vehicle is drawn at 15 Hz. Paint the strip between the end
+        // of the swath and the implement every frame so the colour stays glued
+        // to the implement instead of trailing up to a second behind it.
+        if (tail != null) {
+            val wpNow = implement.workPoint(EnuPoint(v.x, v.y), v.headingDeg)
+            val d = kotlin.math.hypot(wpNow.x - tail.p.x, wpNow.y - tail.p.y)
+            if (d >= com.agroguide.rtk.coverage.Swath.MIN_SEG_M && d <= MAX_TAIL_M) {
+                val ah = Math.toRadians(tail.headingDeg); val bh = Math.toRadians(v.headingDeg)
+                val arx = cos(ah); val ary = -sin(ah)
+                val brx = cos(bh); val bry = -sin(bh)
+                val n = sections.size
+                for (s in 0 until n) {
+                    if (!sections[s]) continue
+                    val (from, to) = com.agroguide.rtk.coverage.Swath.sectionExtent(implement.widthM, n, s)
+                    val p1 = project(tail.p.x + arx * from, tail.p.y + ary * from)
+                    val p2 = project(wpNow.x + brx * from, wpNow.y + bry * from)
+                    val p3 = project(wpNow.x + brx * to, wpNow.y + bry * to)
+                    val p4 = project(tail.p.x + arx * to, tail.p.y + ary * to)
+                    val quad = Path().apply {
+                        moveTo(p1.x, p1.y); lineTo(p2.x, p2.y); lineTo(p3.x, p3.y); lineTo(p4.x, p4.y); close()
+                    }
+                    drawPath(quad, style.coverage)
+                }
+            }
+        }
+
         // trail
         if (trail.size >= 2) {
             val path = Path()
@@ -243,23 +267,67 @@ fun FieldView(
         // rotate clockwise by the heading (screen y grows downwards). The old
         // hand-rolled rotation was mirrored and pointed west when driving east.
         val vehicleRotation = if (headingUp) 0f else v.headingDeg.toFloat()
+        // Icon units: never smaller than 1 dp (readable when zoomed out), and
+        // true to scale when zoomed in (the tractor is ~34 units ≈ 2.5 m wide),
+        // so tractor, implement and swath all grow together.
+        val unit = max(1.dp.toPx(), scale * TRACTOR_M_PER_UNIT)
         withTransform({
             translate(cx, cy)
             rotate(degrees = vehicleRotation, pivot = Offset.Zero)
         }) {
             when (style.vehicle) {
-                com.agroguide.rtk.data.VehicleIcon.TRACTOR -> drawMiniTractor(1.dp.toPx())
-                com.agroguide.rtk.data.VehicleIcon.ARROW -> drawArrowVehicle()
+                com.agroguide.rtk.data.VehicleIcon.TRACTOR -> drawMiniTractor(unit)
+                com.agroguide.rtk.data.VehicleIcon.ARROW -> drawArrowVehicle(unit)
             }
         }
     }
 }
 
+/** Real-world metres per tractor-icon unit (icon ≈ 34 units wide ≈ 2.5 m). */
+private const val TRACTOR_M_PER_UNIT = 0.075f
+
+/** Longest gap the live tail will bridge; beyond that it is a jump, not driving. */
+private const val MAX_TAIL_M = 10.0
+
+/**
+ * Zoom and orientation of the field view. Hoisted so it survives the canvas
+ * moving between layouts (full screen ⇄ data panel) instead of resetting.
+ */
+class FieldCamera(private val density: Float, initialScale: Float, initialHeadingUp: Boolean) {
+    val scaleState = androidx.compose.runtime.mutableFloatStateOf(initialScale)
+    val headingUpState = androidx.compose.runtime.mutableStateOf(initialHeadingUp)
+
+    /** px per metre limits: from ~2 km across down to ~4 m across a phone. */
+    private val minScale get() = 0.2f * density
+    private val maxScale get() = 120f * density
+
+    fun zoomBy(factor: Float) {
+        scaleState.floatValue = (scaleState.floatValue * factor).coerceIn(minScale, maxScale)
+    }
+
+    companion object {
+        /** Starts at 5 dp/m: a 6 m swath about as wide as the vehicle icon. */
+        const val DEFAULT_DP_PER_M = 5f
+    }
+}
+
+@Composable
+fun rememberFieldCamera(): FieldCamera {
+    val density = androidx.compose.ui.platform.LocalDensity.current.density
+    val saved = androidx.compose.runtime.saveable.rememberSaveable(
+        saver = androidx.compose.runtime.saveable.listSaver(
+            save = { listOf(it.scaleState.floatValue, if (it.headingUpState.value) 1f else 0f) },
+            restore = { FieldCamera(density, it[0], it[1] > 0.5f) },
+        ),
+    ) { FieldCamera(density, FieldCamera.DEFAULT_DP_PER_M * density, true) }
+    return saved
+}
+
 /** Classic yellow triangle marker, tip pointing forward (up), centred on 0,0. */
-private fun DrawScope.drawArrowVehicle() {
-    val tr = Path().apply { moveTo(0f, -16f); lineTo(-10f, 12f); lineTo(10f, 12f); close() }
+private fun DrawScope.drawArrowVehicle(u: Float) {
+    val tr = Path().apply { moveTo(0f, -16f * u); lineTo(-10f * u, 12f * u); lineTo(10f * u, 12f * u); close() }
     drawPath(tr, Color(0xFFFFC107))
-    drawPath(tr, Color(0xFF5D4300), style = Stroke(width = 1.5f))
+    drawPath(tr, Color(0xFF5D4300), style = Stroke(width = 1.5f * u))
 }
 
 /**

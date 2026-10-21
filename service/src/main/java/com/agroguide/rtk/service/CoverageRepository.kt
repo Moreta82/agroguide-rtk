@@ -61,8 +61,24 @@ object CoverageRepository {
 
     fun setAllSections(on: Boolean) { _sections.value = _sections.value.map { on } }
 
+    /**
+     * Where the painted swath ends right now, while painting is live (null when
+     * paused, stopped-and-filtered or after a break). Fixes arrive at the
+     * receiver rate (1–10 Hz) but the vehicle is drawn at 15 Hz, so the UI
+     * fills the gap from here to the implement every frame instead of leaving
+     * the paint trailing behind it.
+     */
+    private val _tail = MutableStateFlow<WorkPose?>(null)
+    val tail: StateFlow<WorkPose?> = _tail.asStateFlow()
+
     fun reset() {
-        scope.launch { engine.reset(); publish() }
+        scope.launch { engine.reset(); _tail.value = null; publish() }
+    }
+
+    /** Implement lifted / job paused: the next fix starts a new swath. */
+    fun breakSegment() {
+        _tail.value = null
+        scope.launch { engine.breakSegment(); _tail.value = null }
     }
 
     /** Rebuild the engine from a job journal (resume-after-restart). */
@@ -97,6 +113,7 @@ object CoverageRepository {
         scope.launch {
             if (paused) engine.breakSegment()
             else engine.update(WorkPose(workPoint, state.headingDeg), active)
+            _tail.value = if (paused || active.none { it }) null else engine.anchor
             publish()
         }
     }

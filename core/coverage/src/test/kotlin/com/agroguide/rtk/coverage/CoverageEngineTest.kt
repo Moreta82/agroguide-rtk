@@ -97,4 +97,17 @@ class CoverageEngineTest {
         assertTrue(seconds < 20.0, "took $seconds s")
         assertEquals(20 * 6.0 * 500.0, e.stats.treatedM2, 20.0)
     }
+
+    @Test fun `anchor is where the painted swath ends and clears on a break`() {
+        val e = CoverageEngine(6.0, 1)
+        assertEquals(null, e.anchor)
+        e.update(WorkPose(EnuPoint(0.0, 0.0), 0.0), booleanArrayOf(true))
+        e.update(WorkPose(EnuPoint(0.0, 2.0), 0.0), booleanArrayOf(true))
+        assertEquals(2.0, e.anchor!!.p.y, 1e-9)
+        // sub-5 cm jitter keeps the anchor (nothing new painted)
+        e.update(WorkPose(EnuPoint(0.0, 2.02), 0.0), booleanArrayOf(true))
+        assertEquals(2.0, e.anchor!!.p.y, 1e-9)
+        e.breakSegment()
+        assertEquals(null, e.anchor)
+    }
 }

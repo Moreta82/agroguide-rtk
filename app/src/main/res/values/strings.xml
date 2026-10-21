@@ -118,6 +118,8 @@
     <string name="job_start">Iniciar trabajo</string>
     <string name="job_pause">Pausar</string>
     <string name="job_resume">Reanudar</string>
+    <string name="zoom_in">Acercar</string>
+    <string name="zoom_out">Alejar</string>
     <string name="job_finish">Finalizar</string>
     <string name="job_finish_confirm">¿Finalizar el trabajo «%1$s»? Se guardarán sus estadísticas.</string>
     <string name="job_active">ACTIVO</string>

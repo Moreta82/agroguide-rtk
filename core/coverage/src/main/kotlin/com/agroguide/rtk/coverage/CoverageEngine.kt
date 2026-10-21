@@ -64,6 +64,9 @@ class CoverageEngine(
     /** Call when the implement lifts / a new pass starts: next update won't paint a segment. */
     fun breakSegment() { prevPose = null }
 
+    /** Where the painted swath currently ends (the next segment starts here), or null after a break. */
+    val anchor: WorkPose? get() = prevPose
+
     fun update(pose: WorkPose, activeSections: BooleanArray) {
         val prev = prevPose
         prevPose = pose

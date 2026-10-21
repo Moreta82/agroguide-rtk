@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -71,6 +74,10 @@ fun FieldScreen(
     val tiles by com.agroguide.rtk.service.CoverageRepository.tiles.collectAsStateWithLifecycle()
     val coverageStats by com.agroguide.rtk.service.CoverageRepository.stats.collectAsStateWithLifecycle()
     val sectionStates by com.agroguide.rtk.service.CoverageRepository.sections.collectAsStateWithLifecycle()
+    val coverageTail by com.agroguide.rtk.service.CoverageRepository.tail.collectAsStateWithLifecycle()
+    // Hoisted: the canvas moves between layouts (full screen ⇄ data panel) and
+    // would otherwise reset its zoom every time "Datos" is pressed.
+    val camera = rememberFieldCamera()
 
     var showSource by remember { mutableStateOf(false) }
     var showImplement by remember { mutableStateOf(false) }
@@ -127,6 +134,20 @@ fun FieldScreen(
                     basemapApiKey = basemapApiKey,
                     plane = PositionRepository.activePlane,
                     style = style,
+                    tail = coverageTail,
+                    sections = sectionStates,
+                    camera = camera,
+                )
+                // Small translucent controls on the left edge, clear of the
+                // tractor (centred) and of the banners/section bar.
+                MapControls(
+                    camera = camera,
+                    jobState = activeJob?.state,
+                    onPauseToggle = {
+                        val jm = com.agroguide.rtk.service.JobManager
+                        if (activeJob?.state == jm.STATE_ACTIVE) jm.pause(context) else jm.resume(context)
+                    },
+                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp),
                 )
                 // One row so the job banner (left) gives way to the badges
                 // (right) and wraps instead of overlapping them in portrait.
@@ -548,5 +569,70 @@ private fun CounterRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(label, fontSize = 16.sp)
         Text(value, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+/**
+ * Zoom in/out and job pause/resume over the field. Translucent and compact
+ * so they never hide the swath; paused shows an amber play button so the
+ * state is obvious at a glance.
+ */
+@Composable
+private fun MapControls(
+    camera: FieldCamera,
+    jobState: String?,
+    onPauseToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val jm = com.agroguide.rtk.service.JobManager
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        MapButton(stringResource(R.string.zoom_in), onClick = { camera.zoomBy(ZOOM_STEP) }) { c, s ->
+            drawLine(c, androidx.compose.ui.geometry.Offset(s * 0.28f, s / 2), androidx.compose.ui.geometry.Offset(s * 0.72f, s / 2), s * 0.09f)
+            drawLine(c, androidx.compose.ui.geometry.Offset(s / 2, s * 0.28f), androidx.compose.ui.geometry.Offset(s / 2, s * 0.72f), s * 0.09f)
+        }
+        MapButton(stringResource(R.string.zoom_out), onClick = { camera.zoomBy(1f / ZOOM_STEP) }) { c, s ->
+            drawLine(c, androidx.compose.ui.geometry.Offset(s * 0.28f, s / 2), androidx.compose.ui.geometry.Offset(s * 0.72f, s / 2), s * 0.09f)
+        }
+        if (jobState == jm.STATE_ACTIVE || jobState == jm.STATE_PAUSED) {
+            val paused = jobState == jm.STATE_PAUSED
+            androidx.compose.foundation.layout.Spacer(Modifier.height(8.dp))
+            MapButton(
+                stringResource(if (paused) R.string.job_resume else R.string.job_pause),
+                background = if (paused) Color(0xE6F9A825) else MAP_BUTTON_BG,
+                onClick = onPauseToggle,
+            ) { c, s ->
+                if (paused) {
+                    val play = androidx.compose.ui.graphics.Path().apply {
+                        moveTo(s * 0.38f, s * 0.28f); lineTo(s * 0.74f, s * 0.5f); lineTo(s * 0.38f, s * 0.72f); close()
+                    }
+                    drawPath(play, c)
+                } else {
+                    val w = s * 0.11f
+                    drawRect(c, androidx.compose.ui.geometry.Offset(s * 0.34f, s * 0.29f), androidx.compose.ui.geometry.Size(w, s * 0.42f))
+                    drawRect(c, androidx.compose.ui.geometry.Offset(s * 0.55f, s * 0.29f), androidx.compose.ui.geometry.Size(w, s * 0.42f))
+                }
+            }
+        }
+    }
+}
+
+private const val ZOOM_STEP = 1.6f
+private val MAP_BUTTON_BG = Color(0x8C263238)
+
+@Composable
+private fun MapButton(
+    description: String,
+    onClick: () -> Unit,
+    background: Color = MAP_BUTTON_BG,
+    glyph: androidx.compose.ui.graphics.drawscope.DrawScope.(Color, Float) -> Unit,
+) {
+    Box(
+        Modifier
+            .size(48.dp)
+            .background(background, androidx.compose.foundation.shape.CircleShape)
+            .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = description, onClick = onClick)
+            .semantics { contentDescription = description },
+    ) {
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) { glyph(Color.White, size.minDimension) }
     }
 }

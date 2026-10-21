@@ -28,6 +28,17 @@ object PositionRepository {
     private val _vehicle = MutableStateFlow<VehicleState?>(null)
     val vehicle: StateFlow<VehicleState?> = _vehicle.asStateFlow()
 
+    /**
+     * Every real receiver fix, in order and never conflated. [vehicle] is a
+     * StateFlow shared with the 15 Hz projected states, so a slow collector can
+     * miss real fixes there; coverage and the job journal must not.
+     */
+    private val _fixes = kotlinx.coroutines.flow.MutableSharedFlow<VehicleState>(
+        extraBufferCapacity = 64,
+        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST,
+    )
+    val fixes: kotlinx.coroutines.flow.SharedFlow<VehicleState> = _fixes
+
     private val _connection = MutableStateFlow(
         SourceEvent.ConnectionState(SourceEvent.ConnectionState.State.DISCONNECTED)
     )
@@ -115,7 +126,11 @@ object PositionRepository {
             }
         }
         s.launch {
-            pipeline.states.collect { projector.onFix(it); _vehicle.value = it }
+            pipeline.states.collect {
+                projector.onFix(it)
+                _vehicle.value = it
+                if (!it.projected) _fixes.tryEmit(it)
+            }
         }
         s.launch {
             while (isActive) {
