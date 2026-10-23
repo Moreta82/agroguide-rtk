@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package com.agroguide.rtk.ui
 
 import android.content.Context
@@ -9,6 +11,7 @@ import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -91,7 +94,7 @@ fun SettingsScreen(settings: AppSettings, store: AppSettingsStore) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(stringResource(R.string.theme_label), style = MaterialTheme.typography.titleMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             ThemeOption(R.string.theme_auto, settings.themeMode == ThemeMode.AUTO) {
                 scope.launch { store.update { it.copy(theme = ThemeMode.AUTO.name) } }
             }
@@ -104,7 +107,7 @@ fun SettingsScreen(settings: AppSettings, store: AppSettingsStore) {
         }
 
         Text(stringResource(R.string.orientation_label), style = MaterialTheme.typography.titleMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             ThemeOption(R.string.orientation_landscape, settings.screenOrientation == ScreenOrientation.LANDSCAPE) {
                 scope.launch { store.update { it.copy(orientation = ScreenOrientation.LANDSCAPE.name) } }
             }
@@ -134,20 +137,50 @@ fun SettingsScreen(settings: AppSettings, store: AppSettingsStore) {
             scope.launch { store.update { it.copy(showGrid = on) } }
         }
         Text(stringResource(R.string.field_vehicle), style = MaterialTheme.typography.bodyMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column {
             ThemeOption(R.string.vehicle_tractor, settings.vehicle == VehicleIcon.TRACTOR) {
                 scope.launch { store.update { it.copy(vehicleIcon = VehicleIcon.TRACTOR.name) } }
             }
             ThemeOption(R.string.vehicle_arrow, settings.vehicle == VehicleIcon.ARROW) {
                 scope.launch { store.update { it.copy(vehicleIcon = VehicleIcon.ARROW.name) } }
             }
+            ThemeOption(R.string.vehicle_square, settings.vehicle == VehicleIcon.SQUARE) {
+                scope.launch { store.update { it.copy(vehicleIcon = VehicleIcon.SQUARE.name) } }
+            }
         }
+        Text(stringResource(R.string.field_vehicle_hint), style = MaterialTheme.typography.bodySmall)
 
         Text(stringResource(R.string.painting_label), style = MaterialTheme.typography.titleMedium)
         SettingSwitch(stringResource(R.string.pause_when_stopped), settings.pauseWhenStopped) { on ->
             scope.launch { store.update { it.copy(pauseWhenStopped = on) } }
         }
         Text(stringResource(R.string.pause_when_stopped_hint), style = MaterialTheme.typography.bodySmall)
+
+        Text(stringResource(R.string.latency_label), style = MaterialTheme.typography.bodyMedium)
+        val measured by com.agroguide.rtk.service.PositionRepository.measuredLatencyMs.collectAsStateWithLifecycle()
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ThemeOption(R.string.latency_auto, settings.latencyCompensationMs == -1) {
+                scope.launch { store.update { it.copy(latencyCompensationMs = -1) } }
+            }
+            ThemeOption(R.string.latency_off, settings.latencyCompensationMs == 0) {
+                scope.launch { store.update { it.copy(latencyCompensationMs = 0) } }
+            }
+        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (ms in listOf(100, 200, 300)) {
+                ThemeOptionText("$ms ms", settings.latencyCompensationMs == ms) {
+                    scope.launch { store.update { it.copy(latencyCompensationMs = ms) } }
+                }
+            }
+        }
+        Text(
+            stringResource(R.string.latency_hint) + " " + if (measured > 0) {
+                stringResource(R.string.latency_measured, measured)
+            } else {
+                stringResource(R.string.latency_unmeasured)
+            },
+            style = MaterialTheme.typography.bodySmall,
+        )
 
         SettingSwitch(stringResource(R.string.setting_keep_screen), settings.keepScreenOn) { on ->
             scope.launch { store.update { it.copy(keepScreenOn = on) } }
@@ -294,7 +327,11 @@ private fun BasemapOption(
 
 /** Whole row (circle + label) is the touch target: easier with gloves in the cab. */
 @Composable
-private fun ThemeOption(labelRes: Int, selected: Boolean, onClick: () -> Unit) {
+private fun ThemeOption(labelRes: Int, selected: Boolean, onClick: () -> Unit) =
+    ThemeOptionText(stringResource(labelRes), selected, onClick)
+
+@Composable
+private fun ThemeOptionText(label: String, selected: Boolean, onClick: () -> Unit) {
     Row(
         Modifier
             .height(48.dp)
@@ -303,7 +340,7 @@ private fun ThemeOption(labelRes: Int, selected: Boolean, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RadioButton(selected = selected, onClick = null)
-        Text(stringResource(labelRes), Modifier.padding(start = 12.dp))
+        Text(label, Modifier.padding(start = 12.dp))
     }
 }
 

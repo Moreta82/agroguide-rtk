@@ -86,7 +86,28 @@ object PositionRepository {
     }
 
     private var scope: CoroutineScope? = null
-    private const val RENDER_HZ = 15
+    // 30 Hz: at 15 Hz the drawn tractor and paint advanced in visible ~20 cm
+    // steps at work speed, which reads as the paint lagging.
+    private const val RENDER_HZ = 30
+
+    /**
+     * Latency compensation for the displayed position. Fixes reach the app
+     * 100–200 ms after the receiver measured them (solution + Bluetooth +
+     * Android), so the tractor, the paint and the lightbar are drawn where the
+     * implement was, not where it is. -1 = automatic (measured from the NMEA
+     * time stamps), 0 = off, otherwise a fixed lead in ms. Only the display and
+     * guidance use it; coverage and the job journal keep the true fixes.
+     */
+    @Volatile var latencyCompensationMs: Int = -1
+
+    private val _measuredLatencyMs = MutableStateFlow(0L)
+    /** Last measured fix latency (0 = unknown / not measurable for this source). */
+    val measuredLatencyMs: StateFlow<Long> = _measuredLatencyMs.asStateFlow()
+
+    private fun leadMs(pipeline: PositionPipeline): Long = when (val mode = latencyCompensationMs) {
+        -1 -> pipeline.latencyMs
+        else -> mode.toLong().coerceIn(0, 1000)
+    }
 
     /**
      * Called by GuidanceService when a source is (re)selected. The source flow
@@ -113,7 +134,10 @@ object PositionRepository {
             override val name = source.name
             override val events = shared
         }
-        val pipeline = PositionPipeline(sharedSource, pinnedPlane)
+        val pipeline = PositionPipeline(sharedSource, pinnedPlane) { monotonicMs ->
+            // local UTC at a given elapsedRealtime instant
+            System.currentTimeMillis() - (android.os.SystemClock.elapsedRealtime() - monotonicMs)
+        }
         activePipeline = pipeline
         val projector = CvProjector()
         s.launch {
@@ -128,14 +152,17 @@ object PositionRepository {
         s.launch {
             pipeline.states.collect {
                 projector.onFix(it)
-                _vehicle.value = it
+                _measuredLatencyMs.value = pipeline.latencyMs
+                // Display the fix where the vehicle is now, not where it was
+                // when the receiver measured it.
+                _vehicle.value = projector.projectAt(nowMs() + leadMs(pipeline)) ?: it
                 if (!it.projected) _fixes.tryEmit(it)
             }
         }
         s.launch {
             while (isActive) {
                 delay(1000L / RENDER_HZ)
-                projector.projectAt(nowMs())?.let { if (it.projected) _vehicle.value = it }
+                projector.projectAt(nowMs() + leadMs(pipeline))?.let { if (it.projected) _vehicle.value = it }
             }
         }
     }

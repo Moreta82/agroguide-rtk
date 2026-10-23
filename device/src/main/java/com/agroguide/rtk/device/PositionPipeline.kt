@@ -19,10 +19,19 @@ import kotlinx.coroutines.flow.transform
 class PositionPipeline(
     source: PositionSource,
     @Volatile var plane: TangentPlane? = null,
+    /**
+     * Local UTC wall-clock ms at a given monotonic receive time, used to
+     * measure fix latency; null disables the measurement (unit tests).
+     */
+    private val arrivalWallMs: ((monotonicMs: Long) -> Long)? = null,
 ) {
     private val aggregator = FixAggregator()
     private val jumpFilter = JumpFilter()
     private val headingHold = com.agroguide.rtk.geo.HeadingHold()
+    private val latency = com.agroguide.rtk.geo.LatencyEstimator()
+
+    /** Measured fix age on arrival (receiver + Bluetooth + Android), 0 if unknown. */
+    val latencyMs: Long get() = latency.latencyMs
 
     val states: Flow<VehicleState> = source.events.transform { ev ->
         val fix: GnssFix = when (ev) {
@@ -35,6 +44,12 @@ class PositionPipeline(
             is SourceEvent.UbxAckEvent -> return@transform
         }
         if (fix.quality == FixQuality.NO_FIX) return@transform
+        val clock = arrivalWallMs
+        val fixTod = com.agroguide.rtk.geo.LatencyEstimator.parseNmeaTime(fix.timeUtc)
+        if (clock != null && fixTod != null) {
+            val arrival = Math.floorMod(clock(fix.monotonicMs), com.agroguide.rtk.geo.LatencyEstimator.DAY_MS)
+            latency.onFix(fixTod, arrival)
+        }
         val p = plane ?: TangentPlane(fix.latDeg, fix.lonDeg).also { plane = it }
         val enu = p.toEnu(fix.latDeg, fix.lonDeg)
         val speed = fix.speedMps ?: 0.0

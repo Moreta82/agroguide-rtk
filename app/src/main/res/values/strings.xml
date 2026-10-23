@@ -184,6 +184,14 @@
     <string name="field_vehicle">Vehículo en pantalla</string>
     <string name="vehicle_tractor">Mini tractor</string>
     <string name="vehicle_arrow">Triángulo</string>
+    <string name="vehicle_square">Cuadrado</string>
+    <string name="field_vehicle_hint">El vehículo se dibuja tan ancho como el apero y justo delante de la zona que pinta, así la pintura sale pegada a él.</string>
+    <string name="latency_label">Compensar retardo del receptor</string>
+    <string name="latency_auto">Automático</string>
+    <string name="latency_off">Desactivado</string>
+    <string name="latency_hint">La posición llega del receptor con algo de retraso (cálculo + Bluetooth). La app adelanta el tractor y la pintura ese tiempo para que coincidan con la posición real.</string>
+    <string name="latency_measured">Retardo medido ahora: %1$d ms.</string>
+    <string name="latency_unmeasured">Sin medición: conecta el receptor y ten la hora automática del móvil activada.</string>
     <string name="painting_label">Pintado</string>
     <string name="pause_when_stopped">Pausar pintado al detenerse</string>
     <string name="pause_when_stopped_hint">Desactivado: se pinta siempre, sin cortes. Activado: deja de pintar cuando el tractor va parado o casi parado (útil si al detenerse aparecen manchas de solape).</string>

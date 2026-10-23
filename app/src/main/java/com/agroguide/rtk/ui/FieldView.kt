@@ -266,25 +266,52 @@ fun FieldView(
         // Vehicle at the anchor. Heading-up: always points up. North-up:
         // rotate clockwise by the heading (screen y grows downwards). The old
         // hand-rolled rotation was mirrored and pointed west when driving east.
+        // Vehicle: as wide as the implement (= the painted strip) and placed
+        // with its rear edge on the implement line, so the paint comes out
+        // right behind it at every zoom level. Floor of 24 dp so it stays
+        // visible when zoomed far out.
         val vehicleRotation = if (headingUp) 0f else v.headingDeg.toFloat()
-        // Icon units: never smaller than 1 dp (readable when zoomed out), and
-        // true to scale when zoomed in (the tractor is ~34 units ≈ 2.5 m wide),
-        // so tractor, implement and swath all grow together.
-        val unit = max(1.dp.toPx(), scale * TRACTOR_M_PER_UNIT)
+        val widthPx = max(MIN_VEHICLE_DP.dp.toPx(), (implement.widthM * scale).toFloat())
+        val wpScreen = project(wp.x, wp.y)
         withTransform({
-            translate(cx, cy)
+            translate(wpScreen.x, wpScreen.y)
             rotate(degrees = vehicleRotation, pivot = Offset.Zero)
         }) {
             when (style.vehicle) {
-                com.agroguide.rtk.data.VehicleIcon.TRACTOR -> drawMiniTractor(unit)
-                com.agroguide.rtk.data.VehicleIcon.ARROW -> drawArrowVehicle(unit)
+                com.agroguide.rtk.data.VehicleIcon.TRACTOR -> {
+                    val u = widthPx / TRACTOR_WIDTH_UNITS
+                    withTransform({ translate(0f, -TRACTOR_REAR_UNITS * u) }) { drawMiniTractor(u) }
+                }
+                com.agroguide.rtk.data.VehicleIcon.ARROW -> {
+                    val u = widthPx / ARROW_WIDTH_UNITS
+                    withTransform({ translate(0f, -ARROW_REAR_UNITS * u) }) { drawArrowVehicle(u) }
+                }
+                com.agroguide.rtk.data.VehicleIcon.SQUARE -> drawSquareVehicle(widthPx)
             }
         }
     }
 }
 
-/** Real-world metres per tractor-icon unit (icon ≈ 34 units wide ≈ 2.5 m). */
-private const val TRACTOR_M_PER_UNIT = 0.075f
+private const val MIN_VEHICLE_DP = 24f
+/** Mini tractor extents in its own units: 36 wide (fenders), rear edge at y = +20. */
+private const val TRACTOR_WIDTH_UNITS = 36f
+private const val TRACTOR_REAR_UNITS = 20f
+/** Triangle: 20 units wide, base at y = +12. */
+private const val ARROW_WIDTH_UNITS = 20f
+private const val ARROW_REAR_UNITS = 12f
+
+/**
+ * Square as wide and as long as the implement, rear edge on the implement
+ * line (origin), extending forward (up). Translucent so lines show through.
+ */
+private fun DrawScope.drawSquareVehicle(side: Float) {
+    val topLeft = Offset(-side / 2, -side)
+    val size = androidx.compose.ui.geometry.Size(side, side)
+    drawRect(Color(0x99F5C518), topLeft, size)
+    drawRect(Color(0xFF5D4300), topLeft, size, style = Stroke(width = 2.dp.toPx()))
+    // heading tick so the direction of travel is obvious
+    drawLine(Color(0xFF5D4300), Offset(0f, -side), Offset(0f, -side * 0.75f), 2.dp.toPx())
+}
 
 /** Longest gap the live tail will bridge; beyond that it is a jump, not driving. */
 private const val MAX_TAIL_M = 10.0
@@ -332,7 +359,7 @@ private fun DrawScope.drawArrowVehicle(u: Float) {
 
 /**
  * Mini tractor seen from above, nose pointing up, antenna (0,0) on the cab.
- * Drawn in dp units scaled by [u] so it keeps its size at every zoom level.
+ * Drawn in its own units scaled by [u] (the caller sizes it to the implement width).
  */
 private fun DrawScope.drawMiniTractor(u: Float) {
     fun r(l: Float, t: Float, w: Float, h: Float, c: Color, radius: Float = 1.5f) =

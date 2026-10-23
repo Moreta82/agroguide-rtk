@@ -145,6 +145,9 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(appSettings.pauseWhenStopped) {
                 com.agroguide.rtk.service.CoverageRepository.pauseWhenStopped = appSettings.pauseWhenStopped
             }
+            LaunchedEffect(appSettings.latencyCompensationMs) {
+                com.agroguide.rtk.service.PositionRepository.latencyCompensationMs = appSettings.latencyCompensationMs
+            }
             AgroGuideTheme(night = night) {
                 val settings by store.settings.collectAsStateWithLifecycle(initialValue = NtripSettings())
                 LaunchedEffect(Unit) {

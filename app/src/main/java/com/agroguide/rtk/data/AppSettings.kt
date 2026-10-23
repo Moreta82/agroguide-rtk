@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
 
 enum class ThemeMode { AUTO, DAY, NIGHT }
 enum class ScreenOrientation { LANDSCAPE, PORTRAIT, AUTO }
-enum class VehicleIcon { TRACTOR, ARROW }
+enum class VehicleIcon { TRACTOR, ARROW, SQUARE }
 
 @Serializable
 data class AppSettings(
@@ -31,6 +31,8 @@ data class AppSettings(
     val overlapColor: Long = 0x99E53935,
     val showGrid: Boolean = true,
     val vehicleIcon: String = "TRACTOR",     // VehicleIcon name
+    /** Receiver latency compensation: -1 = automatic, 0 = off, else fixed ms. */
+    val latencyCompensationMs: Int = -1,
 ) {
     val themeMode: ThemeMode get() = runCatching { ThemeMode.valueOf(theme) }.getOrDefault(ThemeMode.AUTO)
     val screenOrientation: ScreenOrientation
