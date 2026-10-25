@@ -66,6 +66,7 @@ object JobManager {
         PositionRepository.pinPlane(TangentPlane(origin.first, origin.second))
         CoverageRepository.reset()
         GuidanceRepository.clearTrail()
+        watchLine(context)
         _activeJob.value = job
         scope.launch { AgroDb.get(context).jobs().insert(job) }
         return true
@@ -132,29 +133,103 @@ object JobManager {
     /** On service start: reopen an unfinished job, replay its journal, pin its plane. */
     fun tryResumeOnStart(context: Context) {
         if (_activeJob.value != null) return
+        watchLine(context)
         scope.launch {
             val job = AgroDb.get(context).jobs().findUnfinished() ?: return@launch
-            val file = journalFile(context, job.id)
-            val data = JournalReader.read(file) ?: return@launch
-            synchronized(this@JobManager) {
-                if (_activeJob.value != null) return@launch
-                PositionRepository.pinPlane(TangentPlane(data.header.originLat, data.header.originLon))
-                CoverageRepository.configure(data.header.widthM, data.header.sections)
-                CoverageRepository.replay(data) { summary ->
-                    GuidanceRepository.restoreTrail(summary.trail)
-                    synchronized(this@JobManager) {
-                        jobStartRealtime = SystemClock.elapsedRealtime() - summary.lastTMs
-                        activeMsAccum = summary.activeSeconds * 1000
-                        spanStartMs = if (job.state == STATE_ACTIVE) summary.lastTMs else -1
-                        wasMoving = false
-                        writer = JournalWriter(
-                            file,
-                            JournalHeader(data.header.originLat, data.header.originLon, data.header.widthM, data.header.sections),
-                        )
-                        _activeJob.value = job
+            val data = JournalReader.read(journalFile(context, job.id)) ?: return@launch
+            reopen(context, job, data)
+        }
+    }
+
+    /** Why [continueJob] could not reopen a job. */
+    enum class ContinueResult { STARTED, ANOTHER_ACTIVE, NO_TRACK }
+
+    /**
+     * Reopens a finished job to carry on where it was left: its painted
+     * coverage, track and guidance line come back from the journal, and new
+     * passes are appended to the same journal (one job, one report).
+     */
+    suspend fun continueJob(context: Context, job: JobEntity): ContinueResult {
+        if (_activeJob.value != null) return ContinueResult.ANOTHER_ACTIVE
+        val data = kotlinx.coroutines.withContext(Dispatchers.IO) {
+            JournalReader.read(journalFile(context, job.id))
+        } ?: return ContinueResult.NO_TRACK
+        watchLine(context)
+        val reopened = job.copy(state = STATE_ACTIVE, finishedAtMs = null)
+        if (!reopen(context, reopened, data)) return ContinueResult.ANOTHER_ACTIVE
+        scope.launch { AgroDb.get(context).jobs().update(reopened) }
+        return ContinueResult.STARTED
+    }
+
+    /**
+     * Shared by crash-resume and "Continuar": pin the job's ENU plane, rebuild
+     * its coverage from the journal, restore its line and reopen the journal
+     * for appending. The tractor has moved since the last record, so a swath
+     * break is written: the first new fix must not paint a band back to where
+     * the job stopped.
+     */
+    private fun reopen(context: Context, job: JobEntity, data: com.agroguide.rtk.data.journal.JournalData): Boolean {
+        synchronized(this) {
+            if (_activeJob.value != null) return false
+            PositionRepository.pinPlane(TangentPlane(data.header.originLat, data.header.originLon))
+            loadLine(context, job.id)?.let { GuidanceRepository.restoreLine(it) }
+            CoverageRepository.configure(data.header.widthM, data.header.sections)
+            // passes, live paint and the journal must all use the job's width
+            GuidanceRepository.setImplement(
+                GuidanceRepository.implement.value.copy(widthM = data.header.widthM, sections = data.header.sections),
+            )
+            CoverageRepository.replay(data) { summary ->
+                GuidanceRepository.restoreTrail(summary.trail)
+                synchronized(this@JobManager) {
+                    jobStartRealtime = SystemClock.elapsedRealtime() - summary.lastTMs
+                    activeMsAccum = summary.activeSeconds * 1000
+                    spanStartMs = if (job.state == STATE_ACTIVE) summary.lastTMs else -1
+                    wasMoving = false
+                    writer = JournalWriter(
+                        journalFile(context, job.id),
+                        JournalHeader(data.header.originLat, data.header.originLon, data.header.widthM, data.header.sections),
+                    ).also { w ->
+                        runCatching { w.breakSegment(summary.lastTMs) }
+                        // a job closed while paused: record the resume so a
+                        // replay counts the new work as active time
+                        if (job.state == STATE_ACTIVE && data.records.lastOrNull() is com.agroguide.rtk.data.journal.JournalRecord.Pause) {
+                            runCatching { w.resume(summary.lastTMs) }
+                        }
                     }
+                    _activeJob.value = job
                 }
             }
+            return true
+        }
+    }
+
+    // ---- per-job guidance line ---------------------------------------------
+    // Saved next to the journal, in the job's own ENU plane, so continuing a
+    // job brings back the line its passes were driven on.
+
+    fun lineFile(context: Context, jobId: String): File = File(context.filesDir, "journals/$jobId.line")
+
+    private fun loadLine(context: Context, jobId: String) = runCatching {
+        val f = lineFile(context, jobId)
+        if (f.exists()) com.agroguide.rtk.data.guidance.GuidanceLineCodec.fromJson(f.readText()) else null
+    }.getOrNull()
+
+    private var lineWatcher: kotlinx.coroutines.Job? = null
+
+    @Synchronized
+    private fun watchLine(context: Context) {
+        if (lineWatcher != null) return
+        val app = context.applicationContext
+        lineWatcher = scope.launch {
+            kotlinx.coroutines.flow.combine(_activeJob, GuidanceRepository.line) { job, line -> job?.id to line }
+                .collect { (jobId, line) ->
+                    if (jobId == null) return@collect
+                    runCatching {
+                        val json = com.agroguide.rtk.data.guidance.GuidanceLineCodec.toJson(line)
+                        val f = lineFile(app, jobId)
+                        if (json == null) f.delete() else f.writeText(json)
+                    }
+                }
         }
     }
 

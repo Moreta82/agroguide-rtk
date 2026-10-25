@@ -585,7 +585,11 @@ private fun MapControls(
     modifier: Modifier = Modifier,
 ) {
     val jm = com.agroguide.rtk.service.JobManager
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         MapButton(stringResource(R.string.zoom_in), onClick = { camera.zoomBy(ZOOM_STEP) }) { c, s ->
             drawLine(c, androidx.compose.ui.geometry.Offset(s * 0.28f, s / 2), androidx.compose.ui.geometry.Offset(s * 0.72f, s / 2), s * 0.09f)
             drawLine(c, androidx.compose.ui.geometry.Offset(s / 2, s * 0.28f), androidx.compose.ui.geometry.Offset(s / 2, s * 0.72f), s * 0.09f)
@@ -599,6 +603,7 @@ private fun MapControls(
             MapButton(
                 stringResource(if (paused) R.string.job_resume else R.string.job_pause),
                 background = if (paused) Color(0xE6F9A825) else MAP_BUTTON_BG,
+                size = 64.dp,
                 onClick = onPauseToggle,
             ) { c, s ->
                 if (paused) {
@@ -624,15 +629,16 @@ private fun MapButton(
     description: String,
     onClick: () -> Unit,
     background: Color = MAP_BUTTON_BG,
+    size: androidx.compose.ui.unit.Dp = 48.dp,
     glyph: androidx.compose.ui.graphics.drawscope.DrawScope.(Color, Float) -> Unit,
 ) {
     Box(
         Modifier
-            .size(48.dp)
+            .size(size)
             .background(background, androidx.compose.foundation.shape.CircleShape)
             .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = description, onClick = onClick)
             .semantics { contentDescription = description },
     ) {
-        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) { glyph(Color.White, size.minDimension) }
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) { glyph(Color.White, this.size.minDimension) }
     }
 }

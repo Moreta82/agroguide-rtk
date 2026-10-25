@@ -89,6 +89,10 @@ object CoverageRepository {
         scope.launch {
             engine.reset()
             val summary = com.agroguide.rtk.data.journal.JournalReplay.into(data, engine)
+            // the tractor is somewhere else now: never join the next live fix
+            // to the last replayed one
+            engine.breakSegment()
+            _tail.value = null
             publish()
             onDone(summary)
         }

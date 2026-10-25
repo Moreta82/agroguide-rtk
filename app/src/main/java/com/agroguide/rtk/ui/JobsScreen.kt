@@ -66,6 +66,7 @@ fun JobsScreen() {
     val stats by CoverageRepository.stats.collectAsStateWithLifecycle()
     var showNew by remember { mutableStateOf(false) }
     var confirmFinish by remember { mutableStateOf(false) }
+    var toContinue by remember { mutableStateOf<JobEntity?>(null) }
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // active job card
@@ -128,6 +129,9 @@ fun JobsScreen() {
                         style = MaterialTheme.typography.bodySmall,
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = { toContinue = j }) {
+                            Text(stringResource(R.string.job_continue))
+                        }
                         TextButton(onClick = { scope.launch { generateReport(context, db, j, html = true) } }) {
                             Text(stringResource(R.string.job_report_html))
                         }
@@ -174,6 +178,8 @@ fun JobsScreen() {
         )
     }
 
+    toContinue?.let { ContinueJobDialog(it) { toContinue = null } }
+
     if (confirmFinish) {
         AlertDialog(
             onDismissRequest = { confirmFinish = false },
@@ -186,6 +192,42 @@ fun JobsScreen() {
             dismissButton = { TextButton(onClick = { confirmFinish = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }
+}
+
+@Composable
+private fun ContinueJobDialog(job: JobEntity, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val currentWidth = com.agroguide.rtk.service.GuidanceRepository.implement.value.widthM
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.job_continue_title, job.name)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.job_continue_body))
+                if (kotlin.math.abs(currentWidth - job.implementWidthM) > 0.01) {
+                    Text(
+                        stringResource(R.string.job_continue_width, job.implementWidthM, currentWidth),
+                        color = Color(0xFFF9A825),
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                scope.launch {
+                    val msg = when (JobManager.continueJob(context, job)) {
+                        JobManager.ContinueResult.STARTED -> null
+                        JobManager.ContinueResult.ANOTHER_ACTIVE -> R.string.job_continue_busy
+                        JobManager.ContinueResult.NO_TRACK -> R.string.job_continue_no_track
+                    }
+                    if (msg != null) Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                    onDismiss()
+                }
+            }) { Text(stringResource(R.string.job_continue)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
 }
 
 fun dateStr(ms: Long): String = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(ms))

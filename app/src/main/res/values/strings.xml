@@ -127,6 +127,12 @@
     <string name="job_none_active">Sin trabajo activo</string>
     <string name="job_need_position">Necesitas posición para iniciar un trabajo</string>
     <string name="job_history">Histórico</string>
+    <string name="job_continue">Continuar</string>
+    <string name="job_continue_title">¿Continuar «%1$s»?</string>
+    <string name="job_continue_body">Se reabre el trabajo con todo lo ya pintado y su línea de guiado. Lo que trabajes ahora se suma al mismo trabajo e informe.</string>
+    <string name="job_continue_width">Atención: este trabajo se hizo con un apero de %1$.2f m y el apero configurado ahora es de %2$.2f m. La zona nueva se pintará con el ancho del trabajo.</string>
+    <string name="job_continue_busy">Hay otro trabajo en curso: finalízalo antes de continuar este.</string>
+    <string name="job_continue_no_track">No se encuentra el recorrido guardado de este trabajo.</string>
     <string name="job_report_html">Informe HTML</string>
     <string name="job_report_pdf">Informe PDF</string>
     <string name="job_report_fail">No se pudo generar el informe</string>
