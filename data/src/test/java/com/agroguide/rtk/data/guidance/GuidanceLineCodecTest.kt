@@ -35,4 +35,20 @@ class GuidanceLineCodecTest {
         assertNull(GuidanceLineCodec.fromJson("garbage"))
         assertNull(GuidanceLineCodec.fromJson("""{"type":"XX","points":[]}"""))
     }
+
+    @Test fun `stores the frame origin with the line`() {
+        val plane = com.agroguide.rtk.geo.TangentPlane(42.6, -5.57)
+        val stored = GuidanceLineCodec.decode(
+            GuidanceLineCodec.toJson(GuidanceLine.Ab(EnuPoint(1.0, 2.0), EnuPoint(30.0, 40.0)), plane)!!,
+        )!!
+        assertEquals(42.6, stored.originLatDeg!!, 1e-12)
+        assertEquals(-5.57, stored.plane!!.originLonDeg, 1e-12)
+    }
+
+    @Test fun `legacy files without origin still decode, with unknown frame`() {
+        val legacy = """{"type":"AB","points":[[1.0,2.0],[30.0,40.0]]}"""
+        val stored = GuidanceLineCodec.decode(legacy)!!
+        assertIs<GuidanceLine.Ab>(stored.line)
+        assertNull(stored.plane)
+    }
 }

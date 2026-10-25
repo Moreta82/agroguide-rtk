@@ -1,5 +1,6 @@
 package com.agroguide.rtk.service
 
+import com.agroguide.rtk.geo.guidance.reproject
 import android.content.Context
 import android.os.SystemClock
 import com.agroguide.rtk.data.db.AgroDb
@@ -171,8 +172,9 @@ object JobManager {
     private fun reopen(context: Context, job: JobEntity, data: com.agroguide.rtk.data.journal.JournalData): Boolean {
         synchronized(this) {
             if (_activeJob.value != null) return false
-            PositionRepository.pinPlane(TangentPlane(data.header.originLat, data.header.originLon))
-            loadLine(context, job.id)?.let { GuidanceRepository.restoreLine(it) }
+            val jobPlane = TangentPlane(data.header.originLat, data.header.originLon)
+            PositionRepository.pinPlane(jobPlane)
+            loadLine(context, job.id, jobPlane)?.let { GuidanceRepository.restoreLine(it) }
             CoverageRepository.configure(data.header.widthM, data.header.sections)
             // passes, live paint and the journal must all use the job's width
             GuidanceRepository.setImplement(
@@ -209,9 +211,13 @@ object JobManager {
 
     fun lineFile(context: Context, jobId: String): File = File(context.filesDir, "journals/$jobId.line")
 
-    private fun loadLine(context: Context, jobId: String) = runCatching {
+    /** The job's line in [jobPlane] (files written with another frame are carried across). */
+    private fun loadLine(context: Context, jobId: String, jobPlane: TangentPlane) = runCatching {
         val f = lineFile(context, jobId)
-        if (f.exists()) com.agroguide.rtk.data.guidance.GuidanceLineCodec.fromJson(f.readText()) else null
+        if (!f.exists()) return@runCatching null
+        val stored = com.agroguide.rtk.data.guidance.GuidanceLineCodec.decode(f.readText()) ?: return@runCatching null
+        val from = stored.plane ?: jobPlane
+        stored.line.reproject(from, jobPlane)
     }.getOrNull()
 
     private var lineWatcher: kotlinx.coroutines.Job? = null
@@ -225,7 +231,7 @@ object JobManager {
                 .collect { (jobId, line) ->
                     if (jobId == null) return@collect
                     runCatching {
-                        val json = com.agroguide.rtk.data.guidance.GuidanceLineCodec.toJson(line)
+                        val json = com.agroguide.rtk.data.guidance.GuidanceLineCodec.toJson(line, PositionRepository.activePlane)
                         val f = lineFile(app, jobId)
                         if (json == null) f.delete() else f.writeText(json)
                     }

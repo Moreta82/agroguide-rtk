@@ -79,10 +79,19 @@ object PositionRepository {
     val activePlaneOrigin: Pair<Double, Double>?
         get() = activePlane?.let { it.originLatDeg to it.originLonDeg }
 
-    /** Pin (or clear with null) the tangent plane; applies to the live pipeline too. */
+    /**
+     * Pin (or clear with null) the tangent plane; applies to the live pipeline
+     * too. The active guidance line is carried into the new frame so it stays
+     * on the same ground (its ENU coordinates are frame-relative).
+     */
+    @Synchronized
     fun pinPlane(plane: com.agroguide.rtk.geo.TangentPlane?) {
+        val previous = activePlane
         pinnedPlane = plane
-        if (plane != null) activePipeline?.plane = plane
+        if (plane != null) {
+            activePipeline?.plane = plane
+            if (previous != null) GuidanceRepository.reprojectLine(previous, plane)
+        }
     }
 
     private var scope: CoroutineScope? = null

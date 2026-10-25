@@ -1,5 +1,6 @@
 package com.agroguide.rtk.service
 
+import com.agroguide.rtk.geo.guidance.reproject
 import com.agroguide.rtk.geo.EnuPoint
 import com.agroguide.rtk.geo.VehicleState
 import com.agroguide.rtk.geo.guidance.CurveRecorder
@@ -80,6 +81,15 @@ object GuidanceRepository {
     }
 
     fun clearLine() { _line.value = null; _result.value = null; _pendingA.value = null }
+
+    /** Re-express the active line (and a pending A) after the ENU frame changes. */
+    fun reprojectLine(from: com.agroguide.rtk.geo.TangentPlane, to: com.agroguide.rtk.geo.TangentPlane) {
+        _line.value?.let { _line.value = it.reproject(from, to) }
+        _pendingA.value?.let { p ->
+            val (lat, lon) = from.toGeo(p.x, p.y)
+            _pendingA.value = to.toEnu(lat, lon)
+        }
+    }
 
     /** Restore a persisted line (mode inferred from the line type). */
     fun restoreLine(line: GuidanceLine) {

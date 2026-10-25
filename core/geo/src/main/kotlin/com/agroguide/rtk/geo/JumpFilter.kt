@@ -39,6 +39,9 @@ class JumpFilter(
         return false
     }
 
+    /** Forget the last position, e.g. after the ENU frame changed under it. */
+    fun reset() { last = null; rejectAnchor = null; rejectCount = 0 }
+
     private fun acceptInternal(p: EnuPoint, ms: Long): Boolean {
         last = p; lastMs = ms; rejectAnchor = null; rejectCount = 0
         return true

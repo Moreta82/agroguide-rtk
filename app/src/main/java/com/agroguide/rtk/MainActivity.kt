@@ -1,5 +1,6 @@
 package com.agroguide.rtk
 
+import com.agroguide.rtk.geo.guidance.reproject
 import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothManager
@@ -158,13 +159,33 @@ class MainActivity : ComponentActivity() {
                 }
                 val lineStore = remember { com.agroguide.rtk.data.GuidanceLineStore(applicationContext) }
                 LaunchedEffect(Unit) {
-                    // restore once, then persist every change (including clearing)
+                    // Restore once, then persist every change (including clearing).
+                    // The line's ENU coordinates only mean something in the frame
+                    // they were saved in, and each session anchors a new frame on
+                    // its first fix: reuse that frame, or carry the line across.
                     if (GuidanceRepository.line.value == null) {
-                        lineStore.load()?.let { GuidanceRepository.restoreLine(it) }
+                        lineStore.load()?.let { stored ->
+                            val linePlane = stored.plane
+                            val active = com.agroguide.rtk.service.PositionRepository.activePlane
+                            when {
+                                // saved by <= 1.0.7 without its frame: it cannot be
+                                // placed reliably, and a shifted line is worse than none
+                                linePlane == null -> lineStore.save(null, null)
+                                active == null -> {
+                                    com.agroguide.rtk.service.PositionRepository.pinPlane(linePlane)
+                                    GuidanceRepository.restoreLine(stored.line)
+                                }
+                                else -> GuidanceRepository.restoreLine(stored.line.reproject(linePlane, active))
+                            }
+                        }
                     }
                     var first = true
                     GuidanceRepository.line.collect { line ->
-                        if (first) { first = false } else { lineStore.save(line) }
+                        if (first) {
+                            first = false
+                        } else {
+                            lineStore.save(line, com.agroguide.rtk.service.PositionRepository.activePlane)
+                        }
                     }
                 }
                 var tab by remember { mutableIntStateOf(0) }

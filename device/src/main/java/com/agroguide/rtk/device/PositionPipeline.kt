@@ -29,6 +29,7 @@ class PositionPipeline(
     private val jumpFilter = JumpFilter()
     private val headingHold = com.agroguide.rtk.geo.HeadingHold()
     private val latency = com.agroguide.rtk.geo.LatencyEstimator()
+    private var filterPlane: TangentPlane? = null
 
     /** Measured fix age on arrival (receiver + Bluetooth + Android), 0 if unknown. */
     val latencyMs: Long get() = latency.latencyMs
@@ -51,6 +52,9 @@ class PositionPipeline(
             latency.onFix(fixTod, arrival)
         }
         val p = plane ?: TangentPlane(fix.latDeg, fix.lonDeg).also { plane = it }
+        // A job pinning another frame moves every ENU coordinate at once; that
+        // is not a GNSS jump, so the filter must start over in the new frame.
+        if (p !== filterPlane) { jumpFilter.reset(); filterPlane = p }
         val enu = p.toEnu(fix.latDeg, fix.lonDeg)
         val speed = fix.speedMps ?: 0.0
         if (!jumpFilter.accept(enu, speed, fix.monotonicMs)) return@transform
