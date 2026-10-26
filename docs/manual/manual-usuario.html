@@ -230,7 +230,7 @@
       Configuración, uso en campo y resolución de problemas, explicado paso a paso.</p>
 
     <div class="meta">
-      <div><span>Versión</span><strong>1.0.4</strong></div>
+      <div><span>Versión</span><strong>1.0.9</strong></div>
       <div><span>Receptor</span><strong>u-blox ZED-F9P</strong></div>
       <div><span>Sistema</span><strong>Android 8.0 o superior</strong></div>
     </div>
@@ -257,9 +257,9 @@
   <div class="toc-item"><span class="tn">10</span><span class="tt">Líneas de guiado</span><span class="td">AB, A+, curvas y modo libre</span></div>
   <div class="toc-item"><span class="tn">11</span><span class="tt">Cobertura, solape y secciones</span><span class="td">Pintado en tiempo real, colores y contadores</span></div>
   <div class="toc-item"><span class="tn">12</span><span class="tt">Parcelas</span><span class="td">Crear, medir, importar y exportar</span></div>
-  <div class="toc-item"><span class="tn">13</span><span class="tt">Trabajos e informes</span><span class="td">Grabar la faena y generar HTML o PDF</span></div>
+  <div class="toc-item"><span class="tn">13</span><span class="tt">Trabajos e informes</span><span class="td">Grabar, continuar y generar informes</span></div>
   <div class="toc-item"><span class="tn">14</span><span class="tt">Mapas de fondo</span><span class="td">Satélite y callejero, con descarga sin cobertura</span></div>
-  <div class="toc-item"><span class="tn">15</span><span class="tt">Ajustes generales</span><span class="td">Tema, orientación, colores del campo y pintado</span></div>
+  <div class="toc-item"><span class="tn">15</span><span class="tt">Ajustes generales</span><span class="td">Tema, orientación, vista de campo y retardo</span></div>
   <div class="toc-item"><span class="tn">16</span><span class="tt">Resolución de problemas</span><span class="td">Síntoma, causa y solución</span></div>
   <div class="toc-item"><span class="tn">17</span><span class="tt">Referencia rápida</span><span class="td">Chuleta para llevar en la cabina</span></div>
 
@@ -634,7 +634,8 @@
 
   <div class="tip" style="margin-top:1mm"><b>Gestos sobre el campo.</b> Pellizca para acercar o alejar y toca dos
     veces para alternar entre vista orientada al rumbo (el tractor siempre apunta arriba) y vista orientada al norte.
-    El vehículo se dibuja como un mini tractor; en Ajustes puedes cambiarlo por un triángulo.</div>
+    Los botones <strong>+</strong> y <strong>−</strong> del borde izquierdo hacen lo mismo que pellizcar, más cómodo
+    con guantes. El vehículo (mini tractor, triángulo o cuadrado) se dibuja tan ancho como el apero.</div>
 
   <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
 </section>
@@ -662,9 +663,10 @@
 
   <h3>Qué se ve a pantalla completa</h3>
   <p style="font-size:9.6pt">La barra de luces arriba; el nombre y estado del trabajo; un recuadro con la
-    <strong>calidad de la señal, la velocidad y las hectáreas tratadas</strong>; el aviso de fuente y NTRIP; la
-    barra de secciones abajo y el botón <strong>"Datos"</strong>. Se ocultan las pestañas y las barras de Android
-    (desliza desde el borde si necesitas verlas un momento).</p>
+    <strong>calidad de la señal, la velocidad y las hectáreas tratadas</strong>; el aviso de fuente y NTRIP; los
+    botones <strong>+ / −</strong> (zoom) y <strong>pausa</strong>; la barra de secciones abajo y el botón
+    <strong>"Datos"</strong>. Se ocultan las pestañas y las barras de Android (desliza desde el borde si
+    necesitas verlas un momento).</p>
 
   <div class="grid g2">
     <div class="num-step" style="margin:0"><div class="bub">1</div><div class="bd">
@@ -672,8 +674,9 @@
       <p>Pulsa <strong>"Datos"</strong> para mostrar el panel completo: contadores, modos de línea, Apero y Fuente.</p>
     </div></div>
     <div class="num-step" style="margin:0"><div class="bub">2</div><div class="bd">
-      <h4>Volver a pantalla completa</h4>
-      <p>Pulsa el botón <strong>"Pantalla completa"</strong>, el primero del panel. Solo aparece con un trabajo en marcha.</p>
+      <h4>Pausar sin salir del campo</h4>
+      <p>El botón redondo grande pausa el trabajo; en pausa se vuelve ámbar con el símbolo ▶ para reanudar.
+        <strong>"Pantalla completa"</strong>, el primer botón del panel, vuelve a esta vista.</p>
     </div></div>
   </div>
 
@@ -1189,6 +1192,10 @@
   <div class="note"><b>La pintura refleja solo lo activo.</b> Si cierras la sección 2, esa franja deja de pintarse
     y de contar hectáreas, exactamente como en un sistema de corte de secciones real.</div>
 
+  <div class="note"><b>La pintura sale pegada al vehículo.</b> El tractor (o el cuadrado) tiene el ancho del
+    apero y su borde trasero marca la línea donde empieza la pintura. Si notas que la pintura va algo por detrás
+    del tractor real, revisa <strong>Ajustes → Compensar retardo del receptor</strong> (sección 15).</div>
+
   <div class="tip"><b>Pintado continuo.</b> Por defecto se pinta siempre, también a muy baja velocidad, sin cortes.
     Si al detenerte aparecen manchas por el ruido del GPS, activa <strong>Ajustes → Pausar pintado al
     detenerse</strong>: la pintura se detiene con el tractor parado y continúa al arrancar.</div>
@@ -1280,7 +1287,7 @@
 
       <rect x="410" y="34" width="104" height="40" rx="20" fill="#1B5E20"/>
       <text x="462" y="58" text-anchor="middle" font-size="10.5" fill="#fff" font-weight="700">FINALIZADO</text>
-      <text x="462" y="24" text-anchor="middle" font-size="8.5" fill="#6B7A70">informe disponible</text>
+      <text x="462" y="24" text-anchor="middle" font-size="8.5" fill="#6B7A70">informe · se puede continuar</text>
     </g>
   </svg>
   </div>
@@ -1314,6 +1321,49 @@
 
   <div class="tip"><b>Solo un trabajo a la vez.</b> Para empezar uno nuevo, finaliza primero el que esté en curso.
     Así se evita mezclar superficies de faenas distintas.</div>
+
+  <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
+</section>
+
+<!-- ============ 16b CONTINUAR ============ -->
+<section class="page">
+  <div class="kicker">Sección 13 · continuación</div>
+  <h2>Continuar un trabajo guardado</h2>
+  <div class="hr"></div>
+  <p class="lead">Si una faena se queda a medias, puedes reabrirla otro día y seguir exactamente donde la
+    dejaste. No hace falta hacer nada especial al terminar: la aplicación ya guarda cada posición del tractor.</p>
+
+  <div class="num-step"><div class="bub">1</div><div class="bd">
+    <h4>Busca el trabajo en el histórico</h4>
+    <p>Pestaña <strong>Trabajos → Histórico</strong>. Cada trabajo finalizado tiene el botón
+      <strong>"Continuar"</strong>, junto a los de informe.</p>
+  </div></div>
+  <div class="num-step"><div class="bub">2</div><div class="bd">
+    <h4>Confirma</h4>
+    <p>La aplicación pide confirmación. Si el apero configurado ahora tiene otro ancho, lo avisa: el trabajo
+      sigue con el ancho con el que se empezó, para que todo encaje.</p>
+  </div></div>
+  <div class="num-step"><div class="bub">3</div><div class="bd">
+    <h4>Sigue trabajando</h4>
+    <p>Se vuelve a pintar todo lo ya hecho, con sus hectáreas, solape y distancia, y se recupera la
+      <strong>línea de guiado</strong> de ese trabajo, así las pasadas nuevas quedan alineadas con las anteriores.
+      La vista pasa a pantalla completa.</p>
+  </div></div>
+
+  <h3>Qué pasa con el informe</h3>
+  <p>Lo que trabajes después se suma al <strong>mismo trabajo</strong>: hectáreas, solape, tiempo efectivo y
+    recorrido. Al finalizar de nuevo, el informe HTML o PDF refleja la faena completa, no solo la última parte.</p>
+
+  <div class="note"><b>Sin franjas fantasma.</b> Desde que dejaste el trabajo el tractor se ha movido. La
+    aplicación lo tiene en cuenta: lo primero que pinta al continuar empieza donde está el tractor, sin unir con
+    el punto donde se quedó.</div>
+
+  <div class="tip"><b>La línea de guiado también se conserva sin trabajo.</b> La línea activa se guarda al cerrar
+    la aplicación y vuelve exactamente al mismo sitio del terreno al abrirla otro día.</div>
+
+  <div class="warn"><b>Solo un trabajo a la vez.</b> Si hay otro en curso, la aplicación pide finalizarlo antes
+    de continuar uno del histórico. Los trabajos hechos con versiones anteriores a la 1.0.7 se pueden continuar,
+    pero sin su línea de guiado: márcala de nuevo.</div>
 
   <div class="pfoot"><span>AgroGuide RTK · Manual de usuario</span><span class="num"></span></div>
 </section>
@@ -1372,7 +1422,8 @@
     <tr><th style="width:46mm">Ajuste</th><th>Función</th></tr>
     <tr><td><strong>Tema</strong></td><td><em>Noche</em> (por defecto): letras claras sobre fondo oscuro, ideal para la cabina. <em>Día</em>: mayor contraste bajo sol directo. <em>Automático</em>: sigue al móvil.</td></tr>
     <tr><td><strong>Orientación de pantalla</strong></td><td><em>Horizontal</em> (por defecto), <em>Vertical</em> o <em>Automática</em>, que gira con el móvil.</td></tr>
-    <tr><td><strong>Vista de campo</strong></td><td>Color de fondo (blanco por defecto), color de la zona trabajada (gris semitransparente), color del solape (rojo), mostrar u ocultar la cuadrícula y vehículo en pantalla: <em>mini tractor</em> o <em>triángulo</em>.</td></tr>
+    <tr><td><strong>Vista de campo</strong></td><td>Color de fondo (blanco por defecto), color de la zona trabajada (gris semitransparente), color del solape (rojo), cuadrícula y vehículo: <em>mini tractor</em>, <em>triángulo</em> o <em>cuadrado</em>, siempre tan ancho como el apero.</td></tr>
+    <tr><td><strong>Compensar retardo del receptor</strong></td><td>La posición llega con 0,1–0,2 s de retraso (cálculo + Bluetooth). <em>Automático</em> (por defecto) lo mide y adelanta el tractor y la pintura ese tiempo; también hay <em>Desactivado</em> y valores fijos de 100, 200 y 300 ms. Necesita la hora automática del móvil.</td></tr>
     <tr><td><strong>Pausar pintado al detenerse</strong></td><td>Desactivado (por defecto): se pinta siempre. Activado: no pinta con el tractor parado o casi parado (sección 11).</td></tr>
     <tr><td><strong>Mantener pantalla encendida</strong></td><td>Evita que la pantalla se apague mientras guías. Actívalo si el móvil va conectado a corriente.</td></tr>
     <tr><td><strong>Salida mock</strong></td><td>Publica la posición RTK al sistema para que <strong>otras aplicaciones</strong> la aprovechen. Requiere elegir AgroGuide como aplicación de ubicación simulada en las opciones de desarrollador.</td></tr>
@@ -1436,8 +1487,8 @@
         <td>El ancho de trabajo configurado no coincide con el real. Vuelve a medirlo y corrígelo en el botón Apero.</td></tr>
     <tr><td><strong>Deja de grabar al apagar la pantalla</strong></td>
         <td>El sistema está durmiendo la aplicación. Concede la exención de optimización de batería en Ajustes y revisa la configuración del fabricante.</td></tr>
-    <tr><td><strong>No veo el panel de datos</strong></td>
-        <td>Estás a pantalla completa: pulsa el botón "Datos" de la vista de campo.</td></tr>
+    <tr><td><strong>La pintura va por detrás del tractor</strong></td>
+        <td>Ajustes → Compensar retardo del receptor en "Automático" (con la hora automática del móvil). Si aún se nota, prueba 200 o 300 ms.</td></tr>
     <tr><td><strong>El mapa aparece en negro</strong></td>
         <td>Sin conexión y sin teselas descargadas para esa zona. Descarga la zona con wifi antes de salir.</td></tr>
     <tr><td><strong>No se genera el informe</strong></td>
@@ -1467,7 +1518,7 @@
         <li>Abre la app → <strong>Fuente</strong> → tu receptor → NTRIP activado → <strong>Iniciar</strong>.</li>
         <li>Espera a <strong>RTK FIJO</strong> (verde).</li>
         <li>Comprueba el ancho en <strong>Apero</strong>.</li>
-        <li><strong>Trabajos</strong> → Nuevo trabajo → asigna parcela.</li>
+        <li><strong>Trabajos</strong> → Nuevo trabajo, o <strong>Continuar</strong> uno del histórico.</li>
         <li>Modo <strong>AB</strong> → Marcar A → recorre → Marcar B.</li>
         <li>A trabajar siguiendo el lightbar.</li>
       </ol>
@@ -1507,6 +1558,8 @@
         <tr><td><strong>Pellizcar</strong></td><td>Acercar o alejar el campo</td></tr>
         <tr><td><strong>Doble toque</strong></td><td>Vista al rumbo / al norte</td></tr>
         <tr><td><strong>Botón "todas"</strong></td><td>Abrir o cerrar todas las secciones</td></tr>
+        <tr><td><strong>Botones + / −</strong></td><td>Acercar o alejar con guantes</td></tr>
+        <tr><td><strong>Botón pausa</strong></td><td>Pausar o reanudar el trabajo</td></tr>
         <tr><td><strong>Botón "Datos"</strong></td><td>Ver el panel en pantalla completa</td></tr>
         <tr><td><strong>Borrar línea</strong></td><td>Eliminar la referencia activa</td></tr>
       </table>
@@ -1596,10 +1649,10 @@
 </g></svg>
       <div>
         <div style="font-size:13pt; color:#fff; font-weight:700">AgroGuide RTK</div>
-        <div style="font-size:9pt; color:#8FB39A">Guiado agrícola de precisión · versión 1.0.4</div>
+        <div style="font-size:9pt; color:#8FB39A">Guiado agrícola de precisión · versión 1.0.9</div>
       </div>
     </div>
-    <p style="font-size:9pt; margin:0; color:#9CBBA3">Este manual describe la versión 1.0.4 de la aplicación.
+    <p style="font-size:9pt; margin:0; color:#9CBBA3">Este manual describe la versión 1.0.9 de la aplicación.
       La interfaz puede variar ligeramente en versiones posteriores. AgroGuide RTK es un sistema de guiado
       visual: asiste al conductor, pero no controla la dirección del vehículo. El operador es en todo momento
       responsable de la conducción y de la seguridad en el trabajo.</p>

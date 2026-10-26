@@ -120,7 +120,10 @@ fun FieldScreen(
 
     // The canvas with its overlays; shared by every layout.
     val canvasArea: @Composable (Modifier) -> Unit = { areaModifier ->
-            Box(areaModifier) {
+            androidx.compose.foundation.layout.BoxWithConstraints(areaModifier) {
+                // A landscape canvas is too short for the button column between
+                // the banners and the section bar: use a row above the bar.
+                val controlsInRow = maxHeight < CONTROLS_COLUMN_MIN_CANVAS
                 FieldView(
                     vehicle = vehicle, line = line, passIndex = result?.passIndex,
                     pendingA = pendingA, trail = trail, implement = implement,
@@ -147,7 +150,12 @@ fun FieldScreen(
                         val jm = com.agroguide.rtk.service.JobManager
                         if (activeJob?.state == jm.STATE_ACTIVE) jm.pause(context) else jm.resume(context)
                     },
-                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp),
+                    horizontal = controlsInRow,
+                    modifier = if (controlsInRow) {
+                        Modifier.align(Alignment.BottomStart).padding(start = 8.dp, bottom = 76.dp)
+                    } else {
+                        Modifier.align(Alignment.CenterStart).padding(start = 8.dp)
+                    },
                 )
                 // One row so the job banner (left) gives way to the badges
                 // (right) and wraps instead of overlapping them in portrait.
@@ -582,14 +590,12 @@ private fun MapControls(
     camera: FieldCamera,
     jobState: String?,
     onPauseToggle: () -> Unit,
+    /** Lay the buttons out in a row (short landscape canvas) instead of a column. */
+    horizontal: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val jm = com.agroguide.rtk.service.JobManager
-    Column(
-        modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    val content: @Composable () -> Unit = {
         MapButton(stringResource(R.string.zoom_in), onClick = { camera.zoomBy(ZOOM_STEP) }) { c, s ->
             drawLine(c, androidx.compose.ui.geometry.Offset(s * 0.28f, s / 2), androidx.compose.ui.geometry.Offset(s * 0.72f, s / 2), s * 0.09f)
             drawLine(c, androidx.compose.ui.geometry.Offset(s / 2, s * 0.28f), androidx.compose.ui.geometry.Offset(s / 2, s * 0.72f), s * 0.09f)
@@ -599,7 +605,7 @@ private fun MapControls(
         }
         if (jobState == jm.STATE_ACTIVE || jobState == jm.STATE_PAUSED) {
             val paused = jobState == jm.STATE_PAUSED
-            androidx.compose.foundation.layout.Spacer(Modifier.height(8.dp))
+            androidx.compose.foundation.layout.Spacer(Modifier.size(8.dp))
             MapButton(
                 stringResource(if (paused) R.string.job_resume else R.string.job_pause),
                 background = if (paused) Color(0xE6F9A825) else MAP_BUTTON_BG,
@@ -619,9 +625,24 @@ private fun MapControls(
             }
         }
     }
+    if (horizontal) {
+        Row(
+            modifier,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) { content() }
+    } else {
+        Column(
+            modifier,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) { content() }
+    }
 }
 
 private const val ZOOM_STEP = 1.6f
+/** Column of controls (~190 dp) plus banners (~120 dp) and section bar (~76 dp). */
+private val CONTROLS_COLUMN_MIN_CANVAS = 420.dp
 private val MAP_BUTTON_BG = Color(0x8C263238)
 
 @Composable

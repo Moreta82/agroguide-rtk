@@ -28,14 +28,14 @@ Requiere Android 8.0 o superior.
 
 ## Qué hace
 
-- **Posicionamiento:** receptor GNSS por Bluetooth SPP (parser NMEA propio, watchdog y reconexión automática), ubicación interna de Android o modo demo simulado sin hardware.
+- **Posicionamiento:** receptor GNSS por Bluetooth SPP (parser NMEA propio, watchdog y reconexión automática), ubicación interna de Android o modo demo simulado sin hardware. Compensación automática del retardo del receptor (medido con la hora de cada posición) y dibujo a 30 fps.
 - **Correcciones RTK:** cliente NTRIP v1/v2 integrado (perfiles, explorador de mountpoints ordenado por distancia, envío de GGA para redes VRS, prueba de conexión con el motivo real del rechazo del caster). El RTCM3 se envía al receptor por el mismo enlace Bluetooth.
 - **Receptor u-blox:** botón "Optimizar" (5 Hz, GSV desactivado) vía UBX-CFG-VALSET con confirmación por ACK, y restaurar valores de fábrica.
 - **Guiado:** líneas AB, A+, curvas grabadas y modo libre; desviación lateral con salto automático a la pasada más cercana; offsets del apero; barra de luces legible a 2 m.
-- **Vista de campo:** orientación horizontal, vertical o automática; pantalla completa al iniciar un trabajo; colores de fondo, zona trabajada y solape configurables; cuadrícula opcional; vehículo como mini tractor o triángulo; mapas base OpenStreetMap, satélite Esri o Google (con tu propia API key) con caché offline.
+- **Vista de campo:** orientación horizontal, vertical o automática; pantalla completa al iniciar un trabajo; zoom amplio con botones +/− y pausa sobre el campo; colores de fondo, zona trabajada y solape configurables; cuadrícula opcional; vehículo (mini tractor, triángulo o cuadrado) del ancho del apero; mapas base OpenStreetMap, satélite Esri o Google (con tu propia API key) con caché offline.
 - **Cobertura:** pintado en tiempo real con solape en otro color, hasta 16 secciones manuales, contadores de hectáreas, solape y distancia. Opción de pausar el pintado al detenerse.
 - **Parcelas:** creación conduciendo el perímetro o marcando puntos; área y perímetro; importación y exportación GeoJSON y KML.
-- **Trabajos:** iniciar, pausar, reanudar y finalizar con un diario binario a prueba de cierres inesperados; al reabrir la app se reconstruye la cobertura; informes HTML y PDF.
+- **Trabajos:** iniciar, pausar, reanudar y finalizar con un diario binario a prueba de cierres inesperados; **continuar** cualquier trabajo del histórico donde se dejó (cobertura, recorrido y línea de guiado); informes HTML y PDF del trabajo completo.
 - **Robustez:** servicio en primer plano, ayuda para los gestores de batería de MIUI/EMUI/One UI, salida como proveedor de ubicación simulada para otras apps, tema día/noche.
 
 ## Compilar
@@ -65,7 +65,7 @@ La compilación `release` se firma solo si existe un `keystore.properties` local
 | `:service` | Android | Servicio en primer plano, repositorios de posición/guiado/cobertura, sesión NTRIP, gestor de trabajos |
 | `:app` | Android | Interfaz Jetpack Compose |
 
-Tests: `.\gradlew.bat test` (unos 140 tests JVM, sin dispositivo). El hardware se sustituye por el generador NMEA sintético.
+Tests: `.\gradlew.bat test` (más de 150 tests JVM, sin dispositivo). El hardware se sustituye por el generador NMEA sintético.
 
 Especificación y planes de implementación en `docs/superpowers/`.
 
